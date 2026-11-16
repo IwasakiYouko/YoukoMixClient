@@ -1,11 +1,9 @@
 import 'dart:async';
 
-import 'package:drift/native.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/core/interface.dart';
 import 'package:fl_clash/core/method.dart';
-import 'package:fl_clash/database/database.dart' as db;
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/action.dart';
@@ -965,74 +963,6 @@ void main() {
         throwsA(isA<CoreMethodException>()),
       );
       verifyNever(() => core.getExternalProvider(any()));
-    });
-  });
-
-  group('addToLocalProxies', () {
-    const hongKong = CustomProxy(
-      id: 5,
-      definition: {'name': 'HK', 'type': 'ss', 'server': 'hk.example.com'},
-    );
-
-    late db.Database testDatabase;
-
-    setUp(() async {
-      testDatabase = db.Database(NativeDatabase.memory());
-      db.database = testDatabase;
-      await testDatabase.customProxies.put(hongKong.toCompanion('a0'));
-    });
-
-    tearDown(() => testDatabase.close());
-
-    test(
-      'adds the running proxy after the app proxies, without its dialer',
-      () async {
-        when(() => core.getProxyDefinition('SG')).thenAnswer(
-          (_) async => {
-            'name': 'SG',
-            'type': 'ss',
-            'server': 'sg.example.com',
-            'dialer-proxy': 'Relay',
-          },
-        );
-
-        await actionOf(buildContainer()).addToLocalProxies('SG');
-
-        final proxies = await testDatabase.customProxiesDao.query().get();
-        expect([for (final proxy in proxies) proxy.name], ['HK', 'SG']);
-        expect(proxies.last.definition, {
-          'name': 'SG',
-          'type': 'ss',
-          'server': 'sg.example.com',
-        });
-      },
-    );
-
-    test('adds nothing for a proxy an app proxy already holds', () async {
-      when(
-        () => core.getProxyDefinition('Hong Kong'),
-      ).thenAnswer((_) async => {...hongKong.definition, 'name': 'Hong Kong'});
-
-      await actionOf(buildContainer()).addToLocalProxies('Hong Kong');
-
-      expect(await testDatabase.customProxiesDao.query().get(), [
-        hongKong.copyWith(order: 'a0'),
-      ]);
-    });
-
-    test('names a proxy the running config does not define', () async {
-      when(() => core.getProxyDefinition('Gone')).thenAnswer((_) async => null);
-
-      await expectLater(
-        actionOf(buildContainer()).addToLocalProxies('Gone'),
-        throwsA(
-          isA<MessageException>().having(
-            (error) => error.message,
-            'message',
-            currentAppLocalizations.customIssueMissingProxies('Gone'),
-          ),
-        ),
-      );
     });
   });
 

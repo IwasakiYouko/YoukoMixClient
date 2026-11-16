@@ -1,4 +1,4 @@
-cask "flclash" do
+cask "youkomix" do
   version "VERSION"
 
   on_macos do
@@ -7,12 +7,13 @@ cask "flclash" do
     sha256 arm:   "ARM_SHA256",
            intel: "AMD_SHA256"
 
-    url "https://github.com/chen08209/FlClash/releases/download/v#{version}/FlClash-#{version}-macos-#{arch}.dmg"
+    url "https://github.com/REPO/releases/download/v#{version}/YoukoMix-#{version}-macos-#{arch}.dmg"
   end
 
-  name "FlClash"
-  desc "Multi-platform proxy client based on ClashMeta"
-  homepage "https://github.com/chen08209/FlClash"
+  name "人间之里"
+  name "YoukoMix"
+  desc "Dedicated cross-platform proxy client for YoukoMix"
+  homepage "https://github.com/REPO"
 
   livecheck do
     url :url
@@ -21,21 +22,21 @@ cask "flclash" do
 
   depends_on :macos
 
-  app "FlClash.app"
+  app "YoukoMix.app"
 
   postflight_steps do
     run "/usr/bin/xattr",
-        args:           ["-rd", "com.apple.quarantine", "{{appdir}}/FlClash.app"],
-        writable_paths: ["FlClash.app"],
+        args:           ["-rd", "com.apple.quarantine", "{{appdir}}/YoukoMix.app"],
+        writable_paths: ["YoukoMix.app"],
         writable_base:  :appdir
   end
 
-  uninstall quit: "com.follow.clash"
+  uninstall quit: "com.youkomix.client"
 
   zap trash: [
-    "~/Library/Application Support/com.follow.clash",
-    "~/Library/Caches/com.follow.clash",
-    "~/Library/Preferences/com.follow.clash.plist",
-    "~/Library/Saved Application State/com.follow.clash.savedState",
+    "~/Library/Application Support/com.youkomix.client",
+    "~/Library/Caches/com.youkomix.client",
+    "~/Library/Preferences/com.youkomix.client.plist",
+    "~/Library/Saved Application State/com.youkomix.client.savedState",
   ]
 end

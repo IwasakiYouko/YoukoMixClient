@@ -23,35 +23,6 @@ class _MockCoreHandlerInterface extends Mock implements CoreHandlerInterface {}
 
 void main() {
   group('ProfilesAction', () {
-    test('keeps edited profile data when remote update fails', () async {
-      final original = Profile.normal(label: 'old label', url: 'bad-url');
-      final edited = original.copyWith(
-        label: 'new label',
-        url: 'still-bad-url',
-      );
-      final container = ProviderContainer(
-        overrides: [
-          currentProfileIdProvider.overrideWithBuild((_, _) => null),
-          profilesProvider.overrideWith(() => TestProfiles([original])),
-        ],
-      );
-      addTearDown(container.dispose);
-
-      expect(
-        container.read(profilesProvider).getProfile(original.id),
-        original,
-      );
-
-      await expectLater(
-        container.read(profilesActionProvider.notifier).updateProfile(edited),
-        throwsA(anything),
-      );
-
-      final profile = container.read(profilesProvider).getProfile(original.id);
-      expect(profile?.label, edited.label);
-      expect(profile?.url, edited.url);
-    });
-
     test('updates selection and inserts the first profile', () {
       final first = Profile.normal(label: 'First');
       final second = Profile.normal(label: 'Second');
@@ -78,19 +49,9 @@ void main() {
     });
 
     test(
-      'skips profile updates that are disabled, fresh, or file-based',
+      'autoUpdateProfiles and updateProfiles safely no-op when unauthenticated',
       () async {
-        final profiles = [
-          Profile.normal(label: 'Disabled').copyWith(autoUpdate: false),
-          Profile.normal(label: 'Fresh').copyWith(
-            autoUpdate: true,
-            lastUpdateDate: DateTime.now().add(const Duration(days: 1)),
-          ),
-          Profile.normal(label: 'File').copyWith(
-            autoUpdate: true,
-            lastUpdateDate: DateTime.now().subtract(const Duration(days: 1)),
-          ),
-        ];
+        final profiles = [Profile.normal(label: 'Managed')];
         final container = ProviderContainer(
           overrides: [
             currentProfileIdProvider.overrideWithBuild((_, _) => null),
@@ -102,6 +63,7 @@ void main() {
 
         await action.autoUpdateProfiles();
         await action.updateProfiles();
+        await action.updateProfile(profiles.single);
 
         expect(container.read(profilesProvider), profiles);
       },

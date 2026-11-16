@@ -289,8 +289,8 @@ void main() {
     expect(tester.getRect(find.byType(ProxyCard).first).top, grid.top);
   });
 
-  testWidgets('a long press on a card offers to select it and to add it to '
-      'the local proxies, one from a provider too', (tester) async {
+  testWidgets('a long press on a card offers to select it without local '
+      'proxy import', (tester) async {
     const group = Group(
       type: GroupType.Selector,
       name: 'B',
@@ -324,7 +324,7 @@ void main() {
     );
     expect(
       find.descendant(of: menu, matching: find.text('Add to local proxies')),
-      findsOneWidget,
+      findsNothing,
     );
 
     await tester.tapAt(Offset.zero);
@@ -338,12 +338,12 @@ void main() {
     );
     expect(
       find.descendant(of: menu, matching: find.text('Add to local proxies')),
-      findsOneWidget,
+      findsNothing,
     );
   });
 
-  testWidgets('a custom profile offers to add only the proxies of a provider, '
-      'as its own are the local proxies', (tester) async {
+  testWidgets('custom profile cards never offer local proxy import even for '
+      'provider nodes', (tester) async {
     const group = Group(
       type: GroupType.Selector,
       name: 'B',
@@ -379,9 +379,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.descendant(of: menu, matching: find.text('Add to local proxies')),
+      find.descendant(of: menu, matching: find.text('Select')),
       findsOneWidget,
     );
+    expect(find.text('Add to local proxies'), findsNothing);
   });
 
   testWidgets('a new current group leaves the visible cards as they were', (

@@ -20,7 +20,7 @@ void main() {
         expect(scripts.first, contains('exit 0'));
         expect(
           scripts,
-          contains('rm -f /etc/systemd/system/flclash-helper.service'),
+          contains('rm -f /etc/systemd/system/youkomix-helper.service'),
         );
         expect(
           scripts.any((script) => script.contains('systemctl daemon-reload')),
@@ -58,5 +58,13 @@ void main() {
 
     expect(macros, contains('%global debug_package %{nil}'));
     expect(macros, contains('%global __os_install_post %{nil}'));
+  });
+
+  test('build_config.yaml names YoukoMixCore and YoukoMixHelperService', () {
+    final config =
+        loadYaml(File('build_config.yaml').readAsStringSync()) as YamlMap;
+
+    expect(config['core_name'], 'YoukoMixCore');
+    expect(config['helper_name'], 'YoukoMixHelperService');
   });
 }

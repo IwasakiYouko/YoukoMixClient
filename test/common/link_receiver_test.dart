@@ -109,8 +109,9 @@ void main() {
       }
     });
 
-    test('hands over the first link and then stops listening', () async {
-      const link = 'https://example.com/sub?token=a&b=1';
+    test('hands over the first youkomix link and then stops listening', () async {
+      const link =
+          'youkomix://auth?code=otc_123&server=https%3A%2F%2Fpanel.example.com';
       final (status, page) = await _request(
         receiver.address,
         method: 'POST',
@@ -126,16 +127,24 @@ void main() {
       );
     });
 
-    test('accepts a clash install-config link', () async {
-      const url = 'https://example.com/sub';
-      final (status, _) = await _request(
-        receiver.address,
-        method: 'POST',
-        link: 'clash://install-config?url=${Uri.encodeQueryComponent(url)}',
-      );
-      expect(status, HttpStatus.ok);
-      expect(await receiver.link, url);
-    });
+    test(
+      'rejects third-party subscription and clash install-config links',
+      () async {
+        for (final rejected in [
+          'https://example.com/sub?token=1',
+          'clash://install-config?url=https%3A%2F%2Fexample.com%2Fsub',
+          'vmess://eyJhZGQiOiIxLjIuMy40In0=',
+        ]) {
+          final (status, page) = await _request(
+            receiver.address,
+            method: 'POST',
+            link: rejected,
+          );
+          expect(status, HttpStatus.badRequest);
+          expect(page, contains('Not a link'));
+        }
+      },
+    );
 
     test('completes the link with null when closed first', () async {
       final pending = receiver.link;

@@ -1,24 +1,23 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:drift/native.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/core/interface.dart';
+import 'package:fl_clash/database/database.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
-import 'package:fl_clash/providers/action.dart';
-import 'package:fl_clash/providers/app.dart';
-import 'package:fl_clash/providers/core.dart';
-import 'package:fl_clash/providers/database.dart';
+import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:yaml/yaml.dart';
 
 import '../helpers/app_paths.dart';
-import '../helpers/test_app.dart';
 import '../helpers/test_profiles.dart';
 
 class _MockCoreHandlerInterface extends Mock implements CoreHandlerInterface {}
@@ -27,12 +26,13 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late Directory home;
+  late Database testDb;
   late _MockCoreHandlerInterface core;
   late ProviderContainer container;
 
   setUpAll(() async {
     await AppLocalizations.load(const Locale('en'));
-    home = Directory.systemTemp.createTempSync('flclash-profiles-action-');
+    home = Directory.systemTemp.createTempSync('youkomix-profiles-action-');
     await useAppPaths(home);
   });
 
@@ -41,182 +41,186 @@ void main() {
   });
 
   setUp(() {
+    testDb = Database(NativeDatabase.memory());
+    database = testDb;
     core = _MockCoreHandlerInterface();
     when(() => core.validateConfig(any())).thenAnswer((_) async => null);
-    container = ProviderContainer(
+  });
+
+  tearDown(() async {
+    await testDb.close();
+  });
+
+  ProviderContainer buildContainer([List<Profile> initial = const []]) {
+    final c = ProviderContainer(
       overrides: [
-        profilesProvider.overrideWith(TestProfiles.new),
+        profilesProvider.overrideWith(() => TestProfiles(initial)),
         coreHandlerProvider.overrideWithValue(CoreController.scoped(core)),
       ],
     );
-    addTearDown(container.dispose);
-    globalState.container = container;
-  });
-
-  void decodesTo(String link, List<Map<String, dynamic>> proxies) {
-    when(
-      () => core.decodeShareLinks([link]),
-    ).thenAnswer((_) async => [proxies]);
+    addTearDown(c.dispose);
+    globalState.container = c;
+    return c;
   }
 
-  Future<void> pumpHost(WidgetTester tester) async {
-    const size = Size(1200, 1000);
-    tester.view.physicalSize = size;
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-    container.read(viewSizeProvider.notifier).value = size;
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const TestApp(child: SizedBox()),
-      ),
+  group('saveManagedProfile', () {
+    test(
+      'saves managed profile #1, parses subscription header, and purges rogue profiles',
+      () async {
+        const rogue = Profile(
+          id: 99,
+          label: 'Rogue',
+          type: ProfileType.url,
+          url: 'https://rogue.example.com/sub',
+          autoUpdateDuration: Duration(hours: 6),
+        );
+        final rogueFile = File(await appPath.getProfilePath('99'))
+          ..createSync(recursive: true)
+          ..writeAsStringSync('proxies: []');
+
+        container = buildContainer([rogue]);
+        container.listen(currentProfileIdProvider, (_, _) {});
+
+        final yamlBytes = Uint8List.fromList(
+          utf8.encode('proxies:\n  - {name: HK-01, type: ss}\n'),
+        );
+        final saved = await container
+            .read(profilesActionProvider.notifier)
+            .saveManagedProfile(
+              bytes: yamlBytes,
+              label: '人间之里 · 专属订阅',
+              subscriptionInfo: SubscriptionInfo.formHString(
+                'upload=1024; download=2048; total=10240; expire=1900000000',
+              ),
+              autoUpdateDuration: const Duration(hours: 12),
+            );
+
+        expect(saved.id, youkomixManagedProfileId);
+        expect(saved.label, '人间之里 · 专属订阅');
+        expect(saved.type, ProfileType.file);
+        expect(saved.url, isEmpty);
+        expect(saved.autoUpdateDuration, const Duration(hours: 12));
+        expect(saved.subscriptionInfo?.upload, 1024);
+        expect(saved.subscriptionInfo?.download, 2048);
+        expect(saved.subscriptionInfo?.total, 10240);
+        expect(saved.subscriptionInfo?.expire, 1900000000);
+        expect(
+          container.read(currentProfileIdProvider),
+          youkomixManagedProfileId,
+        );
+        expect(container.read(profilesProvider).map((p) => p.id), [
+          youkomixManagedProfileId,
+        ]);
+        expect(rogueFile.existsSync(), isFalse);
+        verify(() => core.validateConfig(any())).called(1);
+      },
     );
-  }
 
-  Future<List<Map>> savedProxies(Profile profile) async {
-    final config = loadYaml(await (await profile.file).readAsString()) as Map;
-    return [for (final proxy in config['proxies'] as List) proxy as Map];
-  }
+    test('preserves selectedMap and unfoldSet across refreshes', () async {
+      const existing = Profile(
+        id: youkomixManagedProfileId,
+        label: '人间之里',
+        type: ProfileType.file,
+        autoUpdateDuration: Duration(hours: 6),
+        selectedMap: {'Proxy': 'JP-01'},
+        unfoldSet: {'Proxy'},
+        currentGroupName: 'Proxy',
+      );
+      container = buildContainer([existing]);
+      container.listen(currentProfileIdProvider, (_, _) {});
 
-  group('addProfileFromLink with a share link', () {
-    test('saves a file profile named after the proxy it holds', () async {
-      const link = 'vless://id@hk.example.com:443#HK';
-      decodesTo(link, [
-        {'name': 'HK', 'type': 'vless', 'server': 'hk.example.com'},
-      ]);
-
-      await container
+      final updated = await container
           .read(profilesActionProvider.notifier)
-          .addProfileFromLink(link);
+          .saveManagedProfile(
+            bytes: Uint8List.fromList(utf8.encode('proxies: []\n')),
+            label: '人间之里 · 更新',
+            subscriptionInfo: const SubscriptionInfo(),
+          );
 
-      final profile = container.read(profilesProvider).single;
-      expect(profile.type, ProfileType.file);
-      expect(profile.url, isEmpty);
-      expect(profile.label, 'HK');
-      expect(await savedProxies(profile), [
-        {'name': 'HK', 'type': 'vless', 'server': 'hk.example.com'},
-      ]);
-      verify(() => core.validateConfig(any())).called(1);
+      expect(updated.selectedMap, {'Proxy': 'JP-01'});
+      expect(updated.unfoldSet, {'Proxy'});
+      expect(updated.currentGroupName, 'Proxy');
     });
 
-    test('names an unnamed proxy after its server', () async {
-      const link = 'ss://YWVzLTEyOC1nY206cGFzcw@ss.example.com:8388';
-      decodesTo(link, [
-        {'name': '', 'type': 'ss', 'server': 'ss.example.com'},
-      ]);
+    test('rejects invalid YAML when core validation returns error', () async {
+      when(
+        () => core.validateConfig(any()),
+      ).thenAnswer((_) async => 'invalid proxy configuration');
+      container = buildContainer();
 
-      await container
-          .read(profilesActionProvider.notifier)
-          .addProfileFromLink(link, label: 'Mine');
-
-      final profile = container.read(profilesProvider).single;
-      expect(profile.label, 'Mine');
-      expect((await savedProxies(profile)).single['name'], 'ss.example.com');
-    });
-
-    test('moves a proxy off a name mihomo reserves', () async {
-      const link = 'trojan://pass@t.example.com:443#DIRECT';
-      decodesTo(link, [
-        {'name': 'DIRECT', 'type': 'trojan', 'server': 't.example.com'},
-      ]);
-
-      await container
-          .read(profilesActionProvider.notifier)
-          .addProfileFromLink(link);
-
-      final profile = container.read(profilesProvider).single;
-      expect((await savedProxies(profile)).single['name'], 'DIRECT-01');
-    });
-
-    testWidgets('reports a link no proxy can be read from and adds nothing', (
-      tester,
-    ) async {
-      const link = 'vmess://not-base64';
-      decodesTo(link, const []);
-      await pumpHost(tester);
-
-      await container
-          .read(profilesActionProvider.notifier)
-          .addProfileFromLink(link);
-      await tester.pump(const Duration(seconds: 1));
-      await tester.pumpAndSettle();
-
-      expect(find.text(currentAppLocalizations.shareLinksInvalid), findsOne);
+      await expectLater(
+        container
+            .read(profilesActionProvider.notifier)
+            .saveManagedProfile(
+              bytes: Uint8List.fromList(utf8.encode('bad: yaml')),
+              label: 'Broken',
+              subscriptionInfo: const SubscriptionInfo(),
+            ),
+        throwsA(anything),
+      );
       expect(container.read(profilesProvider), isEmpty);
-      verifyNever(() => core.validateConfig(any()));
     });
   });
 
-  group('addProfilesFromLinks with share links', () {
-    const links = [
-      'vless://id@hk.example.com:443#HK',
-      'trojan://pass@hk2.example.com:443#HK',
-      'ss://YWVzLTEyOC1nY206cGFzcw@ss.example.com:8388',
-    ];
-
-    test('makes one profile of all their proxies', () async {
-      when(() => core.decodeShareLinks(links)).thenAnswer(
-        (_) async => [
-          [
-            {'name': 'HK', 'type': 'vless', 'server': 'hk.example.com'},
-          ],
-          [
-            {'name': 'HK', 'type': 'trojan', 'server': 'hk2.example.com'},
-          ],
-          [
-            {'name': '', 'type': 'ss', 'server': 'ss.example.com'},
-          ],
-        ],
+  group('purgeUnmanagedProfiles and clearAllProfiles', () {
+    test('purgeUnmanagedProfiles keeps only managed profile', () async {
+      const managed = Profile(
+        id: youkomixManagedProfileId,
+        label: 'Managed',
+        autoUpdateDuration: Duration(hours: 6),
       );
+      const other = Profile(
+        id: 42,
+        label: 'ThirdParty',
+        autoUpdateDuration: Duration(hours: 6),
+      );
+      container = buildContainer([managed, other]);
+      container.listen(currentProfileIdProvider, (_, _) {});
+      container.read(currentProfileIdProvider.notifier).value = 42;
 
       await container
           .read(profilesActionProvider.notifier)
-          .addProfilesFromLinks(links);
+          .purgeUnmanagedProfiles();
 
-      final profile = container.read(profilesProvider).single;
-      expect(profile.type, ProfileType.file);
+      expect(container.read(profilesProvider).map((p) => p.id), [
+        youkomixManagedProfileId,
+      ]);
       expect(
-        profile.label,
-        currentAppLocalizations.proxiesProfileLabel('HK', 3),
+        container.read(currentProfileIdProvider),
+        youkomixManagedProfileId,
       );
-      expect(
-        [for (final proxy in await savedProxies(profile)) proxy['name']],
-        ['HK', 'HK-01', 'ss.example.com'],
-      );
-      verify(() => core.decodeShareLinks(links)).called(1);
     });
 
-    testWidgets('names the link no proxy can be read from and adds nothing', (
-      tester,
-    ) async {
-      when(() => core.decodeShareLinks(links)).thenAnswer(
-        (_) async => [
-          [
-            {'name': 'HK', 'type': 'vless', 'server': 'hk.example.com'},
-          ],
-          const [],
-          [
-            {'name': '', 'type': 'ss', 'server': 'ss.example.com'},
-          ],
-        ],
-      );
-      await pumpHost(tester);
+    test(
+      'clearAllProfiles removes managed profile and resets current id',
+      () async {
+        const managed = Profile(
+          id: youkomixManagedProfileId,
+          label: 'Managed',
+          autoUpdateDuration: Duration(hours: 6),
+        );
+        final file =
+            File(
+                await appPath.getProfilePath(
+                  youkomixManagedProfileId.toString(),
+                ),
+              )
+              ..createSync(recursive: true)
+              ..writeAsStringSync('proxies: []');
 
-      await container
-          .read(profilesActionProvider.notifier)
-          .addProfilesFromLinks(links);
-      await tester.pump(const Duration(seconds: 1));
-      await tester.pumpAndSettle();
+        container = buildContainer([managed]);
+        container.listen(currentProfileIdProvider, (_, _) {});
+        container.read(currentProfileIdProvider.notifier).value =
+            youkomixManagedProfileId;
 
-      final l10n = currentAppLocalizations;
-      expect(
-        find.text(
-          l10n.failedItem(links.first, l10n.shareLinkUnreadable(links[1])),
-        ),
-        findsOne,
-      );
-      expect(container.read(profilesProvider), isEmpty);
-      verifyNever(() => core.validateConfig(any()));
-    });
+        await container
+            .read(profilesActionProvider.notifier)
+            .clearAllProfiles();
+
+        expect(container.read(profilesProvider), isEmpty);
+        expect(container.read(currentProfileIdProvider), isNull);
+        expect(file.existsSync(), isFalse);
+      },
+    );
   });
 }

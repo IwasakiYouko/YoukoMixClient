@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   late StreamController<Uri> links;
-  late List<String> received;
+  late List<YoukoMixDeepLink> received;
 
   setUp(() {
     links = StreamController<Uri>.broadcast();
@@ -31,35 +31,48 @@ void main() {
     expect(LinkManager(), same(linkManager));
   });
 
-  test('an install-config link reports its url', () async {
+  test('an auth link reports its code and server url', () async {
     await listen();
 
+    await emit(
+      'youkomix://auth?code=otc_123&server=https%3A%2F%2Fpanel.example.com',
+    );
+
+    expect(received, [
+      const YoukoMixAuthDeepLink(
+        code: 'otc_123',
+        serverUrl: 'https://panel.example.com',
+      ),
+    ]);
+  });
+
+  test('a sync link reports YoukoMixSyncDeepLink', () async {
+    await listen();
+
+    await emit('youkomix://sync');
+
+    expect(received, [const YoukoMixSyncDeepLink()]);
+  });
+
+  test('an auth link without a code or with blank code is ignored', () async {
+    await listen();
+
+    await emit('youkomix://auth');
+    await emit('youkomix://auth?code=');
+    await emit('youkomix://auth?code=%20');
+    await emit('youkomix://auth?code=otc_123&server=javascript:alert(1)');
+
+    expect(received, isEmpty);
+  });
+
+  test('install-config and legacy schemes are strictly ignored', () async {
+    await listen();
+
+    await emit('youkomix://install-config?url=https://example.com/a.yaml');
     await emit('flclash://install-config?url=https://example.com/a.yaml');
-
-    expect(received, ['https://example.com/a.yaml']);
-  });
-
-  test('an install-config link without a url is ignored', () async {
-    await listen();
-
-    await emit('flclash://install-config');
-
-    expect(received, isEmpty);
-  });
-
-  test('an install-config link with a blank url is ignored', () async {
-    await listen();
-
-    await emit('flclash://install-config?url=');
-    await emit('flclash://install-config?url=%20');
-
-    expect(received, isEmpty);
-  });
-
-  test('a link for another host is ignored', () async {
-    await listen();
-
-    await emit('flclash://open-profile?url=https://example.com/a.yaml');
+    await emit('clash://install-config?url=https://example.com/a.yaml');
+    await emit('clashmeta://install-config?url=https://example.com/a.yaml');
+    await emit('youkomix://auth/extra?code=otc_123');
 
     expect(received, isEmpty);
   });
@@ -72,9 +85,9 @@ void main() {
 
     expect(linkManager.subscription, isNot(same(first)));
 
-    await emit('flclash://install-config?url=https://example.com/a.yaml');
+    await emit('youkomix://auth?code=otc_456');
 
-    expect(received, ['https://example.com/a.yaml']);
+    expect(received, [const YoukoMixAuthDeepLink(code: 'otc_456')]);
   });
 
   test(
@@ -82,23 +95,27 @@ void main() {
     () async {
       linkManager.seedInitialLink([
         '--verbose',
-        'flclash://install-config?url=https://example.com/a.yaml',
+        'youkomix://auth?code=otc_789',
       ]);
 
       expect(received, isEmpty);
 
       await listen();
 
-      expect(received, ['https://example.com/a.yaml']);
+      expect(received, [const YoukoMixAuthDeepLink(code: 'otc_789')]);
 
       await listen();
 
-      expect(received, ['https://example.com/a.yaml']);
+      expect(received, [const YoukoMixAuthDeepLink(code: 'otc_789')]);
     },
   );
 
   test('launch arguments without a known scheme are ignored', () async {
-    linkManager.seedInitialLink(['https://example.com/a.yaml', 'not a uri']);
+    linkManager.seedInitialLink([
+      'https://example.com/a.yaml',
+      'clash://install-config?url=https://example.com/a.yaml',
+      'not a uri',
+    ]);
 
     await listen();
 
@@ -110,64 +127,52 @@ void main() {
 
     linkManager.destroy();
     linkManager.destroy();
-    await emit('flclash://install-config?url=https://example.com/a.yaml');
+    await emit('youkomix://auth?code=otc_999');
 
     expect(linkManager.subscription, isNull);
     expect(received, isEmpty);
   });
 
-  group('profileUrlFromQrCodes', () {
-    test('accepts a bare url with surrounding whitespace', () {
+  group('youkoMixLinkFromQrCodes', () {
+    test('accepts youkomix auth and sync links with whitespace', () {
       expect(
-        profileUrlFromQrCodes([' https://example.com/sub?token=1\n']),
-        'https://example.com/sub?token=1',
+        youkoMixLinkFromQrCodes([' youkomix://auth?code=otc_1\n']),
+        'youkomix://auth?code=otc_1',
       );
+      expect(youkoMixLinkFromQrCodes([' youkomix://sync ']), 'youkomix://sync');
     });
 
-    test('unwraps the url of an install-config link for every scheme', () {
-      for (final scheme in ['clash', 'clashmeta', 'flclash']) {
+    test(
+      'strictly rejects third-party urls, install-config, and share links',
+      () {
         expect(
-          profileUrlFromQrCodes([
-            '$scheme://install-config?url=https%3A%2F%2Fexample.com%2Fa.yaml',
+          youkoMixLinkFromQrCodes([
+            null,
+            '',
+            'plain text',
+            'https://example.com/sub?token=1',
+            'http://example.com/sub.yaml',
+            'youkomix://install-config?url=https://example.com/a.yaml',
+            'flclash://install-config?url=https://example.com/a.yaml',
+            'clash://install-config?url=https://example.com/a.yaml',
+            'clashmeta://install-config?url=https://example.com/a.yaml',
+            'vmess://eyJhZGQiOiIxLjIuMy40In0=',
+            'vless://uuid@1.2.3.4:443#node',
+            'ss://YWVzLTI1Ni1nY206cGFzcw@1.2.3.4:8388',
           ]),
-          'https://example.com/a.yaml',
+          isNull,
         );
-      }
-    });
+      },
+    );
 
-    test('rejects codes that carry no profile url', () {
+    test('returns the first valid youkomix link', () {
       expect(
-        profileUrlFromQrCodes([
-          null,
-          '',
-          'plain text',
-          'https://',
-          'clash://install-config?url=not-a-url',
-          'clash://open-profile?url=https://example.com/a.yaml',
-          'other://install-config?url=https://example.com/a.yaml',
+        youkoMixLinkFromQrCodes([
+          'https://thirdparty.example/sub.yaml',
+          'youkomix://auth?code=first',
+          'youkomix://sync',
         ]),
-        isNull,
-      );
-    });
-
-    test('accepts a proxy share link', () {
-      expect(
-        profileUrlFromQrCodes([
-          'plain text',
-          'vmess://eyJhZGQiOiIxLjIuMy40In0=',
-        ]),
-        'vmess://eyJhZGQiOiIxLjIuMy40In0=',
-      );
-    });
-
-    test('returns the first code that carries a profile url', () {
-      expect(
-        profileUrlFromQrCodes([
-          'plain text',
-          'flclash://install-config?url=https://example.com/first.yaml',
-          'https://example.com/second.yaml',
-        ]),
-        'https://example.com/first.yaml',
+        'youkomix://auth?code=first',
       );
     });
   });

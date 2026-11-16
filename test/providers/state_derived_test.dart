@@ -373,7 +373,11 @@ void main() {
     final mobile = container.read(currentNavigationItemsStateProvider).value;
     expect(
       mobile.map((item) => item.label),
-      containsAll([PageLabel.dashboard, PageLabel.profiles, PageLabel.tools]),
+      containsAll([PageLabel.dashboard, PageLabel.tools]),
+    );
+    expect(
+      mobile.map((item) => item.label),
+      isNot(contains(PageLabel.profiles)),
     );
     expect(
       mobile.map((item) => item.label),
@@ -383,6 +387,17 @@ void main() {
     container
         .read(viewSizeProvider.notifier)
         .update((_) => const Size(1200, 800));
+    expect(
+      container
+          .read(currentNavigationItemsStateProvider)
+          .value
+          .map((item) => item.label),
+      isNot(contains(PageLabel.requests)),
+    );
+
+    container
+        .read(appSettingProvider.notifier)
+        .update((state) => state.copyWith(developerMode: true));
     container
         .read(currentPageLabelProvider.notifier)
         .toPage(PageLabel.requests);
