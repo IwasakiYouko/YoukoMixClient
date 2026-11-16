@@ -1,10 +1,13 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:drift/native.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/core/interface.dart';
 import 'package:fl_clash/database/database.dart';
+import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/youkomix/youkomix.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
@@ -25,7 +28,61 @@ class _MockApiClient extends Mock implements YoukoMixApiClient {}
 
 class _MockCoreHandler extends Mock implements CoreHandlerInterface {}
 
+class _MemorySessionStorage extends YoukoMixSessionStorage {
+  YoukoMixSession? saved;
+
+  @override
+  Future<YoukoMixSession?> loadSession() async => saved;
+
+  @override
+  Future<void> saveSession(YoukoMixSession session) async {
+    saved = session;
+    setActiveServerUrl(session.serverUrl);
+  }
+
+  @override
+  Future<void> clearSession() async {
+    saved = null;
+  }
+}
+
+class _MemoryProfilesAction extends ProfilesAction {
+  @override
+  Future<void> purgeUnmanagedProfiles() async {}
+
+  @override
+  Future<void> clearAllProfiles() async {
+    ref.read(profilesProvider.notifier).reorder(const []);
+    ref.read(currentProfileIdProvider.notifier).value = null;
+  }
+
+  @override
+  Future<Profile> saveManagedProfile({
+    required Uint8List bytes,
+    required String label,
+    required SubscriptionInfo subscriptionInfo,
+    Duration autoUpdateDuration = const Duration(hours: 6),
+    bool resetSelection = false,
+  }) async {
+    final saved = Profile(
+      id: youkomixManagedProfileId,
+      type: ProfileType.file,
+      label: label,
+      autoUpdate: true,
+      autoUpdateDuration: autoUpdateDuration,
+      subscriptionInfo: subscriptionInfo,
+    );
+    ref.read(profilesProvider.notifier).put(saved);
+    ref.read(currentProfileIdProvider.notifier).value =
+        youkomixManagedProfileId;
+    return saved;
+  }
+}
+
 class _IdleSetupAction extends SetupAction {
+  @override
+  void applyProfileDebounce({bool silence = false, bool force = false}) {}
+
   @override
   Future<bool> setRunning(bool isRun, {bool initialize = false}) async => false;
 }
@@ -37,7 +94,7 @@ void main() {
   late Database testDb;
   late _MockApiClient api;
   late _MockCoreHandler core;
-  late YoukoMixSessionStorage storage;
+  late _MemorySessionStorage storage;
   late List<String> launchedUrls;
 
   setUpAll(() async {
@@ -55,13 +112,62 @@ void main() {
     api = _MockApiClient();
     core = _MockCoreHandler();
     when(() => core.clearEffect(any())).thenAnswer((_) async {});
+    when(() => core.validateConfig(any())).thenAnswer((_) async => null);
+    when(
+      () => api.fetchBootstrap(
+        serverUrl: any(named: 'serverUrl'),
+        accessToken: any(named: 'accessToken'),
+      ),
+    ).thenAnswer(
+      (_) async => const YoukoMixBootstrap(
+        user: YoukoMixUser(
+          id: 1,
+          email: 'reimu@example.com',
+          userName: '博丽灵梦',
+          userClass: 2,
+          classExpire: '2028-01-01 00:00:00',
+          classExpireDays: 365,
+          money: '42.00',
+        ),
+        subscription: YoukoMixSubscriptionState(
+          exclusiveEnabled: true,
+          activeMode: 'exclusive',
+        ),
+        announcements: [
+          YoukoMixAnnouncement(
+            id: 10,
+            date: '2026-11-15',
+            title: '新节点上线',
+            markdown: '新增东京与香港专线节点',
+            isPinned: true,
+          ),
+        ],
+        links: YoukoMixLinks(panelUrl: 'https://panel.example.com/user'),
+      ),
+    );
+    when(
+      () => api.downloadSubscription(
+        serverUrl: any(named: 'serverUrl'),
+        accessToken: any(named: 'accessToken'),
+        mode: 'standard',
+        userAgent: any(named: 'userAgent'),
+      ),
+    ).thenAnswer(
+      (_) async => YoukoMixSubscriptionPayload(
+        bytes: Uint8List.fromList(
+          utf8.encode('proxies:\n  - {name: STD-01, type: ss}\n'),
+        ),
+        mode: 'standard',
+        title: '人间之里',
+      ),
+    );
     when(
       () => api.logout(
         serverUrl: any(named: 'serverUrl'),
         accessToken: any(named: 'accessToken'),
       ),
     ).thenAnswer((_) async {});
-    storage = YoukoMixSessionStorage(homeDirProvider: () async => home.path);
+    storage = _MemorySessionStorage();
     launchedUrls = [];
   });
 
@@ -130,6 +236,7 @@ void main() {
             return true;
           }),
           profilesProvider.overrideWith(() => TestProfiles([profile])),
+          profilesActionProvider.overrideWith(_MemoryProfilesAction.new),
           currentProfileIdProvider.overrideWithBuild(
             (_, _) => youkomixManagedProfileId,
           ),
@@ -170,6 +277,17 @@ void main() {
       expect(find.text('Lv.2'), findsOneWidget);
       expect(find.text('¥42.00'), findsOneWidget);
       expect(find.text('新节点上线'), findsOneWidget);
+      expect(find.text(l10n.youkomixSubChannel), findsOneWidget);
+      expect(find.text(l10n.youkomixSubChannelStandard), findsOneWidget);
+
+      await tester.tap(find.text(l10n.youkomixSubChannelStandard));
+      await tester.pumpAndSettle(const Duration(seconds: 4));
+      expect(
+        container.read(youkomixControllerProvider).isExclusiveActive,
+        isFalse,
+      );
+      expect(find.text(l10n.youkomixSubModeExclusive), findsNothing);
+      expect(find.text(l10n.youkomixSubModeStandard), findsNWidgets(2));
 
       await tester.tap(find.byTooltip(l10n.youkomixOpenPanel));
       await tester.pumpAndSettle();

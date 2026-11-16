@@ -1712,6 +1712,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixSessionExpired": MessageLookupByLibrary.simpleMessage(
       "登录状态已过期，请重新登录",
     ),
+    "youkomixSubChannel": MessageLookupByLibrary.simpleMessage("订阅类型"),
+    "youkomixSubChannelExclusive": MessageLookupByLibrary.simpleMessage("专属订阅"),
+    "youkomixSubChannelExclusiveDesc": MessageLookupByLibrary.simpleMessage(
+      "使用面板下发的专属定制节点配置",
+    ),
+    "youkomixSubChannelStandard": MessageLookupByLibrary.simpleMessage("普通订阅"),
+    "youkomixSubChannelStandardDesc": MessageLookupByLibrary.simpleMessage(
+      "使用账户等级对应的常规节点配置",
+    ),
     "youkomixSubModeExclusive": MessageLookupByLibrary.simpleMessage("专属订阅已绑定"),
     "youkomixSubModeStandard": MessageLookupByLibrary.simpleMessage("标准订阅模式"),
     "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage("同步节点"),

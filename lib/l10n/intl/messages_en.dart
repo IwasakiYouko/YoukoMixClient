@@ -2216,6 +2216,21 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixSessionExpired": MessageLookupByLibrary.simpleMessage(
       "Your session has expired. Please sign in again",
     ),
+    "youkomixSubChannel": MessageLookupByLibrary.simpleMessage(
+      "Subscription channel",
+    ),
+    "youkomixSubChannelExclusive": MessageLookupByLibrary.simpleMessage(
+      "Dedicated subscription",
+    ),
+    "youkomixSubChannelExclusiveDesc": MessageLookupByLibrary.simpleMessage(
+      "Use dedicated nodes provisioned by the panel",
+    ),
+    "youkomixSubChannelStandard": MessageLookupByLibrary.simpleMessage(
+      "Standard subscription",
+    ),
+    "youkomixSubChannelStandardDesc": MessageLookupByLibrary.simpleMessage(
+      "Use standard nodes included in your account plan",
+    ),
     "youkomixSubModeExclusive": MessageLookupByLibrary.simpleMessage(
       "Dedicated subscription bound",
     ),

@@ -77,6 +77,21 @@ class YoukoMixState {
 
   YoukoMixSubscriptionState? get subscription => bootstrap?.subscription;
 
+  YoukoMixSubPreference get preferredSubMode =>
+      session?.preferredSubMode ?? YoukoMixSubPreference.auto;
+
+  bool get isExclusiveActive {
+    final sub = subscription;
+    if (sub == null || !sub.exclusiveEnabled) {
+      return false;
+    }
+    return switch (preferredSubMode) {
+      YoukoMixSubPreference.exclusive => true,
+      YoukoMixSubPreference.standard => false,
+      YoukoMixSubPreference.auto => sub.isExclusive,
+    };
+  }
+
   List<YoukoMixAnnouncement> get announcements =>
       bootstrap?.announcements ?? const [];
 
@@ -344,9 +359,26 @@ class YoukoMixController extends Notifier<YoukoMixState> {
     return ref.read(youkomixUrlLauncherProvider)(url);
   }
 
+  Future<bool> switchSubscriptionMode(YoukoMixSubPreference targetMode) async {
+    final currentSession = state.session;
+    if (currentSession == null || state.isSyncing || state.isBusy) {
+      return false;
+    }
+    final wantExclusive = targetMode == YoukoMixSubPreference.exclusive;
+    if (wantExclusive && !(state.subscription?.exclusiveEnabled ?? false)) {
+      return false;
+    }
+    if (state.isExclusiveActive == wantExclusive &&
+        currentSession.preferredSubMode == targetMode) {
+      return true;
+    }
+    return syncSubscription(showFeedback: true, overridePreference: targetMode);
+  }
+
   Future<bool> syncSubscription({
     bool showFeedback = false,
     YoukoMixBootstrap? reuseBootstrap,
+    YoukoMixSubPreference? overridePreference,
   }) async {
     final currentSession = state.session;
     if (currentSession == null || state.isSyncing) {
@@ -358,20 +390,43 @@ class YoukoMixController extends Notifier<YoukoMixState> {
         .start(youkomixSyncUpdatingKey);
     state = state.copyWith(isSyncing: true, clearError: true);
     try {
-      final bootstrap =
+      final rawBootstrap =
           reuseBootstrap ??
           await _api.fetchBootstrap(
             serverUrl: currentSession.serverUrl,
             accessToken: currentSession.accessToken,
           );
-      final payload = await _api.downloadSubscription(
-        serverUrl: currentSession.serverUrl,
-        accessToken: currentSession.accessToken,
-        userAgent: _resolveUserAgent(),
-      );
+      final basePreference =
+          overridePreference ?? currentSession.preferredSubMode;
+      final effectivePreference =
+          (!rawBootstrap.subscription.exclusiveEnabled &&
+              basePreference == YoukoMixSubPreference.exclusive)
+          ? YoukoMixSubPreference.auto
+          : basePreference;
+      final requestMode = effectivePreference.apiValue;
+      final payload = requestMode == 'auto'
+          ? await _api.downloadSubscription(
+              serverUrl: currentSession.serverUrl,
+              accessToken: currentSession.accessToken,
+              userAgent: _resolveUserAgent(),
+            )
+          : await _api.downloadSubscription(
+              serverUrl: currentSession.serverUrl,
+              accessToken: currentSession.accessToken,
+              mode: requestMode,
+              userAgent: _resolveUserAgent(),
+            );
       if (!ref.mounted || syncEpoch != _authEpoch) {
         return false;
       }
+      final resolvedMode = payload.mode == 'exclusive'
+          ? 'exclusive'
+          : 'standard';
+      final bootstrap = rawBootstrap.copyWith(
+        subscription: rawBootstrap.subscription.copyWith(
+          activeMode: resolvedMode,
+        ),
+      );
       final expireEpoch =
           (bootstrap.user.classExpireDate?.millisecondsSinceEpoch ?? 0) ~/ 1000;
       final subInfo = bootstrap.traffic.total > 0 || expireEpoch > 0
@@ -383,10 +438,15 @@ class YoukoMixController extends Notifier<YoukoMixState> {
             )
           : SubscriptionInfo.formHString(payload.userInfoHeader);
       final label =
-          bootstrap.subscription.isExclusive &&
+          resolvedMode == 'exclusive' &&
               bootstrap.subscription.exclusiveTitle.trim().isNotEmpty
           ? bootstrap.subscription.exclusiveTitle.trim()
           : (payload.title.trim().isNotEmpty ? payload.title.trim() : appName);
+
+      final previousMode = currentSession.bootstrap?.subscription.activeMode;
+      final modeChanged =
+          overridePreference != null ||
+          (previousMode != null && previousMode != resolvedMode);
 
       await ref
           .read(profilesActionProvider.notifier)
@@ -395,13 +455,17 @@ class YoukoMixController extends Notifier<YoukoMixState> {
             label: label,
             subscriptionInfo: subInfo,
             autoUpdateDuration: Duration(hours: payload.updateIntervalHours),
+            resetSelection: modeChanged,
           );
       if (!ref.mounted || syncEpoch != _authEpoch) {
         await ref.read(profilesActionProvider.notifier).clearAllProfiles();
         return false;
       }
 
-      final updatedSession = currentSession.copyWith(bootstrap: bootstrap);
+      final updatedSession = currentSession.copyWith(
+        preferredSubMode: effectivePreference,
+        bootstrap: bootstrap,
+      );
       await _storage.saveSession(updatedSession);
       if (!ref.mounted || syncEpoch != _authEpoch) {
         await _storage.clearSession();
@@ -475,10 +539,12 @@ class YoukoMixController extends Notifier<YoukoMixState> {
         code: code,
         serverUrl: serverUrl,
       ),
-      YoukoMixSyncDeepLink() =>
-        state.isAuthenticated
-            ? syncSubscription(showFeedback: true)
-            : Future.value(false),
+      YoukoMixSyncDeepLink(:final mode) =>
+        !state.isAuthenticated
+            ? Future.value(false)
+            : (mode != null
+                  ? switchSubscriptionMode(mode)
+                  : syncSubscription(showFeedback: true)),
     };
   }
 

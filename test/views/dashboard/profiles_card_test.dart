@@ -198,6 +198,14 @@ void main() {
       expect(find.text('42 GB / 100 GB'), findsOneWidget);
       expect(find.textContaining('30 days left'), findsOneWidget);
       expect(find.byTooltip(l10n.youkomixSyncNodes), findsOneWidget);
+      expect(find.byTooltip(l10n.youkomixSubChannel), findsOneWidget);
+
+      await tester.tap(find.byTooltip(l10n.youkomixSubChannel));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.youkomixSubChannelStandard), findsOneWidget);
+      // Dismiss popup menu before tapping account card.
+      await tester.tapAt(const Offset(4, 4));
+      await tester.pumpAndSettle();
 
       await tester.tap(label('博丽灵梦'));
       await tester.pumpAndSettle();

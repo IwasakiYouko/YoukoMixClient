@@ -2330,6 +2330,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixSessionExpired": MessageLookupByLibrary.simpleMessage(
       "Сессия истекла. Войдите снова",
     ),
+    "youkomixSubChannel": MessageLookupByLibrary.simpleMessage("Тип подписки"),
+    "youkomixSubChannelExclusive": MessageLookupByLibrary.simpleMessage(
+      "Выделенная подписка",
+    ),
+    "youkomixSubChannelExclusiveDesc": MessageLookupByLibrary.simpleMessage(
+      "Использовать персональную конфигурацию узлов панели",
+    ),
+    "youkomixSubChannelStandard": MessageLookupByLibrary.simpleMessage(
+      "Обычная подписка",
+    ),
+    "youkomixSubChannelStandardDesc": MessageLookupByLibrary.simpleMessage(
+      "Использовать стандартные узлы вашего тарифа",
+    ),
     "youkomixSubModeExclusive": MessageLookupByLibrary.simpleMessage(
       "Выделенная подписка привязана",
     ),

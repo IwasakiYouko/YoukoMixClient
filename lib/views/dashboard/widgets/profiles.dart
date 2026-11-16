@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:fl_clash/common/common.dart';
@@ -141,6 +142,10 @@ class ProfilesCard extends ConsumerWidget {
 
     final canSync = auth.isAuthenticated || profile != null;
     final sync = canSync ? _SyncButton(profile: profile) : null;
+    final channelSwitch =
+        !compact && auth.isAuthenticated && (sub?.exclusiveEnabled ?? false)
+        ? const _SubChannelButton()
+        : null;
 
     final nameRow = Row(
       spacing: 8,
@@ -175,7 +180,7 @@ class ProfilesCard extends ConsumerWidget {
 
     final modeLabel = sub == null
         ? null
-        : (sub.isExclusive
+        : (auth.isExclusiveActive
               ? appLocalizations.youkomixSubModeExclusive
               : appLocalizations.youkomixSubModeStandard);
 
@@ -193,14 +198,16 @@ class ProfilesCard extends ConsumerWidget {
             title: appLocalizations.youkomixAccount,
             chevron: mobile,
             trailing: [
-              if (mobile)
-                ?sync
-              else
+              if (mobile) ...[
+                ?channelSwitch,
+                ?sync,
+              ] else
                 Transform.translate(
                   offset: const Offset(8, 0),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      ?channelSwitch,
                       ?sync,
                       DashboardIconButton(
                         glyph: AppGlyphs.chevronForward,
@@ -276,6 +283,54 @@ const _rowGap = 12.0;
 
 double _widthOf(String text, TextStyle style) =>
     globalState.measure.computeTextSize(Text(text, style: style)).width;
+
+class _SubChannelButton extends ConsumerWidget {
+  const _SubChannelButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(youkomixControllerProvider);
+    final sub = auth.subscription;
+    if (!auth.isAuthenticated || sub == null || !sub.exclusiveEnabled) {
+      return const SizedBox.shrink();
+    }
+    final appLocalizations = context.appLocalizations;
+    final isExclusive = auth.isExclusiveActive;
+    final disabled = auth.isSyncing || auth.isBusy;
+    final exclusiveLabel = sub.exclusiveTitle.trim().isNotEmpty
+        ? sub.exclusiveTitle.trim()
+        : appLocalizations.youkomixSubChannelExclusive;
+    return PopupAnchor(
+      targetBuilder: (open) => DashboardIconButton(
+        glyph: AppGlyphs.swap,
+        tooltip: appLocalizations.youkomixSubChannel,
+        onPressed: disabled ? null : open,
+      ),
+      popupBuilder: (_) => PopupMenu(
+        items: [
+          PopupMenuItem(
+            label: exclusiveLabel,
+            checked: isExclusive,
+            onPressed: () => unawaited(
+              ref
+                  .read(youkomixControllerProvider.notifier)
+                  .switchSubscriptionMode(YoukoMixSubPreference.exclusive),
+            ),
+          ),
+          PopupMenuItem(
+            label: appLocalizations.youkomixSubChannelStandard,
+            checked: !isExclusive,
+            onPressed: () => unawaited(
+              ref
+                  .read(youkomixControllerProvider.notifier)
+                  .switchSubscriptionMode(YoukoMixSubPreference.standard),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _SyncButton extends ConsumerWidget {
   const _SyncButton({required this.profile});

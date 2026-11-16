@@ -72,6 +72,7 @@ class ProfilesAction extends _$ProfilesAction {
     required String label,
     required SubscriptionInfo subscriptionInfo,
     Duration autoUpdateDuration = const Duration(hours: 6),
+    bool resetSelection = false,
   }) async {
     await purgeUnmanagedProfiles();
     final existing = ref
@@ -85,9 +86,11 @@ class ProfilesAction extends _$ProfilesAction {
       autoUpdate: true,
       autoUpdateDuration: autoUpdateDuration,
       subscriptionInfo: subscriptionInfo,
-      selectedMap: existing?.selectedMap ?? const {},
-      unfoldSet: existing?.unfoldSet ?? const {},
-      currentGroupName: existing?.currentGroupName,
+      selectedMap: resetSelection
+          ? const {}
+          : (existing?.selectedMap ?? const {}),
+      unfoldSet: resetSelection ? const {} : (existing?.unfoldSet ?? const {}),
+      currentGroupName: resetSelection ? null : existing?.currentGroupName,
       extendType: existing?.extendType ?? ExtendType.standard,
       scriptId: existing?.scriptId,
       matchTarget: existing?.matchTarget,
@@ -103,9 +106,9 @@ class ProfilesAction extends _$ProfilesAction {
     final merged = latest == null
         ? saved
         : saved.copyWith(
-            selectedMap: latest.selectedMap,
-            unfoldSet: latest.unfoldSet,
-            currentGroupName: latest.currentGroupName,
+            selectedMap: resetSelection ? const {} : latest.selectedMap,
+            unfoldSet: resetSelection ? const {} : latest.unfoldSet,
+            currentGroupName: resetSelection ? null : latest.currentGroupName,
             extendType: latest.extendType,
             scriptId: latest.scriptId,
             matchTarget: latest.matchTarget,

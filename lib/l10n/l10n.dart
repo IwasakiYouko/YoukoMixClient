@@ -9358,6 +9358,56 @@ class AppLocalizations {
     );
   }
 
+  /// `Subscription channel`
+  String get youkomixSubChannel {
+    return Intl.message(
+      'Subscription channel',
+      name: 'youkomixSubChannel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Dedicated subscription`
+  String get youkomixSubChannelExclusive {
+    return Intl.message(
+      'Dedicated subscription',
+      name: 'youkomixSubChannelExclusive',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Use dedicated nodes provisioned by the panel`
+  String get youkomixSubChannelExclusiveDesc {
+    return Intl.message(
+      'Use dedicated nodes provisioned by the panel',
+      name: 'youkomixSubChannelExclusiveDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Standard subscription`
+  String get youkomixSubChannelStandard {
+    return Intl.message(
+      'Standard subscription',
+      name: 'youkomixSubChannelStandard',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Use standard nodes included in your account plan`
+  String get youkomixSubChannelStandardDesc {
+    return Intl.message(
+      'Use standard nodes included in your account plan',
+      name: 'youkomixSubChannelStandardDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Announcements`
   String get youkomixAnnouncements {
     return Intl.message(

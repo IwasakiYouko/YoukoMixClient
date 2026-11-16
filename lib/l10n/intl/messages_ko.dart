@@ -1868,6 +1868,17 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixSessionExpired": MessageLookupByLibrary.simpleMessage(
       "세션이 만료되었습니다. 다시 로그인하세요",
     ),
+    "youkomixSubChannel": MessageLookupByLibrary.simpleMessage("구독 유형"),
+    "youkomixSubChannelExclusive": MessageLookupByLibrary.simpleMessage(
+      "전용 구독",
+    ),
+    "youkomixSubChannelExclusiveDesc": MessageLookupByLibrary.simpleMessage(
+      "패널에서 제공하는 전용 맞춤 노드 구성을 사용합니다",
+    ),
+    "youkomixSubChannelStandard": MessageLookupByLibrary.simpleMessage("일반 구독"),
+    "youkomixSubChannelStandardDesc": MessageLookupByLibrary.simpleMessage(
+      "계정 등급에 해당하는 기본 노드 구성을 사용합니다",
+    ),
     "youkomixSubModeExclusive": MessageLookupByLibrary.simpleMessage(
       "전용 구독 연결됨",
     ),
