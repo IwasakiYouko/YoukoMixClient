@@ -73,6 +73,11 @@ class YoukoMixAccountSheet extends ConsumerWidget {
     final user = bootstrap?.user ?? const YoukoMixUser();
     final subscription =
         bootstrap?.subscription ?? const YoukoMixSubscriptionState();
+    final isExclusive = authState.isExclusiveActive;
+    final channelLocked = authState.isSyncing || authState.isBusy;
+    final exclusiveChannelTitle = subscription.exclusiveTitle.trim().isNotEmpty
+        ? subscription.exclusiveTitle.trim()
+        : appLocalizations.youkomixSubChannelExclusive;
     final announcements = bootstrap?.announcements ?? const [];
     final subscriptionInfo = profile?.subscriptionInfo;
     final expireDate = user.classExpireDate;
@@ -127,11 +132,79 @@ class YoukoMixAccountSheet extends ConsumerWidget {
                   levelLabel: appLocalizations.youkomixLevelBadge(
                     user.userClass,
                   ),
-                  modeLabel: subscription.isExclusive
+                  modeLabel: isExclusive
                       ? appLocalizations.youkomixSubModeExclusive
                       : appLocalizations.youkomixSubModeStandard,
-                  isExclusive: subscription.isExclusive,
+                  isExclusive: isExclusive,
                 ),
+                if (subscription.exclusiveEnabled)
+                  generateSection(
+                    title: appLocalizations.youkomixSubChannel,
+                    items: [
+                      ListItem(
+                        leading: GlyphIcon(
+                          AppGlyphs.verified,
+                          fill: isExclusive ? 1 : 0,
+                          color: isExclusive
+                              ? colorScheme.primary
+                              : colorScheme.onSurfaceVariant,
+                        ),
+                        title: Text(
+                          exclusiveChannelTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          appLocalizations.youkomixSubChannelExclusiveDesc,
+                        ),
+                        trailing: isExclusive
+                            ? GlyphIcon(
+                                AppGlyphs.check,
+                                color: colorScheme.primary,
+                              )
+                            : null,
+                        onTap: channelLocked
+                            ? null
+                            : () => unawaited(
+                                ref
+                                    .read(youkomixControllerProvider.notifier)
+                                    .switchSubscriptionMode(
+                                      YoukoMixSubPreference.exclusive,
+                                    ),
+                              ),
+                      ),
+                      ListItem(
+                        leading: GlyphIcon(
+                          AppGlyphs.vpn,
+                          fill: !isExclusive ? 1 : 0,
+                          color: !isExclusive
+                              ? colorScheme.primary
+                              : colorScheme.onSurfaceVariant,
+                        ),
+                        title: Text(
+                          appLocalizations.youkomixSubChannelStandard,
+                        ),
+                        subtitle: Text(
+                          appLocalizations.youkomixSubChannelStandardDesc,
+                        ),
+                        trailing: !isExclusive
+                            ? GlyphIcon(
+                                AppGlyphs.check,
+                                color: colorScheme.primary,
+                              )
+                            : null,
+                        onTap: channelLocked
+                            ? null
+                            : () => unawaited(
+                                ref
+                                    .read(youkomixControllerProvider.notifier)
+                                    .switchSubscriptionMode(
+                                      YoukoMixSubPreference.standard,
+                                    ),
+                              ),
+                      ),
+                    ],
+                  ),
                 if (subscriptionInfo != null && subscriptionInfo.total > 0)
                   generateSection(
                     title: appLocalizations.subscriptionInfo,

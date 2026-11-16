@@ -64,6 +64,7 @@ class _MemoryProfilesAction extends ProfilesAction {
     required String label,
     required SubscriptionInfo subscriptionInfo,
     Duration autoUpdateDuration = const Duration(hours: 6),
+    bool resetSelection = false,
   }) async {
     final saved = Profile(
       id: youkomixManagedProfileId,

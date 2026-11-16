@@ -1898,6 +1898,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixSessionExpired": MessageLookupByLibrary.simpleMessage(
       "セッションの有効期限が切れました。再度ログインしてください",
     ),
+    "youkomixSubChannel": MessageLookupByLibrary.simpleMessage("サブスクリプション種別"),
+    "youkomixSubChannelExclusive": MessageLookupByLibrary.simpleMessage(
+      "専用サブスクリプション",
+    ),
+    "youkomixSubChannelExclusiveDesc": MessageLookupByLibrary.simpleMessage(
+      "パネルから配布された専用ノード構成を使用します",
+    ),
+    "youkomixSubChannelStandard": MessageLookupByLibrary.simpleMessage(
+      "通常サブスクリプション",
+    ),
+    "youkomixSubChannelStandardDesc": MessageLookupByLibrary.simpleMessage(
+      "アカウントプランに対応する標準ノード構成を使用します",
+    ),
     "youkomixSubModeExclusive": MessageLookupByLibrary.simpleMessage(
       "専用サブスクリプション連携済み",
     ),

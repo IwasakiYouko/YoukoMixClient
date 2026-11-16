@@ -1,3 +1,4 @@
+import 'package:fl_clash/common/link.dart';
 import 'package:fl_clash/models/youkomix.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -146,9 +147,36 @@ void main() {
       expect(decoded, session);
       expect(decoded.hashCode, session.hashCode);
 
-      final updated = session.copyWith(accessToken: 'ymx_next');
+      final updated = session.copyWith(
+        accessToken: 'ymx_next',
+        preferredSubMode: YoukoMixSubPreference.standard,
+        bootstrap: session.bootstrap?.copyWith(
+          subscription: session.bootstrap!.subscription.copyWith(
+            activeMode: 'standard',
+          ),
+        ),
+      );
       expect(updated.accessToken, 'ymx_next');
+      expect(updated.preferredSubMode, YoukoMixSubPreference.standard);
+      expect(updated.bootstrap?.subscription.activeMode, 'standard');
       expect(updated == session, isFalse);
+      expect(YoukoMixSession.fromJson(updated.toJson()), updated);
+      expect(
+        YoukoMixSubPreference.fromString('EXCLUSIVE'),
+        YoukoMixSubPreference.exclusive,
+      );
+      expect(
+        YoukoMixSubPreference.fromString('unknown'),
+        YoukoMixSubPreference.auto,
+      );
+      expect(
+        parseYoukoMixDeepLink('youkomix://sync?mode=standard&format=/clash'),
+        const YoukoMixSyncDeepLink(mode: YoukoMixSubPreference.standard),
+      );
+      expect(
+        parseYoukoMixDeepLink('youkomix://sync?mode=exclusive'),
+        const YoukoMixSyncDeepLink(mode: YoukoMixSubPreference.exclusive),
+      );
     });
   });
 }

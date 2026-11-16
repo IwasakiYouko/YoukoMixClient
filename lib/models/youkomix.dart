@@ -302,6 +302,24 @@ class YoukoMixTraffic {
       Object.hash(upload, download, used, today, total, remaining);
 }
 
+enum YoukoMixSubPreference {
+  auto('auto'),
+  exclusive('exclusive'),
+  standard('standard');
+
+  final String apiValue;
+
+  const YoukoMixSubPreference(this.apiValue);
+
+  static YoukoMixSubPreference fromString(Object? raw) {
+    return switch (raw?.toString().trim().toLowerCase()) {
+      'exclusive' => YoukoMixSubPreference.exclusive,
+      'standard' => YoukoMixSubPreference.standard,
+      _ => YoukoMixSubPreference.auto,
+    };
+  }
+}
+
 @immutable
 class YoukoMixSubscriptionState {
   final bool enabled;
@@ -319,6 +337,22 @@ class YoukoMixSubscriptionState {
   });
 
   bool get isExclusive => activeMode == 'exclusive';
+
+  YoukoMixSubscriptionState copyWith({
+    bool? enabled,
+    bool? exclusiveEnabled,
+    String? exclusiveTitle,
+    String? activeMode,
+    int? updateIntervalHours,
+  }) {
+    return YoukoMixSubscriptionState(
+      enabled: enabled ?? this.enabled,
+      exclusiveEnabled: exclusiveEnabled ?? this.exclusiveEnabled,
+      exclusiveTitle: exclusiveTitle ?? this.exclusiveTitle,
+      activeMode: activeMode ?? this.activeMode,
+      updateIntervalHours: updateIntervalHours ?? this.updateIntervalHours,
+    );
+  }
 
   factory YoukoMixSubscriptionState.fromJson(Map<String, Object?> json) {
     final mode = _toString(json['active_mode']);
@@ -464,6 +498,22 @@ class YoukoMixBootstrap {
     this.links = const YoukoMixLinks(),
   });
 
+  YoukoMixBootstrap copyWith({
+    YoukoMixUser? user,
+    YoukoMixTraffic? traffic,
+    YoukoMixSubscriptionState? subscription,
+    List<YoukoMixAnnouncement>? announcements,
+    YoukoMixLinks? links,
+  }) {
+    return YoukoMixBootstrap(
+      user: user ?? this.user,
+      traffic: traffic ?? this.traffic,
+      subscription: subscription ?? this.subscription,
+      announcements: announcements ?? this.announcements,
+      links: links ?? this.links,
+    );
+  }
+
   factory YoukoMixBootstrap.fromJson(Map<String, Object?> json) {
     final userRaw = json['user'];
     final trafficRaw = json['traffic'];
@@ -547,12 +597,14 @@ class YoukoMixSession {
   final String serverUrl;
   final String accessToken;
   final int expiresAt;
+  final YoukoMixSubPreference preferredSubMode;
   final YoukoMixBootstrap? bootstrap;
 
   const YoukoMixSession({
     required this.serverUrl,
     required this.accessToken,
     this.expiresAt = 0,
+    this.preferredSubMode = YoukoMixSubPreference.auto,
     this.bootstrap,
   });
 
@@ -560,12 +612,14 @@ class YoukoMixSession {
     String? serverUrl,
     String? accessToken,
     int? expiresAt,
+    YoukoMixSubPreference? preferredSubMode,
     YoukoMixBootstrap? bootstrap,
   }) {
     return YoukoMixSession(
       serverUrl: serverUrl ?? this.serverUrl,
       accessToken: accessToken ?? this.accessToken,
       expiresAt: expiresAt ?? this.expiresAt,
+      preferredSubMode: preferredSubMode ?? this.preferredSubMode,
       bootstrap: bootstrap ?? this.bootstrap,
     );
   }
@@ -583,6 +637,9 @@ class YoukoMixSession {
       serverUrl: rawServer.isNotEmpty ? rawServer : fallbackServerUrl,
       accessToken: rawToken,
       expiresAt: _toInt(json['expires_at']),
+      preferredSubMode: YoukoMixSubPreference.fromString(
+        json['preferred_sub_mode'],
+      ),
       bootstrap: bootstrapRaw is Map
           ? YoukoMixBootstrap.fromJson(Map<String, Object?>.from(bootstrapRaw))
           : null,
@@ -593,6 +650,7 @@ class YoukoMixSession {
     'server_url': serverUrl,
     'access_token': accessToken,
     'expires_at': expiresAt,
+    'preferred_sub_mode': preferredSubMode.apiValue,
     if (bootstrap != null) 'bootstrap': bootstrap!.toJson(),
   };
 
@@ -603,10 +661,17 @@ class YoukoMixSession {
           other.serverUrl == serverUrl &&
           other.accessToken == accessToken &&
           other.expiresAt == expiresAt &&
+          other.preferredSubMode == preferredSubMode &&
           other.bootstrap == bootstrap;
 
   @override
-  int get hashCode => Object.hash(serverUrl, accessToken, expiresAt, bootstrap);
+  int get hashCode => Object.hash(
+    serverUrl,
+    accessToken,
+    expiresAt,
+    preferredSubMode,
+    bootstrap,
+  );
 }
 
 sealed class YoukoMixLoginOutcome {

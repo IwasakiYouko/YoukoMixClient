@@ -363,4 +363,163 @@ void main() {
       ).called(1);
     },
   );
+
+  test(
+    'switches between exclusive and standard subscription modes, persists choice, and falls back when exclusive is revoked',
+    () async {
+      final session = YoukoMixSession(
+        serverUrl: 'https://panel.example.com',
+        accessToken: 'ymx_switch_tok',
+        expiresAt: 1999999999,
+        bootstrap: _bootstrap(),
+      );
+      when(
+        () => api.fetchBootstrap(
+          serverUrl: 'https://panel.example.com',
+          accessToken: 'ymx_switch_tok',
+        ),
+      ).thenAnswer((_) async => _bootstrap());
+      when(
+        () => api.downloadSubscription(
+          serverUrl: 'https://panel.example.com',
+          accessToken: 'ymx_switch_tok',
+          mode: 'standard',
+          userAgent: any(named: 'userAgent'),
+        ),
+      ).thenAnswer(
+        (_) async => YoukoMixSubscriptionPayload(
+          bytes: Uint8List.fromList(
+            utf8.encode('proxies:\n  - {name: STD-01, type: ss}\n'),
+          ),
+          mode: 'standard',
+          title: '人间之里',
+          updateIntervalHours: 6,
+        ),
+      );
+      when(
+        () => api.downloadSubscription(
+          serverUrl: 'https://panel.example.com',
+          accessToken: 'ymx_switch_tok',
+          mode: 'exclusive',
+          userAgent: any(named: 'userAgent'),
+        ),
+      ).thenAnswer((_) async => _payload());
+
+      final container = buildContainer(
+        initialSession: session,
+        profiles: const [
+          Profile(
+            id: youkomixManagedProfileId,
+            label: '人间之里 · 专属订阅',
+            selectedMap: {'Proxy': 'HK-01'},
+            currentGroupName: 'Proxy',
+            autoUpdateDuration: Duration(hours: 6),
+          ),
+        ],
+      );
+      final notifier = container.read(youkomixControllerProvider.notifier);
+
+      expect(
+        container.read(youkomixControllerProvider).isExclusiveActive,
+        isTrue,
+      );
+
+      // Pinning exclusive while already active preserves existing group selection.
+      expect(
+        await notifier.switchSubscriptionMode(YoukoMixSubPreference.exclusive),
+        isTrue,
+      );
+      expect(container.read(profilesProvider).single.selectedMap, const {
+        'Proxy': 'HK-01',
+      });
+
+      final switchedToStd = await notifier.switchSubscriptionMode(
+        YoukoMixSubPreference.standard,
+      );
+      expect(switchedToStd, isTrue);
+
+      final afterStd = container.read(youkomixControllerProvider);
+      expect(afterStd.isExclusiveActive, isFalse);
+      expect(afterStd.preferredSubMode, YoukoMixSubPreference.standard);
+      expect(afterStd.subscription?.exclusiveEnabled, isTrue);
+      expect(afterStd.subscription?.activeMode, 'standard');
+
+      final stdProfile = container.read(profilesProvider).single;
+      expect(stdProfile.label, '人间之里');
+      expect(stdProfile.selectedMap, isEmpty);
+      expect(stdProfile.currentGroupName, isNull);
+
+      final persistedStd = await storage.loadSession();
+      expect(persistedStd?.preferredSubMode, YoukoMixSubPreference.standard);
+
+      // Re-invoking a deep link with the same mode still performs a fresh sync.
+      clearInteractions(api);
+      expect(
+        await notifier.handleRawDeepLink('youkomix://sync?mode=standard'),
+        isTrue,
+      );
+      verify(
+        () => api.downloadSubscription(
+          serverUrl: 'https://panel.example.com',
+          accessToken: 'ymx_switch_tok',
+          mode: 'standard',
+          userAgent: any(named: 'userAgent'),
+        ),
+      ).called(1);
+
+      // Subsequent regular sync preserves standard mode without reverting to exclusive.
+      expect(await notifier.syncSubscription(), isTrue);
+      expect(
+        container.read(youkomixControllerProvider).isExclusiveActive,
+        isFalse,
+      );
+
+      // Switch back to exclusive via deep link.
+      expect(
+        await notifier.handleRawDeepLink('youkomix://sync?mode=exclusive'),
+        isTrue,
+      );
+      expect(
+        container.read(youkomixControllerProvider).isExclusiveActive,
+        isTrue,
+      );
+      expect(container.read(profilesProvider).single.label, '人间之里 · 专属订阅');
+
+      // If panel later revokes exclusive subscription, sync falls back cleanly to auto/standard.
+      when(
+        () => api.fetchBootstrap(
+          serverUrl: 'https://panel.example.com',
+          accessToken: 'ymx_switch_tok',
+        ),
+      ).thenAnswer(
+        (_) async => _bootstrap().copyWith(
+          subscription: const YoukoMixSubscriptionState(
+            exclusiveEnabled: false,
+            activeMode: 'standard',
+          ),
+        ),
+      );
+      when(
+        () => api.downloadSubscription(
+          serverUrl: 'https://panel.example.com',
+          accessToken: 'ymx_switch_tok',
+          userAgent: any(named: 'userAgent'),
+        ),
+      ).thenAnswer(
+        (_) async => YoukoMixSubscriptionPayload(
+          bytes: Uint8List.fromList(
+            utf8.encode('proxies:\n  - {name: STD-01, type: ss}\n'),
+          ),
+          mode: 'standard',
+          title: '人间之里',
+          updateIntervalHours: 6,
+        ),
+      );
+
+      expect(await notifier.syncSubscription(), isTrue);
+      final afterRevoke = container.read(youkomixControllerProvider);
+      expect(afterRevoke.isExclusiveActive, isFalse);
+      expect(afterRevoke.preferredSubMode, YoukoMixSubPreference.auto);
+    },
+  );
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
+import 'package:fl_clash/models/youkomix.dart';
 import 'package:flutter/foundation.dart';
 
 import 'print.dart';
@@ -30,14 +31,17 @@ final class YoukoMixAuthDeepLink extends YoukoMixDeepLink {
 
 @immutable
 final class YoukoMixSyncDeepLink extends YoukoMixDeepLink {
-  const YoukoMixSyncDeepLink();
+  final YoukoMixSubPreference? mode;
+
+  const YoukoMixSyncDeepLink({this.mode});
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is YoukoMixSyncDeepLink;
+      identical(this, other) ||
+      other is YoukoMixSyncDeepLink && other.mode == mode;
 
   @override
-  int get hashCode => (YoukoMixSyncDeepLink).hashCode;
+  int get hashCode => Object.hash(YoukoMixSyncDeepLink, mode);
 }
 
 YoukoMixDeepLink? parseYoukoMixDeepLink(String? raw) {
@@ -79,7 +83,13 @@ YoukoMixDeepLink? parseYoukoMixDeepLinkUri(Uri uri) {
       }
       return YoukoMixAuthDeepLink(code: code, serverUrl: serverUrl);
     case 'sync':
-      return const YoukoMixSyncDeepLink();
+      final rawMode = uri.queryParameters['mode']?.trim().toLowerCase();
+      final mode = switch (rawMode) {
+        'exclusive' => YoukoMixSubPreference.exclusive,
+        'standard' => YoukoMixSubPreference.standard,
+        _ => null,
+      };
+      return YoukoMixSyncDeepLink(mode: mode);
     default:
       return null;
   }
