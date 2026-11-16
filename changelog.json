@@ -2,6 +2,54 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "1.0.0",
+      "tag": "v1.0.0",
+      "date": "2026-11-16",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "breaking",
+          "entries": [
+            {
+              "id": "13f58e8",
+              "scope": "sub",
+              "text": "Manual third-party subscription URLs, local YAML/file imports, custom proxy URI imports, and multi-profile management have been removed in favor of the managed panel subscription"
+            }
+          ]
+        },
+        {
+          "type": "feat",
+          "entries": [
+            {
+              "id": "bbfa996",
+              "scope": "auth",
+              "text": "Add native panel authentication gate with email/password login, TOTP MFA, browser handoff, and account/traffic/announcement dashboard sheet"
+            },
+            {
+              "id": "21278fe",
+              "scope": "brand",
+              "text": "Rebrand application identity, pink theme, white-background icons, YoukoMixCore/YoukoMixHelperService isolation, and youkomix:// protocol across Windows, macOS, Linux, and Android"
+            },
+            {
+              "id": "13f58e8",
+              "scope": "sub",
+              "text": "Enforce exclusive managed panel subscription sync and remove all third-party profile and proxy import surfaces"
+            }
+          ]
+        },
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "6739767",
+              "scope": "auth,sub",
+              "text": "Harden release HTTPS/SHA-256 verification, logout sync epoch guard, and panel link/expiry fallbacks"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.9.3",
       "tag": "v0.9.3",
       "date": "2026-11-04",

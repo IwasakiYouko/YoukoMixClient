@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.0.0 (2026-11-16)
+
+**Breaking Changes**
+
+- **sub** Manual third-party subscription URLs, local YAML/file imports, custom proxy URI imports, and multi-profile management have been removed in favor of the managed panel subscription (13f58e8)
+
+**Features**
+
+- **auth** Add native panel authentication gate with email/password login, TOTP MFA, browser handoff, and account/traffic/announcement dashboard sheet (bbfa996)
+- **brand** Rebrand application identity, pink theme, white-background icons, YoukoMixCore/YoukoMixHelperService isolation, and youkomix:// protocol across Windows, macOS, Linux, and Android (21278fe)
+- **sub** Enforce exclusive managed panel subscription sync and remove all third-party profile and proxy import surfaces (13f58e8)
+
+**Bug Fixes**
+
+- **auth,sub** Harden release HTTPS/SHA-256 verification, logout sync epoch guard, and panel link/expiry fallbacks (6739767)
+
 ## v0.9.3 (2026-11-04)
 
 **Features**
