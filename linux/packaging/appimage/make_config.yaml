@@ -1,25 +1,22 @@
-display_name: FlClash
+display_name: 人间之里
 
 icon: ./assets/images/icon.png
 
 supported_mime_type:
-  - x-scheme-handler/clash
-  - x-scheme-handler/clashmeta
-  - x-scheme-handler/flclash
+  - x-scheme-handler/youkomix
 
 keywords:
-  - FlClash
-  - Clash
-  - ClashMeta
+  - YoukoMix
+  - 人间之里
   - Proxy
 
-generic_name: FlClash
+generic_name: 人间之里
 
 categories:
   - Network
 
 startup_notify: true
 
-startup_wm_class: com.follow.clash
+startup_wm_class: com.youkomix.client
 
 include: []

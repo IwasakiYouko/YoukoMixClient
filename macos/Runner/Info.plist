@@ -14,6 +14,8 @@
 	<string>6.0</string>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundleDisplayName</key>
+	<string>人间之里</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -24,12 +26,10 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string></string>
+			<string>com.youkomix.client</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>clash</string>
-				<string>clashmeta</string>
-				<string>flclash</string>
+				<string>youkomix</string>
 			</array>
 		</dict>
 	</array>
@@ -44,6 +44,6 @@
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>FlClash needs location access to detect WiFi network name for connectivity features.</string>
+	<string>人间之里需要位置权限以检测当前 Wi-Fi 网络名称用于按需连接策略。</string>
 </dict>
 </plist>
