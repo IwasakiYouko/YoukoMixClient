@@ -129,7 +129,7 @@ class LinkReceiver {
       return;
     }
     final text = await _readLink(request);
-    final link = profileUrlFromQrCodes([text]);
+    final link = youkoMixLinkFromQrCodes([text]);
     if (link == null) {
       response.statusCode = HttpStatus.badRequest;
       response.write(_page(error: _texts.invalid, value: text ?? ''));

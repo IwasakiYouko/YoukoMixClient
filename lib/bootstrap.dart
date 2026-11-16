@@ -101,6 +101,25 @@ class Bootstrap {
       config = config.copyWith(patchClashConfig: patchClashConfig);
       await preferences.saveConfig(config);
     }
+    final savedSession = await youkomixStorage.loadSession();
+    final storedProfiles = await database.profilesDao.query().get();
+    final managedProfiles = <Profile>[];
+    for (final profile in storedProfiles) {
+      if (savedSession != null && profile.id == youkomixManagedProfileId) {
+        managedProfiles.add(profile);
+        continue;
+      }
+      await database.deleteProfile(profile.id);
+      final file = File(await appPath.getProfilePath(profile.id.toString()));
+      await file.safeDelete();
+    }
+    final expectedProfileId = managedProfiles.isEmpty
+        ? null
+        : youkomixManagedProfileId;
+    if (config.currentProfileId != expectedProfileId) {
+      config = config.copyWith(currentProfileId: expectedProfileId);
+      await preferences.saveConfig(config);
+    }
     final appState = AppState(
       brightness: WidgetsBinding.instance.platformDispatcher.platformBrightness,
       version: version,
@@ -114,7 +133,12 @@ class Bootstrap {
     final appStateOverrides = buildAppStateOverrides(appState);
     final configOverrides = buildConfigOverrides(config);
     final container = ProviderContainer(
-      overrides: [...appStateOverrides, ...configOverrides],
+      overrides: [
+        ...appStateOverrides,
+        ...configOverrides,
+        youkomixGateEnabledProvider.overrideWithValue(true),
+        youkomixInitialSessionProvider.overrideWithValue(savedSession),
+      ],
     );
     globalState.container = container;
     container
@@ -124,8 +148,7 @@ class Bootstrap {
           darkSeed: dynamicColor.darkSeed,
           accentColor: dynamicColor.accentColor,
         );
-    final profiles = await database.profilesDao.query().get();
-    container.read(profilesProvider.notifier).reorder(profiles);
+    container.read(profilesProvider.notifier).reorder(managedProfiles);
     await AppLocalizations.load(
       getLocaleForString(config.appSettingProps.locale) ??
           WidgetsBinding.instance.platformDispatcher.locale,
@@ -149,9 +172,6 @@ class Bootstrap {
 
   Future<void> _initApp() async {
     unawaited(_container.read(systemActionProvider.notifier).updateTray());
-    unawaited(
-      _container.read(profilesActionProvider.notifier).autoUpdateProfiles(),
-    );
     unawaited(clearUpdateDownloads());
     unawaited(_container.read(commonActionProvider.notifier).autoCheckUpdate());
     unawaited(
@@ -172,6 +192,9 @@ class Bootstrap {
       await _container.read(setupActionProvider.notifier).initStatus();
     }
     _container.read(initProvider.notifier).value = true;
+    unawaited(
+      _container.read(profilesActionProvider.notifier).autoUpdateProfiles(),
+    );
     unawaited(_container.read(resourcesActionProvider.notifier).autoUpdate());
     unawaited(_container.read(mitmModulesActionProvider.notifier).autoUpdate());
     await bootGuard.markRunning();
@@ -226,7 +249,8 @@ class Bootstrap {
   /// up front: the core only starts after the disclaimer is accepted.
   bool get _isDisclaimerAcceptedByEnvironment =>
       system.isDesktop &&
-      Platform.environment['FLCLASH_ACCEPT_DISCLAIMER'] == '1';
+      (Platform.environment['YOUKOMIX_ACCEPT_DISCLAIMER'] == '1' ||
+          Platform.environment['FLCLASH_ACCEPT_DISCLAIMER'] == '1');
 
   /// Android's exit only finishes the activity, so Dart keeps running after
   /// [SystemAction.handleExit] returns and must not go on to start the app.

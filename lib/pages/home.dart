@@ -1,5 +1,6 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/youkomix/youkomix.dart';
 import 'package:fl_clash/manager/app_manager.dart';
 import 'package:fl_clash/models/common.dart';
 import 'package:fl_clash/providers/providers.dart';
@@ -23,7 +24,15 @@ class HomePage extends ConsumerWidget {
     if (!hasViewSize) {
       return ColoredBox(color: SurfaceLevel.page.colorOf(context.colorScheme));
     }
+    final auth = ref.watch(youkomixControllerProvider);
+    if (auth.gateEnabled && !auth.isAuthenticated) {
+      return const HomeBackScopeContainer(
+        key: ValueKey('youkomix-login-gate'),
+        child: YoukoMixLoginView(),
+      );
+    }
     return HomeBackScopeContainer(
+      key: const ValueKey('home-authenticated'),
       child: AppSidebarContainer(
         child: _HomeShell(
           child: Consumer(

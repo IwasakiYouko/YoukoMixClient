@@ -33,7 +33,7 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m4(detail) => "Couldn\'t clear the data: ${detail}";
 
   static String m5(code) =>
-      "Windows refused to run FlClashCore.exe (error ${code}). An app control policy such as Smart App Control or AppLocker blocks unsigned programs; allow FlClash in that policy or turn it off, then try again.";
+      "Windows refused to run YoukoMixCore.exe (error ${code}). An app control policy such as Smart App Control or AppLocker blocks unsigned programs; allow YoukoMix in that policy or turn it off, then try again.";
 
   static String m6(name) =>
       "The app failed to finish launching twice in a row. To break the loop, the profile ${name} has been deselected and automatic setup was skipped. You can select it again at any time.";
@@ -158,7 +158,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Chrome and Firefox keep their own certificate stores, which need certutil: ${command}";
 
   static String m55(host) =>
-      "Add ${host} to the hostname list? FlClash can then read what is sent to it, cookies and passwords included.";
+      "Add ${host} to the hostname list? YoukoMix can then read what is sent to it, cookies and passwords included.";
 
   static String m56(host) =>
       "Add -${host} to the top of the hostname list? The host is then never decrypted.";
@@ -176,7 +176,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "The old certificate, ${name}, could not be removed. Remove it from the trusted roots yourself.";
 
   static String m62(name) =>
-      "The old certificate, ${name}, is still among the system\'s trusted CAs. Allow FlClash root access in your root manager and regenerate, or remove the FlClash MITM CA module there and restart.";
+      "The old certificate, ${name}, is still among the system\'s trusted CAs. Allow YoukoMix root access in your root manager and regenerate, or remove the YoukoMix MITM CA module there and restart.";
 
   static String m63(name) =>
       "Remove the old certificate, ${name}, in Settings under Security › Encryption & credentials › Trusted credentials › User, then install the new one.";
@@ -274,6 +274,8 @@ class MessageLookup extends MessageLookupByLibrary {
       "${Intl.plural(count, one: '1 year ago', other: '${count} years ago')}";
 
   static String m101(count) => "${Intl.plural(count, other: '${count}y ago')}";
+
+  static String m102(level) => "Lv.${level}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -558,7 +560,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "core": MessageLookupByLibrary.simpleMessage("Core"),
     "coreBlockedByPolicyTip": m5,
     "coreBlockedBySmartAppControlTip": MessageLookupByLibrary.simpleMessage(
-      "Windows Smart App Control blocked FlClashCore.exe because it is not signed. Open Windows Security → App & browser control → Smart App Control settings, choose Off, then start FlClash again. Smart App Control cannot be turned back on without reinstalling Windows.",
+      "Windows Smart App Control blocked YoukoMixCore.exe because it is not signed. Open Windows Security → App & browser control → Smart App Control settings, choose Off, then start YoukoMix again. Smart App Control cannot be turned back on without reinstalling Windows.",
     ),
     "coreStatus": MessageLookupByLibrary.simpleMessage("Core status"),
     "country": MessageLookupByLibrary.simpleMessage("Region"),
@@ -627,7 +629,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "deleteMultipTip": m22,
     "deleteTip": m23,
     "desc": MessageLookupByLibrary.simpleMessage(
-      "A multi-platform proxy client based on ClashMeta, simple and easy to use, open-source and ad-free.",
+      "Dedicated cross-platform network acceleration client for YoukoMix.",
     ),
     "destination": MessageLookupByLibrary.simpleMessage("Destination"),
     "destinationGeoIP": MessageLookupByLibrary.simpleMessage(
@@ -688,7 +690,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Changes to this statement",
     ),
     "disclaimerDesc": MessageLookupByLibrary.simpleMessage(
-      "Before using FlClash (\"the Software\"), please read this statement carefully and make sure you understand it. Tapping \"Agree\" means you have read and understood what follows. If you do not want to continue, tap \"Exit\".",
+      "Before using YoukoMix (\"the Software\"), please read this statement carefully and make sure you understand it. Tapping \"Agree\" means you have read and understood what follows. If you do not want to continue, tap \"Exit\".",
     ),
     "disclaimerLiabilityContent": MessageLookupByLibrary.simpleMessage(
       "To the maximum extent permitted by applicable law, neither the developers nor any contributor shall be liable for any direct, indirect, incidental, special, punitive, or consequential damages arising from the use of or inability to use the Software, including but not limited to data loss, device damage, network failures, business interruption, lost profits, or any resulting legal dispute, even if advised of the possibility of such damages.",
@@ -932,7 +934,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "headerRewrite": MessageLookupByLibrary.simpleMessage("Header rewrite"),
     "healthCheck": MessageLookupByLibrary.simpleMessage("Health check"),
     "helperCorruptTip": MessageLookupByLibrary.simpleMessage(
-      "Helper service unavailable; TUN mode cannot be enabled. Reinstall FlClash to restore it.",
+      "Helper service unavailable; TUN mode cannot be enabled. Reinstall YoukoMix to restore it.",
     ),
     "hex": MessageLookupByLibrary.simpleMessage("Hex"),
     "hideFromList": MessageLookupByLibrary.simpleMessage("Hide from list"),
@@ -1032,7 +1034,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "init": MessageLookupByLibrary.simpleMessage("Init"),
     "initFailed": MessageLookupByLibrary.simpleMessage("Startup failed"),
     "initFailedTip": MessageLookupByLibrary.simpleMessage(
-      "FlClash ran into an error while starting and can\'t continue. Copy the details to report the problem. If it keeps happening, clearing the data usually lets the app start again.",
+      "YoukoMix ran into an error while starting and can\'t continue. Copy the details to report the problem. If it keeps happening, clearing the data usually lets the app start again.",
     ),
     "initiator": MessageLookupByLibrary.simpleMessage("Initiator"),
     "initiatorShort": MessageLookupByLibrary.simpleMessage("From"),
@@ -1292,7 +1294,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "mitmDecryptHostTip": m55,
     "mitmEnableTip": MessageLookupByLibrary.simpleMessage(
-      "FlClash will be able to read everything sent to the decrypted hosts, cookies and passwords included. Turn this on only for hosts you mean to rewrite.",
+      "YoukoMix will be able to read everything sent to the decrypted hosts, cookies and passwords included. Turn this on only for hosts you mean to rewrite.",
     ),
     "mitmExcludeHost": MessageLookupByLibrary.simpleMessage(
       "Exclude from decryption",
@@ -1304,7 +1306,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "mitmIgnoredLines": MessageLookupByLibrary.simpleMessage("Ignored lines"),
     "mitmInstallSystemCaTip": MessageLookupByLibrary.simpleMessage(
-      "Root was found, so the certificate goes into the system\'s trusted certificates as a FlClash MITM CA module for Magisk, KernelSU or APatch. Every app on this device will then trust it, and anyone holding its private key could decrypt this device\'s HTTPS traffic. To undo it, regenerate the certificate or remove the module in the root manager and restart. If root is denied, it is installed as a user certificate instead.",
+      "Root was found, so the certificate goes into the system\'s trusted certificates as a YoukoMix MITM CA module for Magisk, KernelSU or APatch. Every app on this device will then trust it, and anyone holding its private key could decrypt this device\'s HTTPS traffic. To undo it, regenerate the certificate or remove the module in the root manager and restart. If root is denied, it is installed as a user certificate instead.",
     ),
     "mitmInstallUserCaTip": MessageLookupByLibrary.simpleMessage(
       "No root was found, so the certificate can only be installed as a user certificate. Only apps that trust user certificates, mostly browsers, are decrypted; other apps fail on the hosts you list, so leave those hosts out. On Android 11 and later you finish the install yourself in system settings.",
@@ -1628,7 +1630,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Regenerate certificate",
     ),
     "regenerateCertificateTip": MessageLookupByLibrary.simpleMessage(
-      "The new certificate replaces the current one, which FlClash takes out of this device\'s trusted roots where it can. Every other device that trusts the current one has to install the new one.",
+      "The new certificate replaces the current one, which YoukoMix takes out of this device\'s trusted roots where it can. Every other device that trusts the current one has to install the new one.",
     ),
     "regex": MessageLookupByLibrary.simpleMessage("Regex"),
     "releaseMemory": MessageLookupByLibrary.simpleMessage("Release memory"),
@@ -1891,10 +1893,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "Sent. Confirm the import on the other device.",
     ),
     "sendFromPhonePageTitle": MessageLookupByLibrary.simpleMessage(
-      "Send a link to FlClash",
+      "Send a link to YoukoMix",
     ),
     "sendFromPhonePermissionDenied": MessageLookupByLibrary.simpleMessage(
-      "Receiving a link from your phone needs the Nearby devices permission, which lets FlClash reach the local network. Turn it on in the app\'s settings.",
+      "Receiving a link from your phone needs the Nearby devices permission, which lets YoukoMix reach the local network. Turn it on in the app\'s settings.",
     ),
     "sendFromPhoneTip": MessageLookupByLibrary.simpleMessage(
       "Scan the code with your phone\'s camera and paste the link on the page that opens. Both devices need to be on the same network.",
@@ -1936,7 +1938,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "No proxy could be read from the links",
     ),
     "shareQrcodeTip": MessageLookupByLibrary.simpleMessage(
-      "Scan with FlClash on another device to import this profile.",
+      "Scan with YoukoMix on another device to import this profile.",
     ),
     "show": MessageLookupByLibrary.simpleMessage("Show"),
     "showLess": MessageLookupByLibrary.simpleMessage("Collapse"),
@@ -2119,7 +2121,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "The update has downloaded. Tap to install it.",
     ),
     "updateRestartTip": MessageLookupByLibrary.simpleMessage(
-      "FlClash closes to install the update and opens again when it is done.",
+      "YoukoMix closes to install the update and opens again when it is done.",
     ),
     "upload": MessageLookupByLibrary.simpleMessage("Upload"),
     "uploadBandwidth": MessageLookupByLibrary.simpleMessage("Upload bandwidth"),
@@ -2152,6 +2154,88 @@ class MessageLookup extends MessageLookupByLibrary {
     "yearsAgo": m100,
     "yearsAgoShort": m101,
     "yes": MessageLookupByLibrary.simpleMessage("Yes"),
+    "youkomixAccount": MessageLookupByLibrary.simpleMessage(
+      "Account & subscription",
+    ),
+    "youkomixAnnouncements": MessageLookupByLibrary.simpleMessage(
+      "Announcements",
+    ),
+    "youkomixAuthCode": MessageLookupByLibrary.simpleMessage("One-time code"),
+    "youkomixAuthCodeHint": MessageLookupByLibrary.simpleMessage(
+      "Paste the one-time code from the browser",
+    ),
+    "youkomixBackToLogin": MessageLookupByLibrary.simpleMessage(
+      "Back to password sign-in",
+    ),
+    "youkomixBalance": MessageLookupByLibrary.simpleMessage("Balance"),
+    "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
+      "Browser verification is required. Complete verification in your browser to return automatically",
+    ),
+    "youkomixEmail": MessageLookupByLibrary.simpleMessage("Email"),
+    "youkomixEmailHint": MessageLookupByLibrary.simpleMessage(
+      "Enter your account email",
+    ),
+    "youkomixEnterAuthCode": MessageLookupByLibrary.simpleMessage(
+      "Enter one-time code",
+    ),
+    "youkomixExpired": MessageLookupByLibrary.simpleMessage("Plan expired"),
+    "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage(
+      "Forgot password",
+    ),
+    "youkomixLevelBadge": m102,
+    "youkomixLoggingIn": MessageLookupByLibrary.simpleMessage("Signing in…"),
+    "youkomixLogin": MessageLookupByLibrary.simpleMessage("Sign in"),
+    "youkomixLogout": MessageLookupByLibrary.simpleMessage("Sign out"),
+    "youkomixLogoutConfirm": MessageLookupByLibrary.simpleMessage(
+      "Signing out stops the proxy and clears cached node configs on this device. Continue?",
+    ),
+    "youkomixMfaCode": MessageLookupByLibrary.simpleMessage(
+      "Verification code",
+    ),
+    "youkomixMfaDesc": MessageLookupByLibrary.simpleMessage(
+      "Enter the 6-digit code from your authenticator app",
+    ),
+    "youkomixMfaTitle": MessageLookupByLibrary.simpleMessage(
+      "Two-factor authentication",
+    ),
+    "youkomixNeverExpire": MessageLookupByLibrary.simpleMessage(
+      "No expiration",
+    ),
+    "youkomixNoAnnouncements": MessageLookupByLibrary.simpleMessage(
+      "No announcements",
+    ),
+    "youkomixOpenPanel": MessageLookupByLibrary.simpleMessage("Open panel"),
+    "youkomixRegister": MessageLookupByLibrary.simpleMessage("Create account"),
+    "youkomixScanAuthQr": MessageLookupByLibrary.simpleMessage(
+      "Scan QR code to sign in",
+    ),
+    "youkomixServerUrl": MessageLookupByLibrary.simpleMessage("Panel URL"),
+    "youkomixServerUrlHint": MessageLookupByLibrary.simpleMessage(
+      "https://example.com",
+    ),
+    "youkomixSessionExpired": MessageLookupByLibrary.simpleMessage(
+      "Your session has expired. Please sign in again",
+    ),
+    "youkomixSubModeExclusive": MessageLookupByLibrary.simpleMessage(
+      "Dedicated subscription bound",
+    ),
+    "youkomixSubModeStandard": MessageLookupByLibrary.simpleMessage(
+      "Standard subscription",
+    ),
+    "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage("Sync nodes"),
+    "youkomixSyncSuccess": MessageLookupByLibrary.simpleMessage(
+      "Subscription nodes synced",
+    ),
+    "youkomixSyncing": MessageLookupByLibrary.simpleMessage("Syncing nodes…"),
+    "youkomixTagline": MessageLookupByLibrary.simpleMessage(
+      "Dedicated high-speed network client",
+    ),
+    "youkomixVerify": MessageLookupByLibrary.simpleMessage(
+      "Verify and sign in",
+    ),
+    "youkomixWebAuth": MessageLookupByLibrary.simpleMessage(
+      "Sign in via browser",
+    ),
     "zhCN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
   };
 }
