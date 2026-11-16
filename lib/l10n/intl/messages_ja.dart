@@ -1860,8 +1860,11 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "youkomixBackToLogin": MessageLookupByLibrary.simpleMessage("パスワードログインに戻る"),
     "youkomixBalance": MessageLookupByLibrary.simpleMessage("残高"),
+    "youkomixCaptchaCode": MessageLookupByLibrary.simpleMessage("画像認証コード"),
+    "youkomixCaptchaHint": MessageLookupByLibrary.simpleMessage("文字を入力"),
+    "youkomixCaptchaRefresh": MessageLookupByLibrary.simpleMessage("タップで更新"),
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
-      "ブラウザ認証が必要です。ブラウザで認証を完了すると自動的に戻ります",
+      "セキュリティ保護が有効です。下の画像認証コードを入力してください",
     ),
     "youkomixEmail": MessageLookupByLibrary.simpleMessage("メールアドレス"),
     "youkomixEmailHint": MessageLookupByLibrary.simpleMessage("登録メールアドレスを入力"),

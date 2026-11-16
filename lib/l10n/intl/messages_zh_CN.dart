@@ -1680,8 +1680,11 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "youkomixBackToLogin": MessageLookupByLibrary.simpleMessage("返回密码登录"),
     "youkomixBalance": MessageLookupByLibrary.simpleMessage("账户余额"),
+    "youkomixCaptchaCode": MessageLookupByLibrary.simpleMessage("图形验证码"),
+    "youkomixCaptchaHint": MessageLookupByLibrary.simpleMessage("输入图片字符"),
+    "youkomixCaptchaRefresh": MessageLookupByLibrary.simpleMessage("点击刷新"),
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
-      "当前面板开启了人机验证，请在浏览器完成安全验证后自动唤起客户端登录",
+      "当前站点已开启安全登录保护，请输入下方图形验证码",
     ),
     "youkomixEmail": MessageLookupByLibrary.simpleMessage("邮箱"),
     "youkomixEmailHint": MessageLookupByLibrary.simpleMessage("输入注册邮箱"),

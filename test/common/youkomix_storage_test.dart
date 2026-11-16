@@ -28,6 +28,10 @@ void main() {
       serverUrl: 'https://panel.example.com/',
       accessToken: 'ymx_live_token',
       expiresAt: futureExpiry,
+      apiEndpoints: const [
+        'https://edge1.example.com',
+        'https://panel.example.com',
+      ],
       bootstrap: const YoukoMixBootstrap(
         user: YoukoMixUser(id: 5, email: 'alice@example.com'),
       ),
@@ -35,6 +39,16 @@ void main() {
 
     await storage.saveSession(session);
     expect(storage.activeServerUrl, 'https://panel.example.com');
+    expect(storage.candidateEndpoints('https://panel.example.com'), [
+      'https://edge1.example.com',
+      'https://panel.example.com',
+    ]);
+
+    storage.promoteEndpoint('https://panel.example.com', persist: false);
+    expect(storage.candidateEndpoints('https://panel.example.com'), [
+      'https://panel.example.com',
+      'https://edge1.example.com',
+    ]);
 
     final freshReader = YoukoMixSessionStorage(
       homeDirProvider: () async => tempDir.path,

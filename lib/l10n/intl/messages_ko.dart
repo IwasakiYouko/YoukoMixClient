@@ -1834,8 +1834,11 @@ class MessageLookup extends MessageLookupByLibrary {
       "비밀번호 로그인으로 돌아가기",
     ),
     "youkomixBalance": MessageLookupByLibrary.simpleMessage("잔액"),
+    "youkomixCaptchaCode": MessageLookupByLibrary.simpleMessage("보안문자"),
+    "youkomixCaptchaHint": MessageLookupByLibrary.simpleMessage("문자 입력"),
+    "youkomixCaptchaRefresh": MessageLookupByLibrary.simpleMessage("탭하여 새로고침"),
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
-      "브라우저 인증이 필요합니다. 브라우저에서 인증을 완료하면 자동으로 돌아옵니다",
+      "보안 로그인이 활성화되어 있습니다. 아래 이미지 보안문자를 입력하세요",
     ),
     "youkomixEmail": MessageLookupByLibrary.simpleMessage("이메일"),
     "youkomixEmailHint": MessageLookupByLibrary.simpleMessage("계정 이메일 입력"),

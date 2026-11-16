@@ -24,6 +24,7 @@ class _YoukoMixLoginViewState extends ConsumerState<YoukoMixLoginView> {
   final _serverController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _captchaController = TextEditingController();
   final _mfaController = TextEditingController();
 
   bool get _hasFixedServer => defaultYoukoMixServerUrl.trim().isNotEmpty;
@@ -51,6 +52,7 @@ class _YoukoMixLoginViewState extends ConsumerState<YoukoMixLoginView> {
     _serverController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _captchaController.dispose();
     _mfaController.dispose();
     super.dispose();
   }
@@ -63,14 +65,24 @@ class _YoukoMixLoginViewState extends ConsumerState<YoukoMixLoginView> {
   }
 
   Future<void> _submitLogin() async {
-    if (ref.read(youkomixControllerProvider).isBusy) return;
+    final current = ref.read(youkomixControllerProvider);
+    if (current.isBusy) return;
     FocusManager.instance.primaryFocus?.unfocus();
     final notifier = ref.read(youkomixControllerProvider.notifier);
     await notifier.login(
       serverUrl: _effectiveServerUrl(),
       email: _emailController.text,
       password: _passwordController.text,
+      captchaCode: current.shouldShowCaptcha ? _captchaController.text : null,
     );
+  }
+
+  Future<void> _refreshCaptcha() async {
+    if (ref.read(youkomixControllerProvider).isBusy) return;
+    _captchaController.clear();
+    await ref
+        .read(youkomixControllerProvider.notifier)
+        .refreshCaptcha(_effectiveServerUrl());
   }
 
   Future<void> _submitMfa() async {
@@ -171,6 +183,14 @@ class _YoukoMixLoginViewState extends ConsumerState<YoukoMixLoginView> {
         _serverController.text = next;
       }
     });
+    ref.listen<String?>(
+      youkomixControllerProvider.select((s) => s.captchaChallenge?.captchaId),
+      (prev, next) {
+        if (prev != null && next != prev) {
+          _captchaController.clear();
+        }
+      },
+    );
     final colorScheme = context.colorScheme;
     final appLocalizations = context.appLocalizations;
     final padding = MediaQuery.paddingOf(context);
@@ -219,13 +239,14 @@ class _YoukoMixLoginViewState extends ConsumerState<YoukoMixLoginView> {
   Widget _buildPasswordStep(BuildContext context, YoukoMixState authState) {
     final appLocalizations = context.appLocalizations;
     final meta = authState.meta;
+    final showCaptcha = authState.shouldShowCaptcha;
     return Column(
       key: const ValueKey('youkomix-password-step'),
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 16,
       children: [
-        if (meta?.captchaEnabled == true)
+        if (showCaptcha)
           _InfoBanner(message: appLocalizations.youkomixCaptchaRequiredTip),
         generateGroup([
           if (!_hasFixedServer)
@@ -268,13 +289,40 @@ class _YoukoMixLoginViewState extends ConsumerState<YoukoMixLoginView> {
             trailing: FormRowSecretTextField(
               controller: _passwordController,
               hintText: appLocalizations.password,
-              textInputAction: TextInputAction.done,
+              textInputAction: showCaptcha
+                  ? TextInputAction.next
+                  : TextInputAction.done,
               onChanged: (_) =>
                   ref.read(youkomixControllerProvider.notifier).clearError(),
-              onFieldSubmitted: (_) => unawaited(_submitLogin()),
+              onFieldSubmitted: showCaptcha
+                  ? null
+                  : (_) => unawaited(_submitLogin()),
             ),
           ),
+          if (showCaptcha)
+            FormRow(
+              title: appLocalizations.youkomixCaptchaCode,
+              trailing: FormRowTextField(
+                controller: _captchaController,
+                hintText: appLocalizations.youkomixCaptchaHint,
+                autocorrect: false,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
+                  LengthLimitingTextInputFormatter(8),
+                ],
+                textInputAction: TextInputAction.done,
+                onChanged: (_) =>
+                    ref.read(youkomixControllerProvider.notifier).clearError(),
+                onFieldSubmitted: (_) => unawaited(_submitLogin()),
+              ),
+            ),
         ]),
+        if (showCaptcha)
+          _CaptchaChallengeCard(
+            challenge: authState.captchaChallenge,
+            isLoading: authState.isLoadingCaptcha,
+            onRefresh: _refreshCaptcha,
+          ),
         SizedBox(
           height: 46,
           child: IgnorePointer(
@@ -403,6 +451,97 @@ class _YoukoMixLoginViewState extends ConsumerState<YoukoMixLoginView> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CaptchaChallengeCard extends StatelessWidget {
+  final YoukoMixCaptchaChallenge? challenge;
+  final bool isLoading;
+  final VoidCallback onRefresh;
+
+  const _CaptchaChallengeCard({
+    required this.challenge,
+    required this.isLoading,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+    final appLocalizations = context.appLocalizations;
+    final hasImage = challenge != null && challenge!.imageBytes.isNotEmpty;
+
+    return GestureDetector(
+      key: const ValueKey('youkomix-captcha-card'),
+      behavior: HitTestBehavior.opaque,
+      onTap: isLoading ? null : onRefresh,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: ShapeDecoration(
+          color: colorScheme.surfaceContainerLow,
+          shape: AppShape.all(AppCorner.lg).copyWith(
+            side: BorderSide(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
+          ),
+        ),
+        child: Row(
+          spacing: 12,
+          children: [
+            ClipRSuperellipse(
+              borderRadius: BorderRadius.circular(AppCorner.md),
+              child: Container(
+                width: 148,
+                height: 50,
+                color: const Color(0xFFFDF4F7),
+                alignment: Alignment.center,
+                child: hasImage
+                    ? Image.memory(
+                        challenge!.imageBytes,
+                        width: 148,
+                        height: 50,
+                        fit: BoxFit.contain,
+                        gaplessPlayback: true,
+                      )
+                    : (isLoading
+                          ? const ActivityIndicator(size: 18)
+                          : GlyphIcon(
+                              AppGlyphs.refresh,
+                              size: 20,
+                              color: colorScheme.primary,
+                            )),
+              ),
+            ),
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                spacing: 6,
+                children: [
+                  if (isLoading && hasImage)
+                    const ActivityIndicator(size: 14)
+                  else
+                    GlyphIcon(
+                      AppGlyphs.refresh,
+                      size: 16,
+                      color: colorScheme.primary,
+                    ),
+                  Flexible(
+                    child: Text(
+                      appLocalizations.youkomixCaptchaRefresh,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyle.footnote
+                          .of(context)
+                          .copyWith(color: colorScheme.primary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

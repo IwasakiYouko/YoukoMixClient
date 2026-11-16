@@ -18,6 +18,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../helpers/app_paths.dart';
 import '../helpers/test_profiles.dart';
+import '../helpers/youkomix_e2ee_server.dart';
 
 class _MockApiClient extends Mock implements YoukoMixApiClient {}
 
@@ -250,6 +251,40 @@ void main() {
         isFalse,
       );
       expect(launchedUrls, ['https://panel.example.com/user/client-auth']);
+
+      // Inline graphical CAPTCHA keeps login inside the app without browser launch.
+      launchedUrls.clear();
+      final inlineChallenge = YoukoMixCaptchaChallenge.fromJson(const {
+        'captcha_id': 'cch_prov_1',
+        'image_base64': tinyValidPngBase64,
+        'expires_in': 180,
+      });
+      when(
+        () => api.login(
+          serverUrl: 'https://panel.example.com',
+          email: 'inline@example.com',
+          password: 'pass',
+        ),
+      ).thenAnswer(
+        (_) async => YoukoMixLoginCaptchaRequired(
+          challenge: inlineChallenge,
+          webAuthUrl: 'https://panel.example.com/user/client-auth',
+          message: '请输入图形验证码',
+        ),
+      );
+      expect(
+        await notifier.login(
+          serverUrl: 'https://panel.example.com',
+          email: 'inline@example.com',
+          password: 'pass',
+        ),
+        isFalse,
+      );
+      expect(launchedUrls, isEmpty);
+      expect(
+        container.read(youkomixControllerProvider).captchaChallenge?.captchaId,
+        'cch_prov_1',
+      );
     },
   );
 

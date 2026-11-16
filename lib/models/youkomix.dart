@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 
@@ -38,6 +40,31 @@ bool _toBool(Object? value, {bool fallback = false}) {
   return fallback;
 }
 
+List<String> parseYoukoMixEndpointList(Object? raw) {
+  if (raw is! List) {
+    return const [];
+  }
+  final seen = <String>{};
+  final result = <String>[];
+  for (final item in raw) {
+    final text = _toString(item).trim().replaceAll(RegExp(r'/+$'), '');
+    if (text.isEmpty) {
+      continue;
+    }
+    final uri = Uri.tryParse(text);
+    if (uri == null ||
+        (uri.scheme != 'https' && uri.scheme != 'http') ||
+        uri.host.isEmpty ||
+        uri.userInfo.isNotEmpty) {
+      continue;
+    }
+    if (seen.add(text)) {
+      result.add(text);
+    }
+  }
+  return List.unmodifiable(result);
+}
+
 final _htmlTagPattern = RegExp(r'<[^>]*>');
 final _multiBlankLinePattern = RegExp(r'\n{3,}');
 
@@ -60,10 +87,72 @@ String stripAnnouncementHtml(String raw) {
 }
 
 @immutable
+class YoukoMixCaptchaChallenge {
+  final String captchaId;
+  final String imageBase64;
+  final Uint8List imageBytes;
+  final int expiresIn;
+
+  const YoukoMixCaptchaChallenge({
+    required this.captchaId,
+    required this.imageBase64,
+    required this.imageBytes,
+    this.expiresIn = 180,
+  });
+
+  bool get isValid => captchaId.isNotEmpty && imageBytes.isNotEmpty;
+
+  factory YoukoMixCaptchaChallenge.fromJson(Map<String, Object?> json) {
+    final id = _toString(json['captcha_id']).trim();
+    final rawB64 = _toString(json['image_base64']).trim();
+    final strippedB64 = rawB64.contains(',')
+        ? rawB64.split(',').last.trim()
+        : rawB64;
+    Uint8List decodedBytes = Uint8List(0);
+    if (strippedB64.isNotEmpty) {
+      try {
+        decodedBytes = Uint8List.fromList(base64Decode(strippedB64));
+      } on FormatException {
+        decodedBytes = Uint8List(0);
+      }
+    }
+    final ttl = _toInt(json['expires_in']);
+    return YoukoMixCaptchaChallenge(
+      captchaId: id,
+      imageBase64: strippedB64,
+      imageBytes: decodedBytes,
+      expiresIn: ttl > 0 ? ttl : 180,
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'captcha_id': captchaId,
+    'image_base64': imageBase64,
+    'expires_in': expiresIn,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is YoukoMixCaptchaChallenge &&
+          other.captchaId == captchaId &&
+          other.imageBase64 == imageBase64 &&
+          other.expiresIn == expiresIn;
+
+  @override
+  int get hashCode => Object.hash(captchaId, imageBase64, expiresIn);
+}
+
+@immutable
 class YoukoMixMeta {
   final String appName;
   final String baseUrl;
+  final List<String> apiEndpoints;
+  final String downloadBaseUrl;
   final bool captchaEnabled;
+  final String captchaMode;
+  final String minClientVersion;
+  final bool e2eeRequired;
   final String registerUrl;
   final String passwordResetUrl;
   final String webAuthUrl;
@@ -71,7 +160,12 @@ class YoukoMixMeta {
   const YoukoMixMeta({
     this.appName = '',
     this.baseUrl = '',
+    this.apiEndpoints = const [],
+    this.downloadBaseUrl = '',
     this.captchaEnabled = false,
+    this.captchaMode = 'none',
+    this.minClientVersion = '',
+    this.e2eeRequired = false,
     this.registerUrl = '',
     this.passwordResetUrl = '',
     this.webAuthUrl = '',
@@ -87,13 +181,27 @@ class YoukoMixMeta {
     final captcha = json.containsKey('login_captcha_enabled')
         ? _toBool(json['login_captcha_enabled'])
         : _toBool(json['captcha_enabled']);
+    final rawMode = _toString(json['captcha_mode']).trim();
+    final rawDownloadBase = _toString(
+      json['download_base_url'],
+    ).trim().replaceAll(RegExp(r'/+$'), '');
     final webAuth = _toString(json['web_auth_url']).trim();
     final register = _toString(json['register_url']).trim();
     final reset = _toString(json['password_reset_url']).trim();
+    final endpoints = parseYoukoMixEndpointList(json['api_endpoints']);
     return YoukoMixMeta(
       appName: _toString(json['app_name']),
       baseUrl: resolvedBase,
+      apiEndpoints: endpoints,
+      downloadBaseUrl: rawDownloadBase.isNotEmpty
+          ? rawDownloadBase
+          : resolvedBase,
       captchaEnabled: captcha,
+      captchaMode: rawMode.isNotEmpty
+          ? rawMode
+          : (captcha ? 'native_image' : 'none'),
+      minClientVersion: _toString(json['min_client_version']).trim(),
+      e2eeRequired: _toBool(json['e2ee_required']),
       webAuthUrl: webAuth.isNotEmpty
           ? webAuth
           : (resolvedBase.isNotEmpty ? '$resolvedBase/user/client-auth' : ''),
@@ -109,7 +217,12 @@ class YoukoMixMeta {
   Map<String, Object?> toJson() => {
     'app_name': appName,
     'base_url': baseUrl,
+    'api_endpoints': apiEndpoints,
+    'download_base_url': downloadBaseUrl,
     'login_captcha_enabled': captchaEnabled,
+    'captcha_mode': captchaMode,
+    'min_client_version': minClientVersion,
+    'e2ee_required': e2eeRequired,
     'register_url': registerUrl,
     'password_reset_url': passwordResetUrl,
     'web_auth_url': webAuthUrl,
@@ -121,7 +234,15 @@ class YoukoMixMeta {
       other is YoukoMixMeta &&
           other.appName == appName &&
           other.baseUrl == baseUrl &&
+          const ListEquality<String>().equals(
+            other.apiEndpoints,
+            apiEndpoints,
+          ) &&
+          other.downloadBaseUrl == downloadBaseUrl &&
           other.captchaEnabled == captchaEnabled &&
+          other.captchaMode == captchaMode &&
+          other.minClientVersion == minClientVersion &&
+          other.e2eeRequired == e2eeRequired &&
           other.registerUrl == registerUrl &&
           other.passwordResetUrl == passwordResetUrl &&
           other.webAuthUrl == webAuthUrl;
@@ -130,7 +251,12 @@ class YoukoMixMeta {
   int get hashCode => Object.hash(
     appName,
     baseUrl,
+    const ListEquality<String>().hash(apiEndpoints),
+    downloadBaseUrl,
     captchaEnabled,
+    captchaMode,
+    minClientVersion,
+    e2eeRequired,
     registerUrl,
     passwordResetUrl,
     webAuthUrl,
@@ -489,6 +615,8 @@ class YoukoMixBootstrap {
   final YoukoMixSubscriptionState subscription;
   final List<YoukoMixAnnouncement> announcements;
   final YoukoMixLinks links;
+  final List<String> apiEndpoints;
+  final String downloadBaseUrl;
 
   const YoukoMixBootstrap({
     this.user = const YoukoMixUser(),
@@ -496,6 +624,8 @@ class YoukoMixBootstrap {
     this.subscription = const YoukoMixSubscriptionState(),
     this.announcements = const [],
     this.links = const YoukoMixLinks(),
+    this.apiEndpoints = const [],
+    this.downloadBaseUrl = '',
   });
 
   YoukoMixBootstrap copyWith({
@@ -504,6 +634,8 @@ class YoukoMixBootstrap {
     YoukoMixSubscriptionState? subscription,
     List<YoukoMixAnnouncement>? announcements,
     YoukoMixLinks? links,
+    List<String>? apiEndpoints,
+    String? downloadBaseUrl,
   }) {
     return YoukoMixBootstrap(
       user: user ?? this.user,
@@ -511,6 +643,8 @@ class YoukoMixBootstrap {
       subscription: subscription ?? this.subscription,
       announcements: announcements ?? this.announcements,
       links: links ?? this.links,
+      apiEndpoints: apiEndpoints ?? this.apiEndpoints,
+      downloadBaseUrl: downloadBaseUrl ?? this.downloadBaseUrl,
     );
   }
 
@@ -522,11 +656,14 @@ class YoukoMixBootstrap {
     final linksRaw = json['links'];
     final panelRaw = json['panel'];
     YoukoMixLinks resolvedLinks = const YoukoMixLinks();
-    if (linksRaw is Map) {
-      resolvedLinks = YoukoMixLinks.fromJson(
-        Map<String, Object?>.from(linksRaw),
-      );
-    } else if (panelRaw is Map) {
+    List<String> resolvedEndpoints = parseYoukoMixEndpointList(
+      json['api_endpoints'],
+    );
+    String resolvedDownloadBase = _toString(
+      json['download_base_url'],
+    ).trim().replaceAll(RegExp(r'/+$'), '');
+
+    if (panelRaw is Map) {
       final panelMap = Map<String, Object?>.from(panelRaw);
       final baseUrl = _toString(
         panelMap['base_url'],
@@ -538,7 +675,25 @@ class YoukoMixBootstrap {
             : (baseUrl.isNotEmpty ? '$baseUrl/user' : ''),
         webAuthUrl: baseUrl.isNotEmpty ? '$baseUrl/user/client-auth' : '',
       );
+      final panelEndpoints = parseYoukoMixEndpointList(
+        panelMap['api_endpoints'],
+      );
+      if (panelEndpoints.isNotEmpty) {
+        resolvedEndpoints = panelEndpoints;
+      }
+      final panelDl = _toString(
+        panelMap['download_base_url'],
+      ).trim().replaceAll(RegExp(r'/+$'), '');
+      if (panelDl.isNotEmpty) {
+        resolvedDownloadBase = panelDl;
+      }
     }
+    if (linksRaw is Map) {
+      resolvedLinks = YoukoMixLinks.fromJson(
+        Map<String, Object?>.from(linksRaw),
+      );
+    }
+
     return YoukoMixBootstrap(
       user: userRaw is Map
           ? YoukoMixUser.fromJson(Map<String, Object?>.from(userRaw))
@@ -558,6 +713,8 @@ class YoukoMixBootstrap {
               YoukoMixAnnouncement.fromJson(Map<String, Object?>.from(item)),
       ],
       links: resolvedLinks,
+      apiEndpoints: resolvedEndpoints,
+      downloadBaseUrl: resolvedDownloadBase,
     );
   }
 
@@ -567,6 +724,8 @@ class YoukoMixBootstrap {
     'subscription': subscription.toJson(),
     'announcements': [for (final item in announcements) item.toJson()],
     'links': links.toJson(),
+    if (apiEndpoints.isNotEmpty) 'api_endpoints': apiEndpoints,
+    if (downloadBaseUrl.isNotEmpty) 'download_base_url': downloadBaseUrl,
   };
 
   @override
@@ -580,7 +739,12 @@ class YoukoMixBootstrap {
             other.announcements,
             announcements,
           ) &&
-          other.links == links;
+          other.links == links &&
+          const ListEquality<String>().equals(
+            other.apiEndpoints,
+            apiEndpoints,
+          ) &&
+          other.downloadBaseUrl == downloadBaseUrl;
 
   @override
   int get hashCode => Object.hash(
@@ -589,6 +753,8 @@ class YoukoMixBootstrap {
     subscription,
     const ListEquality<YoukoMixAnnouncement>().hash(announcements),
     links,
+    const ListEquality<String>().hash(apiEndpoints),
+    downloadBaseUrl,
   );
 }
 
@@ -598,6 +764,7 @@ class YoukoMixSession {
   final String accessToken;
   final int expiresAt;
   final YoukoMixSubPreference preferredSubMode;
+  final List<String> apiEndpoints;
   final YoukoMixBootstrap? bootstrap;
 
   const YoukoMixSession({
@@ -605,6 +772,7 @@ class YoukoMixSession {
     required this.accessToken,
     this.expiresAt = 0,
     this.preferredSubMode = YoukoMixSubPreference.auto,
+    this.apiEndpoints = const [],
     this.bootstrap,
   });
 
@@ -613,6 +781,7 @@ class YoukoMixSession {
     String? accessToken,
     int? expiresAt,
     YoukoMixSubPreference? preferredSubMode,
+    List<String>? apiEndpoints,
     YoukoMixBootstrap? bootstrap,
   }) {
     return YoukoMixSession(
@@ -620,6 +789,7 @@ class YoukoMixSession {
       accessToken: accessToken ?? this.accessToken,
       expiresAt: expiresAt ?? this.expiresAt,
       preferredSubMode: preferredSubMode ?? this.preferredSubMode,
+      apiEndpoints: apiEndpoints ?? this.apiEndpoints,
       bootstrap: bootstrap ?? this.bootstrap,
     );
   }
@@ -629,10 +799,14 @@ class YoukoMixSession {
     String fallbackServerUrl = '',
   }) {
     final bootstrapRaw = json['bootstrap'];
+    final parsedBootstrap = bootstrapRaw is Map
+        ? YoukoMixBootstrap.fromJson(Map<String, Object?>.from(bootstrapRaw))
+        : null;
     final rawServer = _toString(json['server_url']).trim();
     final rawToken = _toString(json['access_token']).isNotEmpty
         ? _toString(json['access_token'])
         : _toString(json['token']);
+    final explicitEndpoints = parseYoukoMixEndpointList(json['api_endpoints']);
     return YoukoMixSession(
       serverUrl: rawServer.isNotEmpty ? rawServer : fallbackServerUrl,
       accessToken: rawToken,
@@ -640,9 +814,10 @@ class YoukoMixSession {
       preferredSubMode: YoukoMixSubPreference.fromString(
         json['preferred_sub_mode'],
       ),
-      bootstrap: bootstrapRaw is Map
-          ? YoukoMixBootstrap.fromJson(Map<String, Object?>.from(bootstrapRaw))
-          : null,
+      apiEndpoints: explicitEndpoints.isNotEmpty
+          ? explicitEndpoints
+          : (parsedBootstrap?.apiEndpoints ?? const []),
+      bootstrap: parsedBootstrap,
     );
   }
 
@@ -651,6 +826,7 @@ class YoukoMixSession {
     'access_token': accessToken,
     'expires_at': expiresAt,
     'preferred_sub_mode': preferredSubMode.apiValue,
+    if (apiEndpoints.isNotEmpty) 'api_endpoints': apiEndpoints,
     if (bootstrap != null) 'bootstrap': bootstrap!.toJson(),
   };
 
@@ -662,6 +838,10 @@ class YoukoMixSession {
           other.accessToken == accessToken &&
           other.expiresAt == expiresAt &&
           other.preferredSubMode == preferredSubMode &&
+          const ListEquality<String>().equals(
+            other.apiEndpoints,
+            apiEndpoints,
+          ) &&
           other.bootstrap == bootstrap;
 
   @override
@@ -670,6 +850,7 @@ class YoukoMixSession {
     accessToken,
     expiresAt,
     preferredSubMode,
+    const ListEquality<String>().hash(apiEndpoints),
     bootstrap,
   );
 }
@@ -697,10 +878,12 @@ final class YoukoMixLoginMfaRequired extends YoukoMixLoginOutcome {
 }
 
 final class YoukoMixLoginCaptchaRequired extends YoukoMixLoginOutcome {
+  final YoukoMixCaptchaChallenge? challenge;
   final String webAuthUrl;
   final String message;
 
   const YoukoMixLoginCaptchaRequired({
+    this.challenge,
     required this.webAuthUrl,
     required this.message,
   });
