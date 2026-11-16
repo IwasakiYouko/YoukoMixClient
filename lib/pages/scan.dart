@@ -156,7 +156,7 @@ class _ScanPageState extends ConsumerState<ScanPage>
     if (_leaving || !mounted || capture.barcodes.isEmpty) {
       return;
     }
-    final url = profileUrlFromQrCodes(
+    final url = youkoMixLinkFromQrCodes(
       capture.barcodes.map((barcode) => barcode.rawValue),
     );
     if (url == null) {

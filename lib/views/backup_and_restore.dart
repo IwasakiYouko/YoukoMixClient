@@ -91,12 +91,6 @@ class _BackupAndRestoreState extends ConsumerState<BackupAndRestore>
     );
   }
 
-  Future<RestoreOption?> _pickRestoreOption() {
-    return dialogs.showCommonDialog<RestoreOption>(
-      child: const RestoreOptionsDialog(),
-    );
-  }
-
   Future<void> _backupOnWebDAV() async {
     final client = _davConnection.client;
     if (client == null) return;
@@ -109,9 +103,7 @@ class _BackupAndRestoreState extends ConsumerState<BackupAndRestore>
   Future<void> _restoreOnWebDAV() async {
     final client = _davConnection.client;
     if (client == null) return;
-    final option = await _pickRestoreOption();
-    if (option == null || !mounted) return;
-    await _restore(option, (downloadPath) async {
+    await _restore(RestoreOption.all, (downloadPath) async {
       await client.download(downloadPath);
       return downloadPath;
     });
@@ -128,12 +120,10 @@ class _BackupAndRestoreState extends ConsumerState<BackupAndRestore>
   }
 
   Future<void> _restoreOnLocal() async {
-    final option = await _pickRestoreOption();
-    if (option == null || !mounted) return;
     final file = await picker.pickerFile();
     final path = file?.path;
     if (path == null || !mounted) return;
-    await _restore(option, (_) async => path);
+    await _restore(RestoreOption.all, (_) async => path);
   }
 
   void _handleChange(String? value, WidgetRef ref) {
@@ -293,45 +283,6 @@ class _DavConnectionIndicator extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class RestoreOptionsDialog extends StatefulWidget {
-  const RestoreOptionsDialog({super.key});
-
-  @override
-  State<RestoreOptionsDialog> createState() => _RestoreOptionsDialogState();
-}
-
-class _RestoreOptionsDialogState extends State<RestoreOptionsDialog> {
-  void _handleOnTab(RestoreOption? option) {
-    if (option == null) return;
-    Navigator.of(context).pop(option);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final appLocalizations = context.appLocalizations;
-    return AlertDialog(
-      title: appLocalizations.restore,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-      child: Wrap(
-        children: [
-          ListItem(
-            onTap: () {
-              _handleOnTab(RestoreOption.onlyProfiles);
-            },
-            title: Text(appLocalizations.restoreOnlyConfig),
-          ),
-          ListItem(
-            onTap: () {
-              _handleOnTab(RestoreOption.all);
-            },
-            title: Text(appLocalizations.restoreAllData),
-          ),
-        ],
-      ),
     );
   }
 }

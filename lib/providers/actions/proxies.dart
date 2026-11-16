@@ -278,37 +278,6 @@ class ProxiesAction extends _$ProxiesAction {
     }
   }
 
-  Future<void> addToLocalProxies(String proxyName) async {
-    final appLocalizations = currentAppLocalizations;
-    final definition = await _core.getProxyDefinition(proxyName);
-    if (definition == null) {
-      throw MessageException(
-        appLocalizations.customIssueMissingProxies(proxyName),
-      );
-    }
-    final (proxies, groupNames) = await (
-      database.customProxiesDao.query().get(),
-      database.proxyGroupsDao.names().get(),
-    ).wait;
-    final (:name, :added) = importProxy(
-      definition,
-      existing: [for (final proxy in proxies) proxy.definition],
-      groupNames: groupNames.toSet(),
-    );
-    if (added == null) {
-      dialogs.showBanner(appLocalizations.alreadyInLocalProxies(name));
-      return;
-    }
-    final order = indexing.generateKeyBetween(
-      proxies.map((proxy) => proxy.order).nonNulls.lastOrNull,
-      null,
-    );
-    await database.customProxies.put(
-      CustomProxy.fromDefinition(added).copyWith(order: order).toCompanion(),
-    );
-    dialogs.showBanner(appLocalizations.addedToLocalProxies(name));
-  }
-
   Future<void> proxyDelayTest(Proxy proxy, [String? testUrl]) {
     return _runDelayTests([
       (proxies: [proxy], testUrl: testUrl),

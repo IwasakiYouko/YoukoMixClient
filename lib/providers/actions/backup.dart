@@ -2,8 +2,6 @@ part of '../action.dart';
 
 typedef BackupDelivery = Future<bool> Function(String archivePath);
 
-/// Returns the archive to restore, or null when the user backed out. A source
-/// that downloads writes to [downloadPath], which is removed afterwards.
 typedef BackupFetch = Future<String?> Function(String downloadPath);
 
 @Riverpod(keepAlive: true)
@@ -53,8 +51,6 @@ class BackupAction extends _$BackupAction {
     }
   }
 
-  /// Earlier versions staged restores in the home directory and never removed
-  /// the downloaded archive.
   Future<void> _discardLegacyStaging() async {
     final homeDirPath = await appPath.homeDirPath;
     await File(join(homeDirPath, 'backup.zip')).safeDelete();
@@ -64,13 +60,13 @@ class BackupAction extends _$BackupAction {
   Future<String> _createArchive(String workDir) async {
     final databaseSnapshotPath = join(workDir, backupDatabaseName);
     await database.customStatement('VACUUM INTO ?', [databaseSnapshotPath]);
-    final (profileIds, scriptIds, providers, mitmModules) = await (
-      database.profilesDao.query().map((item) => item.id).get(),
+    final (scriptIds, providers, mitmModules) = await (
       database.scriptsDao.query().map((item) => item.id).get(),
       database.clashProvidersDao.query().get(),
       database.mitmModulesDao.query().get(),
     ).wait;
     final configMap = ref.read(configProvider).toJson();
+    configMap['currentProfileId'] = null;
     configMap['version'] = await preferences.getVersion();
     final archivePath = join(workDir, 'backup.zip');
     await backupTask((
@@ -79,7 +75,7 @@ class BackupAction extends _$BackupAction {
       databaseSnapshotPath: databaseSnapshotPath,
       homeDirPath: await appPath.homeDirPath,
       entries: BackupEntries.of(
-        profileIds: profileIds,
+        profileIds: const [],
         scriptIds: scriptIds,
         providers: providers,
         mitmModules: mitmModules,
@@ -101,21 +97,46 @@ class BackupAction extends _$BackupAction {
     final isOverride =
         ref.read(appSettingProvider).restoreStrategy ==
         RestoreStrategy.override;
+    final sanitizedData = MigrationData(
+      configMap: data.configMap,
+      profiles: const [],
+      scripts: data.scripts,
+      rules: data.rules,
+      disabledRules: data.disabledRules,
+      proxyGroups: const [],
+      clashProviders: data.clashProviders,
+      customProxies: const [],
+      proxyDialers: const [],
+      mitmModules: data.mitmModules,
+    );
+    final keptManagedProfiles = isOverride
+        ? (await database.profilesDao.query().get())
+              .where((item) => item.id == youkomixManagedProfileId)
+              .toList()
+        : const <Profile>[];
     final previousProviders = await database.clashProvidersDao.query().get();
     final putBack = stagingDirPath == null
         ? null
-        : await _copyStagedFiles(data, stagingDirPath);
+        : await _copyStagedFiles(sanitizedData, stagingDirPath);
     try {
+      if (isOverride) {
+        final unmanaged = (await database.profilesDao.query().get())
+            .where((item) => item.id != youkomixManagedProfileId)
+            .toList();
+        for (final item in unmanaged) {
+          await database.deleteProfile(item.id);
+        }
+      }
       await database.restore(
-        data.profiles,
-        data.scripts,
-        data.rules,
-        data.disabledRules,
-        data.proxyGroups,
-        clashProviders: data.clashProviders,
-        customProxies: data.customProxies,
-        proxyDialers: data.proxyDialers,
-        mitmModules: data.mitmModules,
+        keptManagedProfiles,
+        sanitizedData.scripts,
+        sanitizedData.rules,
+        sanitizedData.disabledRules,
+        sanitizedData.proxyGroups,
+        clashProviders: sanitizedData.clashProviders,
+        customProxies: sanitizedData.customProxies,
+        proxyDialers: sanitizedData.proxyDialers,
+        mitmModules: sanitizedData.mitmModules,
         isOverride: isOverride,
       );
     } catch (_) {
@@ -123,18 +144,26 @@ class BackupAction extends _$BackupAction {
       rethrow;
     }
     await _clearReplacedProviderCaches(previousProviders);
-    await _clearOutdatedCompiledRuleSets(data.clashProviders);
+    await _clearOutdatedCompiledRuleSets(sanitizedData.clashProviders);
     if (config == null) {
       await _restoreMitmModules();
+      if (ref.mounted) {
+        unawaited(
+          ref
+              .read(youkomixControllerProvider.notifier)
+              .refreshIfAuthenticated(),
+        );
+      }
       return;
     }
-    // A desktop backup carries no package lists; the apps picked here stay.
     final accessControlProps = config.vpnProps.accessControlProps.hasPackages
         ? config.vpnProps.accessControlProps
         : ref.read(vpnSettingProvider).accessControlProps;
+    final currentProfileId = ref.read(currentProfileIdProvider);
     writeConfig(
       ref,
       config.copyWith(
+        currentProfileId: currentProfileId,
         davProps: config.davProps ?? ref.read(davSettingProvider),
         vpnProps: config.vpnProps.copyWith(
           accessControlProps: accessControlProps,
@@ -142,6 +171,11 @@ class BackupAction extends _$BackupAction {
       ),
     );
     await _restoreMitmModules();
+    if (ref.mounted) {
+      unawaited(
+        ref.read(youkomixControllerProvider.notifier).refreshIfAuthenticated(),
+      );
+    }
   }
 
   Future<void> _restoreMitmModules() async {
@@ -152,8 +186,6 @@ class BackupAction extends _$BackupAction {
     }
   }
 
-  /// The files go in before the rows that name them, so the returned callback
-  /// is how a restore whose rows fail takes them back out.
   Future<Future<void> Function()> _copyStagedFiles(
     MigrationData data,
     String stagingDirPath,
@@ -208,7 +240,6 @@ class BackupAction extends _$BackupAction {
     }
   }
 
-  /// A restored source outdates the mrs compiled from the one it replaced.
   Future<void> _clearOutdatedCompiledRuleSets(
     List<ClashProvider> restored,
   ) async {

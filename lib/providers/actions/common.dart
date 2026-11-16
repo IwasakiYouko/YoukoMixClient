@@ -161,7 +161,7 @@ class CommonAction extends _$CommonAction {
       );
       if (res == true) {
         if (suffix == null) {
-          _openReleasePage();
+          _openReleasePage(data['html_url'] as String?);
         } else {
           unawaited(_downloadUpdate(tag, releaseAssetName(tag, suffix)));
         }
@@ -180,10 +180,11 @@ class CommonAction extends _$CommonAction {
     }
   }
 
-  void _openReleasePage() {
-    unawaited(
-      launchUrl(Uri.parse('https://github.com/$repository/releases/latest')),
-    );
+  void _openReleasePage([String? releaseUrl]) {
+    final target = (releaseUrl != null && releaseUrl.isNotEmpty)
+        ? releaseUrl
+        : 'https://github.com/$repository/releases/latest';
+    unawaited(launchUrl(Uri.parse(target)));
   }
 
   /// Downloads the latest release for this build even when it is not newer.

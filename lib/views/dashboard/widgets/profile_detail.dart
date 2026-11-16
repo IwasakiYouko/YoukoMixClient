@@ -7,34 +7,35 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
-import 'package:fl_clash/views/profiles/preview.dart';
-import 'package:fl_clash/views/profiles/profiles.dart';
+import 'package:fl_clash/views/config/profile_preview.dart';
 import 'package:fl_clash/views/proxies/providers.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yaml/yaml.dart';
 
 const _statSpacing = 8.0;
 
-Future<void> syncProfile(WidgetRef ref, Profile profile) async {
+Future<void> syncProfile(WidgetRef ref, [Profile? profile]) async {
   await globalState.loadingRun(() async {
-    await ref
-        .read(profilesActionProvider.notifier)
-        .updateProfile(profile, showLoading: true);
+    final auth = ref.read(youkomixControllerProvider);
+    if (auth.isAuthenticated) {
+      await ref
+          .read(youkomixControllerProvider.notifier)
+          .syncSubscription(showFeedback: true);
+      return;
+    }
+    if (profile != null) {
+      await ref
+          .read(profilesActionProvider.notifier)
+          .updateProfile(profile, showLoading: true);
+    }
   }, tag: LoadingTag.profiles);
 }
 
 void showProfileDetailSheet(BuildContext context) {
   showSheet<void>(context: context, builder: (_) => const ProfileDetailSheet());
-}
-
-void showProfilesSheet(BuildContext context) {
-  showSheet<void>(
-    context: context,
-    builder: (_) => const ProfilesView(picker: true),
-  );
 }
 
 typedef ProfileStats = ({int groups, int proxies, int rules, int providers});
@@ -56,7 +57,6 @@ ProfileStats profileStatsOf(
 
 ({String md5, ConfigCounts counts})? _countsCache;
 
-// package:yaml holds a document in many times its size.
 const _maxCountedConfigBytes = 8 << 20;
 
 ConfigCounts? _cachedCounts() {
@@ -77,7 +77,6 @@ ConfigCounts? _countConfigFile(String path) {
   return configCountsOf(config is Map ? config : const {});
 }
 
-/// Parsed in an isolate: a large profile takes far longer than a frame.
 Future<ConfigCounts?> _loadCounts() async {
   if (_cachedCounts() case final counts?) {
     return counts;
@@ -122,7 +121,6 @@ mixin ConfigCountsWatch<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     });
   }
 
-  /// Called from build: groups refresh after every applied setup.
   void watchConfigCounts() {
     ref.listen(groupsProvider, (_, _) {
       final cached = _cachedCounts();
@@ -162,26 +160,34 @@ class _ProfileDetailSheetState extends ConsumerState<ProfileDetailSheet>
       return const SizedBox.shrink();
     }
     final providers = ref.watch(providersProvider);
-    final isUpdating = ref.watch(isUpdatingProvider(profile.updatingKey));
+    final syncing = ref.watch(
+      youkomixControllerProvider.select((s) => s.isSyncing || s.isBusy),
+    );
+    final isUpdating =
+        syncing || ref.watch(isUpdatingProvider(profile.updatingKey));
+    final developerMode = ref.watch(
+      appSettingProvider.select((state) => state.developerMode),
+    );
     final appLocalizations = context.appLocalizations;
     final subscriptionInfo = profile.subscriptionInfo;
     return Scaffold(
       title: profile.realLabel,
       iconActions: [
-        if (profile.type == ProfileType.url)
-          IconButtonData(
-            glyph: AppGlyphs.sync,
-            tooltip: appLocalizations.sync,
-            isLoading: isUpdating,
-            onPressed: () => syncProfile(ref, profile),
-          ),
         IconButtonData(
-          glyph: AppGlyphs.eye,
-          tooltip: appLocalizations.runtimeConfig,
-          onPressed: () => _handlePreview(profile),
+          glyph: AppGlyphs.sync,
+          tooltip: appLocalizations.sync,
+          isLoading: isUpdating,
+          onPressed: () => syncProfile(ref, profile),
         ),
+        if (developerMode)
+          IconButtonData(
+            glyph: AppGlyphs.eye,
+            tooltip: appLocalizations.runtimeConfig,
+            onPressed: () => _handlePreview(profile),
+          ),
       ],
       body: CustomScrollView(
+        controller: sheetScrollController(context),
         slivers: [
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
@@ -219,13 +225,6 @@ class _ProfileDetailSheetState extends ConsumerState<ProfileDetailSheet>
                             lastUpdateDate: profile.lastUpdateDate,
                           ),
                         ),
-                        if (profile.type != ProfileType.custom)
-                          _InfoRow(
-                            label: appLocalizations.extendMode,
-                            value: Text(
-                              _extendLabel(context, profile.extendType),
-                            ),
-                          ),
                       ],
                     ),
                   ],
@@ -239,13 +238,6 @@ class _ProfileDetailSheetState extends ConsumerState<ProfileDetailSheet>
       ),
     );
   }
-}
-
-String _extendLabel(BuildContext context, ExtendType type) {
-  return switch (type) {
-    ExtendType.standard => context.appLocalizations.standard,
-    ExtendType.script => context.appLocalizations.script,
-  };
 }
 
 class _StatsGrid extends StatelessWidget {

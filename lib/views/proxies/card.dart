@@ -32,14 +32,6 @@ void selectGroupProxy(
   );
 }
 
-/// Built-ins and groups have no definition, and a custom profile's own proxies
-/// are the local proxies already.
-bool _isAddableToLocal(Proxy proxy, {required bool isCustomProfile}) {
-  return (proxy.providerName != null || !isCustomProfile) &&
-      !reservedCustomProxyNames.contains(proxy.name) &&
-      GroupTypeExtension.getGroupType(proxy.type) == null;
-}
-
 class ProxyCard extends ConsumerWidget {
   final String groupName;
   final Proxy proxy;
@@ -91,17 +83,11 @@ class ProxyCard extends ConsumerWidget {
     );
   }
 
-  void _handleAddToLocalProxies(WidgetRef ref) {
-    final proxiesAction = ref.read(proxiesActionProvider.notifier);
-    globalState.safeRun(() => proxiesAction.addToLocalProxies(proxy.name));
-  }
-
   List<PopupMenuItem> _menuItems(
     BuildContext context,
     WidgetRef ref, {
     required bool inUse,
     required bool pinned,
-    required bool addable,
   }) {
     final appLocalizations = context.appLocalizations;
     return [
@@ -118,12 +104,6 @@ class ProxyCard extends ConsumerWidget {
           label: appLocalizations.preferred,
           checked: pinned,
           onPressed: () => _handleSelect(ref),
-        ),
-      if (addable)
-        PopupMenuItem(
-          glyph: AppGlyphs.listAdd,
-          label: appLocalizations.addToLocalProxies,
-          onPressed: () => _handleAddToLocalProxies(ref),
         ),
     ];
   }
@@ -184,19 +164,8 @@ class ProxyCard extends ConsumerWidget {
             ref.watch(
               proxyNameProvider(groupName).select((name) => name == proxy.name),
             );
-        final isCustomProfile = ref.watch(
-          currentProfileProvider.select(
-            (profile) => profile?.type == ProfileType.custom,
-          ),
-        );
         return ContextMenuRegion(
-          menuItems: _menuItems(
-            context,
-            ref,
-            inUse: inUse,
-            pinned: pinned,
-            addable: _isAddableToLocal(proxy, isCustomProfile: isCustomProfile),
-          ),
+          menuItems: _menuItems(context, ref, inUse: inUse, pinned: pinned),
           child: Card(
             radius: AppCorner.lg,
             enterActionsOnRight: true,

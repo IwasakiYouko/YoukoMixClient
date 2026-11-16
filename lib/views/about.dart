@@ -60,6 +60,12 @@ class AboutView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final appLocalizations = context.appLocalizations;
     final isLoading = ref.watch(loadingProvider(LoadingTag.checkUpdate));
+    final serverUrl = ref.watch(
+      youkomixControllerProvider.select((state) => state.effectiveServerUrl),
+    );
+    final panelUrl = serverUrl.isNotEmpty
+        ? serverUrl
+        : (youkomixStorage.activeServerUrl ?? '');
     return Scaffold(
       isLoading: isLoading,
       title: appLocalizations.about,
@@ -88,6 +94,15 @@ class AboutView extends ConsumerWidget {
           generateSection(
             title: appLocalizations.more,
             items: [
+              if (panelUrl.isNotEmpty)
+                _buildLinkItem(
+                  glyph: AppGlyphs.account,
+                  title: appLocalizations.youkomixOpenPanel,
+                  url: panelUrl,
+                  label: Uri.tryParse(panelUrl)?.host.isNotEmpty == true
+                      ? Uri.parse(panelUrl).host
+                      : panelUrl,
+                ),
               _buildLinkItem(
                 glyph: AppGlyphs.code,
                 title: appLocalizations.project,
@@ -99,12 +114,6 @@ class AboutView extends ConsumerWidget {
                 title: appLocalizations.core,
                 url: 'https://github.com/chen08209/Clash.Meta/tree/FlClash',
                 label: 'github.com/chen08209/Clash.Meta',
-              ),
-              _buildLinkItem(
-                glyph: AppGlyphs.send,
-                title: 'Telegram',
-                url: 'https://t.me/FlClash',
-                label: 't.me/FlClash',
               ),
             ],
           ),

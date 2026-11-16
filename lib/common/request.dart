@@ -20,6 +20,8 @@ class Request {
   /// off, because what it fetches is installed, on Windows as administrator.
   @visibleForTesting
   late final Dio releaseDio;
+  @visibleForTesting
+  YoukoMixReleaseInfo? lastPanelRelease;
   String? userAgent;
 
   ProviderReader? _read;
@@ -116,6 +118,30 @@ class Request {
 
   /// The release page redirect still answers once the hourly API quota is spent.
   Future<Map<String, dynamic>> latestRelease() async {
+    final serverUrl = youkomixStorage.activeServerUrl;
+    if (serverUrl != null && serverUrl.isNotEmpty) {
+      try {
+        final panelRelease = await youkomixApi.fetchRelease(serverUrl);
+        final rawVersion = panelRelease.version.trim();
+        if (rawVersion.isNotEmpty) {
+          lastPanelRelease = panelRelease;
+          final tagName = rawVersion.startsWith('v')
+              ? rawVersion
+              : 'v$rawVersion';
+          return {
+            'tag_name': tagName,
+            if (panelRelease.releaseUrl.isNotEmpty)
+              'html_url': panelRelease.releaseUrl,
+          };
+        }
+      } catch (error) {
+        commonPrint.log(
+          'panel release check failed: ${compactError(error)}',
+          logLevel: LogLevel.warning,
+        );
+      }
+    }
+    lastPanelRelease = null;
     try {
       final response = await dio.get<Map<String, dynamic>>(
         'https://api.github.com/repos/$repository/releases/latest',
@@ -151,17 +177,27 @@ class Request {
     ProgressCallback? onReceiveProgress,
     CancelToken? cancelToken,
   }) async {
-    final sums = await releaseDio.getUri<String>(
-      releaseAssetUri(tag, releaseChecksumsName),
-      options: Options(responseType: ResponseType.plain),
-      cancelToken: cancelToken,
-    );
-    final expected = releaseChecksum(sums.data ?? '', name);
-    if (expected == null) {
-      throw ReleaseNotVerifiedException(name);
+    final panelAsset = lastPanelRelease?.assets[name];
+    final String? expected;
+    final Uri uri;
+    if (panelAsset != null &&
+        panelAsset.url.isNotEmpty &&
+        panelAsset.sha256.isNotEmpty) {
+      expected = panelAsset.sha256.toLowerCase();
+      uri = Uri.parse(panelAsset.url);
+    } else {
+      final sums = await releaseDio.getUri<String>(
+        releaseAssetUri(tag, releaseChecksumsName),
+        options: Options(responseType: ResponseType.plain),
+        cancelToken: cancelToken,
+      );
+      expected = releaseChecksum(sums.data ?? '', name);
+      if (expected == null) {
+        throw ReleaseNotVerifiedException(name);
+      }
+      uri = releaseAssetUri(tag, name);
     }
     final path = join(directory, name);
-    final uri = releaseAssetUri(tag, name);
     if (app case final android?) {
       await android.downloadFile(
         uri,

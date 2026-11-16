@@ -4,35 +4,7 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/pages/editor.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:flutter/widgets.dart';
-
-IconButtonData customQuickEditAction(
-  BuildContext context, {
-  required VoidCallback onPressed,
-}) {
-  return IconButtonData(
-    glyph: AppGlyphs.compose,
-    onPressed: onPressed,
-    tooltip: context.appLocalizations.quickEdit,
-  );
-}
-
-IconButtonData customSaveAction(
-  BuildContext context, {
-  required VoidCallback onPressed,
-}) {
-  return IconButtonData(
-    glyph: AppGlyphs.check,
-    onPressed: onPressed,
-    tooltip: context.appLocalizations.save,
-  );
-}
-
-/// Thrown by an `apply` the user called off, which keeps the editor open.
-class QuickEditCancelled implements Exception {
-  const QuickEditCancelled();
-}
 
 /// Edits a list as text; a [FormatException] from [apply] reads as
 /// [invalidMessage].
@@ -59,8 +31,6 @@ Future<void> showQuickEdit(
       try {
         await apply(next);
         return true;
-      } on QuickEditCancelled {
-        return false;
       } catch (error) {
         final message = error is FormatException && invalidMessage != null
             ? invalidMessage
