@@ -725,20 +725,20 @@ class AppLocalizations {
     );
   }
 
-  /// `Receiving a link from your phone needs the Nearby devices permission, which lets FlClash reach the local network. Turn it on in the app's settings.`
+  /// `Receiving a link from your phone needs the Nearby devices permission, which lets YoukoMix reach the local network. Turn it on in the app's settings.`
   String get sendFromPhonePermissionDenied {
     return Intl.message(
-      'Receiving a link from your phone needs the Nearby devices permission, which lets FlClash reach the local network. Turn it on in the app\'s settings.',
+      'Receiving a link from your phone needs the Nearby devices permission, which lets YoukoMix reach the local network. Turn it on in the app\'s settings.',
       name: 'sendFromPhonePermissionDenied',
       desc: '',
       args: [],
     );
   }
 
-  /// `Send a link to FlClash`
+  /// `Send a link to YoukoMix`
   String get sendFromPhonePageTitle {
     return Intl.message(
-      'Send a link to FlClash',
+      'Send a link to YoukoMix',
       name: 'sendFromPhonePageTitle',
       desc: '',
       args: [],
@@ -780,10 +780,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Scan with FlClash on another device to import this profile.`
+  /// `Scan with YoukoMix on another device to import this profile.`
   String get shareQrcodeTip {
     return Intl.message(
-      'Scan with FlClash on another device to import this profile.',
+      'Scan with YoukoMix on another device to import this profile.',
       name: 'shareQrcodeTip',
       desc: '',
       args: [],
@@ -981,10 +981,10 @@ class AppLocalizations {
     );
   }
 
-  /// `A multi-platform proxy client based on ClashMeta, simple and easy to use, open-source and ad-free.`
+  /// `Dedicated cross-platform network acceleration client for YoukoMix.`
   String get desc {
     return Intl.message(
-      'A multi-platform proxy client based on ClashMeta, simple and easy to use, open-source and ad-free.',
+      'Dedicated cross-platform network acceleration client for YoukoMix.',
       name: 'desc',
       desc: '',
       args: [],
@@ -2331,10 +2331,10 @@ class AppLocalizations {
     return Intl.message('Disclaimer', name: 'disclaimer', desc: '', args: []);
   }
 
-  /// `Before using FlClash ("the Software"), please read this statement carefully and make sure you understand it. Tapping "Agree" means you have read and understood what follows. If you do not want to continue, tap "Exit".`
+  /// `Before using YoukoMix ("the Software"), please read this statement carefully and make sure you understand it. Tapping "Agree" means you have read and understood what follows. If you do not want to continue, tap "Exit".`
   String get disclaimerDesc {
     return Intl.message(
-      'Before using FlClash ("the Software"), please read this statement carefully and make sure you understand it. Tapping "Agree" means you have read and understood what follows. If you do not want to continue, tap "Exit".',
+      'Before using YoukoMix ("the Software"), please read this statement carefully and make sure you understand it. Tapping "Agree" means you have read and understood what follows. If you do not want to continue, tap "Exit".',
       name: 'disclaimerDesc',
       desc: '',
       args: [],
@@ -4646,10 +4646,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Helper service unavailable; TUN mode cannot be enabled. Reinstall FlClash to restore it.`
+  /// `Helper service unavailable; TUN mode cannot be enabled. Reinstall YoukoMix to restore it.`
   String get helperCorruptTip {
     return Intl.message(
-      'Helper service unavailable; TUN mode cannot be enabled. Reinstall FlClash to restore it.',
+      'Helper service unavailable; TUN mode cannot be enabled. Reinstall YoukoMix to restore it.',
       name: 'helperCorruptTip',
       desc: '',
       args: [],
@@ -4676,20 +4676,20 @@ class AppLocalizations {
     );
   }
 
-  /// `Windows refused to run FlClashCore.exe (error {code}). An app control policy such as Smart App Control or AppLocker blocks unsigned programs; allow FlClash in that policy or turn it off, then try again.`
+  /// `Windows refused to run YoukoMixCore.exe (error {code}). An app control policy such as Smart App Control or AppLocker blocks unsigned programs; allow YoukoMix in that policy or turn it off, then try again.`
   String coreBlockedByPolicyTip(Object code) {
     return Intl.message(
-      'Windows refused to run FlClashCore.exe (error $code). An app control policy such as Smart App Control or AppLocker blocks unsigned programs; allow FlClash in that policy or turn it off, then try again.',
+      'Windows refused to run YoukoMixCore.exe (error $code). An app control policy such as Smart App Control or AppLocker blocks unsigned programs; allow YoukoMix in that policy or turn it off, then try again.',
       name: 'coreBlockedByPolicyTip',
       desc: '',
       args: [code],
     );
   }
 
-  /// `Windows Smart App Control blocked FlClashCore.exe because it is not signed. Open Windows Security → App & browser control → Smart App Control settings, choose Off, then start FlClash again. Smart App Control cannot be turned back on without reinstalling Windows.`
+  /// `Windows Smart App Control blocked YoukoMixCore.exe because it is not signed. Open Windows Security → App & browser control → Smart App Control settings, choose Off, then start YoukoMix again. Smart App Control cannot be turned back on without reinstalling Windows.`
   String get coreBlockedBySmartAppControlTip {
     return Intl.message(
-      'Windows Smart App Control blocked FlClashCore.exe because it is not signed. Open Windows Security → App & browser control → Smart App Control settings, choose Off, then start FlClash again. Smart App Control cannot be turned back on without reinstalling Windows.',
+      'Windows Smart App Control blocked YoukoMixCore.exe because it is not signed. Open Windows Security → App & browser control → Smart App Control settings, choose Off, then start YoukoMix again. Smart App Control cannot be turned back on without reinstalling Windows.',
       name: 'coreBlockedBySmartAppControlTip',
       desc: '',
       args: [],
@@ -6694,10 +6694,10 @@ class AppLocalizations {
     );
   }
 
-  /// `FlClash ran into an error while starting and can't continue. Copy the details to report the problem. If it keeps happening, clearing the data usually lets the app start again.`
+  /// `YoukoMix ran into an error while starting and can't continue. Copy the details to report the problem. If it keeps happening, clearing the data usually lets the app start again.`
   String get initFailedTip {
     return Intl.message(
-      'FlClash ran into an error while starting and can\'t continue. Copy the details to report the problem. If it keeps happening, clearing the data usually lets the app start again.',
+      'YoukoMix ran into an error while starting and can\'t continue. Copy the details to report the problem. If it keeps happening, clearing the data usually lets the app start again.',
       name: 'initFailedTip',
       desc: '',
       args: [],
@@ -8133,10 +8133,10 @@ class AppLocalizations {
     );
   }
 
-  /// `FlClash will be able to read everything sent to the decrypted hosts, cookies and passwords included. Turn this on only for hosts you mean to rewrite.`
+  /// `YoukoMix will be able to read everything sent to the decrypted hosts, cookies and passwords included. Turn this on only for hosts you mean to rewrite.`
   String get mitmEnableTip {
     return Intl.message(
-      'FlClash will be able to read everything sent to the decrypted hosts, cookies and passwords included. Turn this on only for hosts you mean to rewrite.',
+      'YoukoMix will be able to read everything sent to the decrypted hosts, cookies and passwords included. Turn this on only for hosts you mean to rewrite.',
       name: 'mitmEnableTip',
       desc: '',
       args: [],
@@ -8168,10 +8168,10 @@ class AppLocalizations {
     );
   }
 
-  /// `The new certificate replaces the current one, which FlClash takes out of this device's trusted roots where it can. Every other device that trusts the current one has to install the new one.`
+  /// `The new certificate replaces the current one, which YoukoMix takes out of this device's trusted roots where it can. Every other device that trusts the current one has to install the new one.`
   String get regenerateCertificateTip {
     return Intl.message(
-      'The new certificate replaces the current one, which FlClash takes out of this device\'s trusted roots where it can. Every other device that trusts the current one has to install the new one.',
+      'The new certificate replaces the current one, which YoukoMix takes out of this device\'s trusted roots where it can. Every other device that trusts the current one has to install the new one.',
       name: 'regenerateCertificateTip',
       desc: '',
       args: [],
@@ -8343,10 +8343,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Root was found, so the certificate goes into the system's trusted certificates as a FlClash MITM CA module for Magisk, KernelSU or APatch. Every app on this device will then trust it, and anyone holding its private key could decrypt this device's HTTPS traffic. To undo it, regenerate the certificate or remove the module in the root manager and restart. If root is denied, it is installed as a user certificate instead.`
+  /// `Root was found, so the certificate goes into the system's trusted certificates as a YoukoMix MITM CA module for Magisk, KernelSU or APatch. Every app on this device will then trust it, and anyone holding its private key could decrypt this device's HTTPS traffic. To undo it, regenerate the certificate or remove the module in the root manager and restart. If root is denied, it is installed as a user certificate instead.`
   String get mitmInstallSystemCaTip {
     return Intl.message(
-      'Root was found, so the certificate goes into the system\'s trusted certificates as a FlClash MITM CA module for Magisk, KernelSU or APatch. Every app on this device will then trust it, and anyone holding its private key could decrypt this device\'s HTTPS traffic. To undo it, regenerate the certificate or remove the module in the root manager and restart. If root is denied, it is installed as a user certificate instead.',
+      'Root was found, so the certificate goes into the system\'s trusted certificates as a YoukoMix MITM CA module for Magisk, KernelSU or APatch. Every app on this device will then trust it, and anyone holding its private key could decrypt this device\'s HTTPS traffic. To undo it, regenerate the certificate or remove the module in the root manager and restart. If root is denied, it is installed as a user certificate instead.',
       name: 'mitmInstallSystemCaTip',
       desc: '',
       args: [],
@@ -8403,10 +8403,10 @@ class AppLocalizations {
     );
   }
 
-  /// `The old certificate, {name}, is still among the system's trusted CAs. Allow FlClash root access in your root manager and regenerate, or remove the FlClash MITM CA module there and restart.`
+  /// `The old certificate, {name}, is still among the system's trusted CAs. Allow YoukoMix root access in your root manager and regenerate, or remove the YoukoMix MITM CA module there and restart.`
   String mitmOldSystemCertificateLeftTip(Object name) {
     return Intl.message(
-      'The old certificate, $name, is still among the system\'s trusted CAs. Allow FlClash root access in your root manager and regenerate, or remove the FlClash MITM CA module there and restart.',
+      'The old certificate, $name, is still among the system\'s trusted CAs. Allow YoukoMix root access in your root manager and regenerate, or remove the YoukoMix MITM CA module there and restart.',
       name: 'mitmOldSystemCertificateLeftTip',
       desc: '',
       args: [name],
@@ -8423,10 +8423,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Add {host} to the hostname list? FlClash can then read what is sent to it, cookies and passwords included.`
+  /// `Add {host} to the hostname list? YoukoMix can then read what is sent to it, cookies and passwords included.`
   String mitmDecryptHostTip(Object host) {
     return Intl.message(
-      'Add $host to the hostname list? FlClash can then read what is sent to it, cookies and passwords included.',
+      'Add $host to the hostname list? YoukoMix can then read what is sent to it, cookies and passwords included.',
       name: 'mitmDecryptHostTip',
       desc: '',
       args: [host],
@@ -8943,10 +8943,10 @@ class AppLocalizations {
     );
   }
 
-  /// `FlClash closes to install the update and opens again when it is done.`
+  /// `YoukoMix closes to install the update and opens again when it is done.`
   String get updateRestartTip {
     return Intl.message(
-      'FlClash closes to install the update and opens again when it is done.',
+      'YoukoMix closes to install the update and opens again when it is done.',
       name: 'updateRestartTip',
       desc: '',
       args: [],
@@ -9068,6 +9068,346 @@ class AppLocalizations {
     return Intl.message(
       'These domains are resolved by Fallback directly.',
       name: 'fallbackFilterDomainDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Dedicated high-speed network client`
+  String get youkomixTagline {
+    return Intl.message(
+      'Dedicated high-speed network client',
+      name: 'youkomixTagline',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Panel URL`
+  String get youkomixServerUrl {
+    return Intl.message(
+      'Panel URL',
+      name: 'youkomixServerUrl',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `https://example.com`
+  String get youkomixServerUrlHint {
+    return Intl.message(
+      'https://example.com',
+      name: 'youkomixServerUrlHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Email`
+  String get youkomixEmail {
+    return Intl.message('Email', name: 'youkomixEmail', desc: '', args: []);
+  }
+
+  /// `Enter your account email`
+  String get youkomixEmailHint {
+    return Intl.message(
+      'Enter your account email',
+      name: 'youkomixEmailHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sign in`
+  String get youkomixLogin {
+    return Intl.message('Sign in', name: 'youkomixLogin', desc: '', args: []);
+  }
+
+  /// `Signing in…`
+  String get youkomixLoggingIn {
+    return Intl.message(
+      'Signing in…',
+      name: 'youkomixLoggingIn',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sign in via browser`
+  String get youkomixWebAuth {
+    return Intl.message(
+      'Sign in via browser',
+      name: 'youkomixWebAuth',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter one-time code`
+  String get youkomixEnterAuthCode {
+    return Intl.message(
+      'Enter one-time code',
+      name: 'youkomixEnterAuthCode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Scan QR code to sign in`
+  String get youkomixScanAuthQr {
+    return Intl.message(
+      'Scan QR code to sign in',
+      name: 'youkomixScanAuthQr',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `One-time code`
+  String get youkomixAuthCode {
+    return Intl.message(
+      'One-time code',
+      name: 'youkomixAuthCode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Paste the one-time code from the browser`
+  String get youkomixAuthCodeHint {
+    return Intl.message(
+      'Paste the one-time code from the browser',
+      name: 'youkomixAuthCodeHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Two-factor authentication`
+  String get youkomixMfaTitle {
+    return Intl.message(
+      'Two-factor authentication',
+      name: 'youkomixMfaTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter the 6-digit code from your authenticator app`
+  String get youkomixMfaDesc {
+    return Intl.message(
+      'Enter the 6-digit code from your authenticator app',
+      name: 'youkomixMfaDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Verification code`
+  String get youkomixMfaCode {
+    return Intl.message(
+      'Verification code',
+      name: 'youkomixMfaCode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Verify and sign in`
+  String get youkomixVerify {
+    return Intl.message(
+      'Verify and sign in',
+      name: 'youkomixVerify',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Back to password sign-in`
+  String get youkomixBackToLogin {
+    return Intl.message(
+      'Back to password sign-in',
+      name: 'youkomixBackToLogin',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Create account`
+  String get youkomixRegister {
+    return Intl.message(
+      'Create account',
+      name: 'youkomixRegister',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Forgot password`
+  String get youkomixForgotPassword {
+    return Intl.message(
+      'Forgot password',
+      name: 'youkomixForgotPassword',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Browser verification is required. Complete verification in your browser to return automatically`
+  String get youkomixCaptchaRequiredTip {
+    return Intl.message(
+      'Browser verification is required. Complete verification in your browser to return automatically',
+      name: 'youkomixCaptchaRequiredTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Account & subscription`
+  String get youkomixAccount {
+    return Intl.message(
+      'Account & subscription',
+      name: 'youkomixAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sync nodes`
+  String get youkomixSyncNodes {
+    return Intl.message(
+      'Sync nodes',
+      name: 'youkomixSyncNodes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Subscription nodes synced`
+  String get youkomixSyncSuccess {
+    return Intl.message(
+      'Subscription nodes synced',
+      name: 'youkomixSyncSuccess',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Syncing nodes…`
+  String get youkomixSyncing {
+    return Intl.message(
+      'Syncing nodes…',
+      name: 'youkomixSyncing',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Lv.{level}`
+  String youkomixLevelBadge(Object level) {
+    return Intl.message(
+      'Lv.$level',
+      name: 'youkomixLevelBadge',
+      desc: '',
+      args: [level],
+    );
+  }
+
+  /// `Plan expired`
+  String get youkomixExpired {
+    return Intl.message(
+      'Plan expired',
+      name: 'youkomixExpired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No expiration`
+  String get youkomixNeverExpire {
+    return Intl.message(
+      'No expiration',
+      name: 'youkomixNeverExpire',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Balance`
+  String get youkomixBalance {
+    return Intl.message('Balance', name: 'youkomixBalance', desc: '', args: []);
+  }
+
+  /// `Dedicated subscription bound`
+  String get youkomixSubModeExclusive {
+    return Intl.message(
+      'Dedicated subscription bound',
+      name: 'youkomixSubModeExclusive',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Standard subscription`
+  String get youkomixSubModeStandard {
+    return Intl.message(
+      'Standard subscription',
+      name: 'youkomixSubModeStandard',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Announcements`
+  String get youkomixAnnouncements {
+    return Intl.message(
+      'Announcements',
+      name: 'youkomixAnnouncements',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No announcements`
+  String get youkomixNoAnnouncements {
+    return Intl.message(
+      'No announcements',
+      name: 'youkomixNoAnnouncements',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Open panel`
+  String get youkomixOpenPanel {
+    return Intl.message(
+      'Open panel',
+      name: 'youkomixOpenPanel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sign out`
+  String get youkomixLogout {
+    return Intl.message('Sign out', name: 'youkomixLogout', desc: '', args: []);
+  }
+
+  /// `Signing out stops the proxy and clears cached node configs on this device. Continue?`
+  String get youkomixLogoutConfirm {
+    return Intl.message(
+      'Signing out stops the proxy and clears cached node configs on this device. Continue?',
+      name: 'youkomixLogoutConfirm',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your session has expired. Please sign in again`
+  String get youkomixSessionExpired {
+    return Intl.message(
+      'Your session has expired. Please sign in again',
+      name: 'youkomixSessionExpired',
       desc: '',
       args: [],
     );

@@ -33,7 +33,7 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m4(detail) => "No se pudieron borrar los datos: ${detail}";
 
   static String m5(code) =>
-      "Windows se negó a ejecutar FlClashCore.exe (error ${code}). Una directiva de control de aplicaciones, como Smart App Control o AppLocker, bloquea los programas sin firmar; permite FlClash en esa directiva o desactívala e inténtalo de nuevo.";
+      "Windows se negó a ejecutar YoukoMixCore.exe (error ${code}). Una directiva de control de aplicaciones, como Smart App Control o AppLocker, bloquea los programas sin firmar; permite YoukoMix en esa directiva o desactívala e inténtalo de nuevo.";
 
   static String m6(name) =>
       "La app no pudo terminar de iniciarse dos veces seguidas. Para romper el ciclo, se ha deseleccionado el perfil ${name} y se ha omitido la configuración automática. Puedes volver a seleccionarlo en cualquier momento.";
@@ -163,7 +163,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Chrome y Firefox tienen sus propios almacenes de certificados, que necesitan certutil: ${command}";
 
   static String m55(host) =>
-      "¿Añadir ${host} a la lista de nombres de host? FlClash podrá leer lo que se le envíe, incluidas cookies y contraseñas.";
+      "¿Añadir ${host} a la lista de nombres de host? YoukoMix podrá leer lo que se le envíe, incluidas cookies y contraseñas.";
 
   static String m56(host) =>
       "¿Añadir -${host} al principio de la lista de nombres de host? El host ya no se descifrará nunca.";
@@ -182,7 +182,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "No se pudo quitar el certificado antiguo, ${name}. Quítalo tú de las raíces de confianza.";
 
   static String m62(name) =>
-      "El certificado antiguo, ${name}, sigue entre los certificados de confianza del sistema. Permite el acceso root a FlClash en tu gestor de root y vuelve a generarlo, o elimina allí el módulo «FlClash MITM CA» y reinicia.";
+      "El certificado antiguo, ${name}, sigue entre los certificados de confianza del sistema. Permite el acceso root a YoukoMix en tu gestor de root y vuelve a generarlo, o elimina allí el módulo «YoukoMix MITM CA» y reinicia.";
 
   static String m63(name) =>
       "Quita el certificado antiguo, ${name}, en Ajustes › Seguridad › Cifrado y credenciales › Credenciales de confianza › Usuario, y después instala el nuevo.";
@@ -281,6 +281,8 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m101(count) =>
       "${Intl.plural(count, other: 'hace ${count} a')}";
+
+  static String m102(level) => "Lv.${level}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -605,7 +607,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "core": MessageLookupByLibrary.simpleMessage("Núcleo"),
     "coreBlockedByPolicyTip": m5,
     "coreBlockedBySmartAppControlTip": MessageLookupByLibrary.simpleMessage(
-      "Smart App Control de Windows bloqueó FlClashCore.exe porque no está firmado. Abre Seguridad de Windows → Control de aplicaciones y navegador → Configuración de Smart App Control, elige Desactivado y vuelve a iniciar FlClash. Smart App Control no se puede volver a activar sin reinstalar Windows.",
+      "Smart App Control de Windows bloqueó YoukoMixCore.exe porque no está firmado. Abre Seguridad de Windows → Control de aplicaciones y navegador → Configuración de Smart App Control, elige Desactivado y vuelve a iniciar YoukoMix. Smart App Control no se puede volver a activar sin reinstalar Windows.",
     ),
     "coreStatus": MessageLookupByLibrary.simpleMessage("Estado del núcleo"),
     "country": MessageLookupByLibrary.simpleMessage("Región"),
@@ -674,7 +676,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "deleteMultipTip": m22,
     "deleteTip": m23,
     "desc": MessageLookupByLibrary.simpleMessage(
-      "Un cliente proxy multiplataforma basado en ClashMeta, sencillo de usar, de código abierto y sin anuncios.",
+      "Cliente multiplataforma exclusivo de aceleración de red para YoukoMix.",
     ),
     "destination": MessageLookupByLibrary.simpleMessage("Destino"),
     "destinationGeoIP": MessageLookupByLibrary.simpleMessage(
@@ -735,7 +737,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Cambios en esta declaración",
     ),
     "disclaimerDesc": MessageLookupByLibrary.simpleMessage(
-      "Antes de usar FlClash («el Software»), lee atentamente esta declaración y asegúrate de entenderla. Tocar «Aceptar» significa que has leído y entendido lo que sigue. Si no quieres continuar, toca «Salir».",
+      "Antes de usar YoukoMix («el Software»), lee atentamente esta declaración y asegúrate de entenderla. Tocar «Aceptar» significa que has leído y entendido lo que sigue. Si no quieres continuar, toca «Salir».",
     ),
     "disclaimerLiabilityContent": MessageLookupByLibrary.simpleMessage(
       "En la máxima medida permitida por la ley aplicable, ni los desarrolladores ni ningún colaborador serán responsables de ningún daño directo, indirecto, incidental, especial, punitivo o emergente derivado del uso o de la imposibilidad de usar el Software, incluidos, entre otros, la pérdida de datos, los daños al dispositivo, los fallos de red, la interrupción de la actividad, el lucro cesante o cualquier disputa legal resultante, incluso si se les hubiera advertido de la posibilidad de tales daños.",
@@ -999,7 +1001,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Comprobación de estado",
     ),
     "helperCorruptTip": MessageLookupByLibrary.simpleMessage(
-      "El servicio auxiliar (Helper) no está disponible; no se puede activar el modo TUN. Reinstala FlClash para restaurarlo.",
+      "El servicio auxiliar (Helper) no está disponible; no se puede activar el modo TUN. Reinstala YoukoMix para restaurarlo.",
     ),
     "hex": MessageLookupByLibrary.simpleMessage("Hex"),
     "hideFromList": MessageLookupByLibrary.simpleMessage("Ocultar de la lista"),
@@ -1109,7 +1111,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "init": MessageLookupByLibrary.simpleMessage("Inicio"),
     "initFailed": MessageLookupByLibrary.simpleMessage("Error al iniciar"),
     "initFailedTip": MessageLookupByLibrary.simpleMessage(
-      "FlClash encontró un error al iniciarse y no puede continuar. Copia los detalles para informar del problema. Si sigue ocurriendo, borrar los datos suele permitir que la app vuelva a iniciarse.",
+      "YoukoMix encontró un error al iniciarse y no puede continuar. Copia los detalles para informar del problema. Si sigue ocurriendo, borrar los datos suele permitir que la app vuelva a iniciarse.",
     ),
     "initiator": MessageLookupByLibrary.simpleMessage("Origen de la solicitud"),
     "initiatorShort": MessageLookupByLibrary.simpleMessage("De"),
@@ -1393,7 +1395,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "mitmDecryptHostTip": m55,
     "mitmEnableTip": MessageLookupByLibrary.simpleMessage(
-      "FlClash podrá leer todo lo que se envíe a los hosts descifrados, incluidas cookies y contraseñas. Actívalo solo para los hosts que quieras reescribir.",
+      "YoukoMix podrá leer todo lo que se envíe a los hosts descifrados, incluidas cookies y contraseñas. Actívalo solo para los hosts que quieras reescribir.",
     ),
     "mitmExcludeHost": MessageLookupByLibrary.simpleMessage(
       "Excluir del descifrado",
@@ -1407,7 +1409,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Líneas ignoradas",
     ),
     "mitmInstallSystemCaTip": MessageLookupByLibrary.simpleMessage(
-      "Se detectó root: el certificado se añadirá a los certificados de confianza del sistema como el módulo de Magisk, KernelSU o APatch «FlClash MITM CA». Todas las apps del dispositivo confiarán en él, y quien tenga su clave privada podrá descifrar el tráfico HTTPS del dispositivo. Para deshacerlo, regenera el certificado o quita el módulo en el gestor de root y reinicia. Si se deniega root, se instalará como certificado de usuario.",
+      "Se detectó root: el certificado se añadirá a los certificados de confianza del sistema como el módulo de Magisk, KernelSU o APatch «YoukoMix MITM CA». Todas las apps del dispositivo confiarán en él, y quien tenga su clave privada podrá descifrar el tráfico HTTPS del dispositivo. Para deshacerlo, regenera el certificado o quita el módulo en el gestor de root y reinicia. Si se deniega root, se instalará como certificado de usuario.",
     ),
     "mitmInstallUserCaTip": MessageLookupByLibrary.simpleMessage(
       "No se detectó root: el certificado solo puede instalarse como certificado de usuario. Solo se descifran las apps que confían en certificados de usuario, sobre todo los navegadores; las demás fallan en los hosts que indiques, así que no indiques sus hosts. Desde Android 11 terminas la instalación tú mismo en los ajustes del sistema.",
@@ -1755,7 +1757,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Regenerar certificado",
     ),
     "regenerateCertificateTip": MessageLookupByLibrary.simpleMessage(
-      "El nuevo certificado sustituye al actual, que FlClash quita de las raíces de confianza de este dispositivo cuando puede. Cada otro dispositivo que confía en el actual tiene que instalar el nuevo.",
+      "El nuevo certificado sustituye al actual, que YoukoMix quita de las raíces de confianza de este dispositivo cuando puede. Cada otro dispositivo que confía en el actual tiene que instalar el nuevo.",
     ),
     "regex": MessageLookupByLibrary.simpleMessage("Expresión regular"),
     "releaseMemory": MessageLookupByLibrary.simpleMessage("Liberar memoria"),
@@ -2044,10 +2046,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "Enviado. Confirma la importación en el otro dispositivo.",
     ),
     "sendFromPhonePageTitle": MessageLookupByLibrary.simpleMessage(
-      "Enviar un enlace a FlClash",
+      "Enviar un enlace a YoukoMix",
     ),
     "sendFromPhonePermissionDenied": MessageLookupByLibrary.simpleMessage(
-      "Para recibir un enlace desde el teléfono, FlClash necesita el permiso Dispositivos cercanos, que le da acceso a la red local. Actívalo en los ajustes de la aplicación.",
+      "Para recibir un enlace desde el teléfono, YoukoMix necesita el permiso Dispositivos cercanos, que le da acceso a la red local. Actívalo en los ajustes de la aplicación.",
     ),
     "sendFromPhoneTip": MessageLookupByLibrary.simpleMessage(
       "Escanea el código con la cámara del teléfono y pega el enlace en la página que se abre. Ambos dispositivos deben estar en la misma red.",
@@ -2095,7 +2097,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "No se pudo leer ningún proxy de los enlaces",
     ),
     "shareQrcodeTip": MessageLookupByLibrary.simpleMessage(
-      "Escanea con FlClash en otro dispositivo para importar este perfil.",
+      "Escanea con YoukoMix en otro dispositivo para importar este perfil.",
     ),
     "show": MessageLookupByLibrary.simpleMessage("Mostrar"),
     "showLess": MessageLookupByLibrary.simpleMessage("Contraer"),
@@ -2288,7 +2290,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "La actualización se descargó. Toca para instalarla.",
     ),
     "updateRestartTip": MessageLookupByLibrary.simpleMessage(
-      "FlClash se cerrará para instalar la actualización y se volverá a abrir al terminar.",
+      "YoukoMix se cerrará para instalar la actualización y se volverá a abrir al terminar.",
     ),
     "upload": MessageLookupByLibrary.simpleMessage("Subida"),
     "uploadBandwidth": MessageLookupByLibrary.simpleMessage(
@@ -2327,6 +2329,92 @@ class MessageLookup extends MessageLookupByLibrary {
     "yearsAgo": m100,
     "yearsAgoShort": m101,
     "yes": MessageLookupByLibrary.simpleMessage("Sí"),
+    "youkomixAccount": MessageLookupByLibrary.simpleMessage(
+      "Cuenta y suscripción",
+    ),
+    "youkomixAnnouncements": MessageLookupByLibrary.simpleMessage("Anuncios"),
+    "youkomixAuthCode": MessageLookupByLibrary.simpleMessage("Código único"),
+    "youkomixAuthCodeHint": MessageLookupByLibrary.simpleMessage(
+      "Pega el código generado en el navegador",
+    ),
+    "youkomixBackToLogin": MessageLookupByLibrary.simpleMessage(
+      "Volver al inicio con contraseña",
+    ),
+    "youkomixBalance": MessageLookupByLibrary.simpleMessage("Saldo"),
+    "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
+      "Se requiere verificación en el navegador. Complétala para volver automáticamente",
+    ),
+    "youkomixEmail": MessageLookupByLibrary.simpleMessage("Correo electrónico"),
+    "youkomixEmailHint": MessageLookupByLibrary.simpleMessage(
+      "Introduce tu correo de cuenta",
+    ),
+    "youkomixEnterAuthCode": MessageLookupByLibrary.simpleMessage(
+      "Introducir código único",
+    ),
+    "youkomixExpired": MessageLookupByLibrary.simpleMessage("Plan vencido"),
+    "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage(
+      "¿Olvidaste tu contraseña?",
+    ),
+    "youkomixLevelBadge": m102,
+    "youkomixLoggingIn": MessageLookupByLibrary.simpleMessage(
+      "Iniciando sesión…",
+    ),
+    "youkomixLogin": MessageLookupByLibrary.simpleMessage("Iniciar sesión"),
+    "youkomixLogout": MessageLookupByLibrary.simpleMessage("Cerrar sesión"),
+    "youkomixLogoutConfirm": MessageLookupByLibrary.simpleMessage(
+      "Al cerrar sesión se detendrá el proxy y se borrarán los nodos en caché. ¿Continuar?",
+    ),
+    "youkomixMfaCode": MessageLookupByLibrary.simpleMessage(
+      "Código de verificación",
+    ),
+    "youkomixMfaDesc": MessageLookupByLibrary.simpleMessage(
+      "Introduce el código de 6 dígitos de tu autenticador",
+    ),
+    "youkomixMfaTitle": MessageLookupByLibrary.simpleMessage(
+      "Verificación en dos pasos",
+    ),
+    "youkomixNeverExpire": MessageLookupByLibrary.simpleMessage(
+      "Sin vencimiento",
+    ),
+    "youkomixNoAnnouncements": MessageLookupByLibrary.simpleMessage(
+      "Sin anuncios recientes",
+    ),
+    "youkomixOpenPanel": MessageLookupByLibrary.simpleMessage("Abrir panel"),
+    "youkomixRegister": MessageLookupByLibrary.simpleMessage("Crear cuenta"),
+    "youkomixScanAuthQr": MessageLookupByLibrary.simpleMessage(
+      "Escanear QR para iniciar sesión",
+    ),
+    "youkomixServerUrl": MessageLookupByLibrary.simpleMessage("URL del panel"),
+    "youkomixServerUrlHint": MessageLookupByLibrary.simpleMessage(
+      "https://example.com",
+    ),
+    "youkomixSessionExpired": MessageLookupByLibrary.simpleMessage(
+      "La sesión ha caducado. Inicia sesión de nuevo",
+    ),
+    "youkomixSubModeExclusive": MessageLookupByLibrary.simpleMessage(
+      "Suscripción exclusiva vinculada",
+    ),
+    "youkomixSubModeStandard": MessageLookupByLibrary.simpleMessage(
+      "Suscripción estándar",
+    ),
+    "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage(
+      "Sincronizar nodos",
+    ),
+    "youkomixSyncSuccess": MessageLookupByLibrary.simpleMessage(
+      "Nodos sincronizados",
+    ),
+    "youkomixSyncing": MessageLookupByLibrary.simpleMessage(
+      "Sincronizando nodos…",
+    ),
+    "youkomixTagline": MessageLookupByLibrary.simpleMessage(
+      "Cliente exclusivo de red de alta velocidad",
+    ),
+    "youkomixVerify": MessageLookupByLibrary.simpleMessage(
+      "Verificar e iniciar sesión",
+    ),
+    "youkomixWebAuth": MessageLookupByLibrary.simpleMessage(
+      "Autorizar en el navegador",
+    ),
     "zhCN": MessageLookupByLibrary.simpleMessage("Chino simplificado"),
   };
 }

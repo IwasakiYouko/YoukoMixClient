@@ -5,35 +5,97 @@ import 'package:flutter/foundation.dart';
 
 import 'print.dart';
 import 'protocol.dart';
-import 'string.dart';
 
-String? profileUrlFromQrCodes(Iterable<String?> values) {
+sealed class YoukoMixDeepLink {
+  const YoukoMixDeepLink();
+}
+
+@immutable
+final class YoukoMixAuthDeepLink extends YoukoMixDeepLink {
+  final String code;
+  final String? serverUrl;
+
+  const YoukoMixAuthDeepLink({required this.code, this.serverUrl});
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is YoukoMixAuthDeepLink &&
+          other.code == code &&
+          other.serverUrl == serverUrl;
+
+  @override
+  int get hashCode => Object.hash(code, serverUrl);
+}
+
+@immutable
+final class YoukoMixSyncDeepLink extends YoukoMixDeepLink {
+  const YoukoMixSyncDeepLink();
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) || other is YoukoMixSyncDeepLink;
+
+  @override
+  int get hashCode => (YoukoMixSyncDeepLink).hashCode;
+}
+
+YoukoMixDeepLink? parseYoukoMixDeepLink(String? raw) {
+  final text = raw?.trim();
+  if (text == null || text.isEmpty) {
+    return null;
+  }
+  final uri = Uri.tryParse(text);
+  if (uri == null) {
+    return null;
+  }
+  return parseYoukoMixDeepLinkUri(uri);
+}
+
+YoukoMixDeepLink? parseYoukoMixDeepLinkUri(Uri uri) {
+  if (!protocolSchemes.contains(uri.scheme.toLowerCase())) {
+    return null;
+  }
+  if (uri.path.isNotEmpty && uri.path != '/') {
+    return null;
+  }
+  switch (uri.host.toLowerCase()) {
+    case 'auth':
+      final code = uri.queryParameters['code']?.trim();
+      if (code == null || code.isEmpty) {
+        return null;
+      }
+      final rawServer = uri.queryParameters['server']?.trim();
+      String? serverUrl;
+      if (rawServer != null && rawServer.isNotEmpty) {
+        final parsedServer = Uri.tryParse(rawServer);
+        final validScheme =
+            parsedServer != null &&
+            (parsedServer.scheme == 'https' || parsedServer.scheme == 'http');
+        if (!validScheme || parsedServer.host.isEmpty) {
+          return null;
+        }
+        serverUrl = rawServer;
+      }
+      return YoukoMixAuthDeepLink(code: code, serverUrl: serverUrl);
+    case 'sync':
+      return const YoukoMixSyncDeepLink();
+    default:
+      return null;
+  }
+}
+
+String? youkoMixLinkFromQrCodes(Iterable<String?> values) {
   for (final value in values) {
     final text = value?.trim();
     if (text == null || text.isEmpty) {
       continue;
     }
-    if (text.isUrl || text.isShareLink) {
+    if (parseYoukoMixDeepLink(text) != null) {
       return text;
-    }
-    final uri = Uri.tryParse(text);
-    if (uri == null || !protocolSchemes.contains(uri.scheme)) {
-      continue;
-    }
-    final url = _installConfigUrl(uri);
-    if (url != null && url.isUrl) {
-      return url;
     }
   }
   return null;
-}
-
-String? _installConfigUrl(Uri uri) {
-  if (uri.host != 'install-config') {
-    return null;
-  }
-  final url = uri.queryParameters['url']?.trim();
-  return url == null || url.isEmpty ? null : url;
 }
 
 class LinkManager {
@@ -46,11 +108,10 @@ class LinkManager {
   @visibleForTesting
   Stream<Uri> Function() uriLinkStream = () => AppLinks().uriLinkStream;
 
-  /// Linux argv: the gtk plugin hooks GApplication too late to see it.
   void seedInitialLink(List<String> args) {
     for (final arg in args) {
-      final uri = Uri.tryParse(arg);
-      if (uri != null && protocolSchemes.contains(uri.scheme)) {
+      final uri = Uri.tryParse(arg.trim());
+      if (uri != null && protocolSchemes.contains(uri.scheme.toLowerCase())) {
         _pendingUri = uri;
         return;
       }
@@ -58,24 +119,24 @@ class LinkManager {
   }
 
   Future<void> initAppLinksListen(
-    Function(String url) installConfigCallBack,
+    void Function(YoukoMixDeepLink link) onDeepLink,
   ) async {
     destroy();
     subscription = uriLinkStream().listen((uri) {
-      _handle(uri, installConfigCallBack);
+      _handle(uri, onDeepLink);
     });
     final pending = _pendingUri;
     _pendingUri = null;
     if (pending != null) {
-      _handle(pending, installConfigCallBack);
+      _handle(pending, onDeepLink);
     }
   }
 
-  void _handle(Uri uri, Function(String url) installConfigCallBack) {
+  void _handle(Uri uri, void Function(YoukoMixDeepLink link) onDeepLink) {
     commonPrint.log('onAppLink: $uri');
-    final url = _installConfigUrl(uri);
-    if (url != null) {
-      installConfigCallBack(url);
+    final link = parseYoukoMixDeepLinkUri(uri);
+    if (link != null) {
+      onDeepLink(link);
     }
   }
 
