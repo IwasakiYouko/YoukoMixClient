@@ -86,7 +86,7 @@ class YoukoMixState {
       return false;
     }
     return switch (preferredSubMode) {
-      YoukoMixSubPreference.exclusive => true,
+      YoukoMixSubPreference.exclusive => sub.isExclusive,
       YoukoMixSubPreference.standard => false,
       YoukoMixSubPreference.auto => sub.isExclusive,
     };
@@ -444,9 +444,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
           : (payload.title.trim().isNotEmpty ? payload.title.trim() : appName);
 
       final previousMode = currentSession.bootstrap?.subscription.activeMode;
-      final modeChanged =
-          overridePreference != null ||
-          (previousMode != null && previousMode != resolvedMode);
+      final modeChanged = previousMode != null && previousMode != resolvedMode;
 
       await ref
           .read(profilesActionProvider.notifier)
@@ -542,9 +540,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
       YoukoMixSyncDeepLink(:final mode) =>
         !state.isAuthenticated
             ? Future.value(false)
-            : (mode != null
-                  ? switchSubscriptionMode(mode)
-                  : syncSubscription(showFeedback: true)),
+            : syncSubscription(showFeedback: true, overridePreference: mode),
     };
   }
 

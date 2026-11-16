@@ -424,6 +424,15 @@ void main() {
         isTrue,
       );
 
+      // Pinning exclusive while already active preserves existing group selection.
+      expect(
+        await notifier.switchSubscriptionMode(YoukoMixSubPreference.exclusive),
+        isTrue,
+      );
+      expect(container.read(profilesProvider).single.selectedMap, const {
+        'Proxy': 'HK-01',
+      });
+
       final switchedToStd = await notifier.switchSubscriptionMode(
         YoukoMixSubPreference.standard,
       );
@@ -442,6 +451,21 @@ void main() {
 
       final persistedStd = await storage.loadSession();
       expect(persistedStd?.preferredSubMode, YoukoMixSubPreference.standard);
+
+      // Re-invoking a deep link with the same mode still performs a fresh sync.
+      clearInteractions(api);
+      expect(
+        await notifier.handleRawDeepLink('youkomix://sync?mode=standard'),
+        isTrue,
+      );
+      verify(
+        () => api.downloadSubscription(
+          serverUrl: 'https://panel.example.com',
+          accessToken: 'ymx_switch_tok',
+          mode: 'standard',
+          userAgent: any(named: 'userAgent'),
+        ),
+      ).called(1);
 
       // Subsequent regular sync preserves standard mode without reverting to exclusive.
       expect(await notifier.syncSubscription(), isTrue);
