@@ -42,6 +42,7 @@ class YoukoMixState {
   final YoukoMixMeta? meta;
   final YoukoMixSession? session;
   final YoukoMixCaptchaChallenge? captchaChallenge;
+  final String? captchaServerUrl;
   final bool isLoadingCaptcha;
   final String? mfaChallengeToken;
   final String? webAuthUrl;
@@ -56,6 +57,7 @@ class YoukoMixState {
     this.meta,
     this.session,
     this.captchaChallenge,
+    this.captchaServerUrl,
     this.isLoadingCaptcha = false,
     this.mfaChallengeToken,
     this.webAuthUrl,
@@ -113,6 +115,7 @@ class YoukoMixState {
     YoukoMixMeta? meta,
     YoukoMixSession? session,
     YoukoMixCaptchaChallenge? captchaChallenge,
+    String? captchaServerUrl,
     bool? isLoadingCaptcha,
     String? mfaChallengeToken,
     String? webAuthUrl,
@@ -133,6 +136,9 @@ class YoukoMixState {
       captchaChallenge: clearCaptcha
           ? null
           : (captchaChallenge ?? this.captchaChallenge),
+      captchaServerUrl: clearCaptcha
+          ? null
+          : (captchaServerUrl ?? this.captchaServerUrl),
       isLoadingCaptcha: isLoadingCaptcha ?? this.isLoadingCaptcha,
       mfaChallengeToken: clearMfa
           ? null
@@ -151,9 +157,22 @@ final youkomixControllerProvider =
 
 class YoukoMixController extends Notifier<YoukoMixState> {
   int _authEpoch = 0;
+  int _captchaEpoch = 0;
 
   YoukoMixApiClient get _api => ref.read(youkomixApiProvider);
   YoukoMixSessionStorage get _storage => ref.read(youkomixStorageProvider);
+
+  static String? _tryNormalize(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+    try {
+      return normalizeYoukoMixServerUrl(trimmed);
+    } on YoukoMixApiException {
+      return null;
+    }
+  }
 
   @override
   YoukoMixState build() {
@@ -171,7 +190,22 @@ class YoukoMixController extends Notifier<YoukoMixState> {
   }
 
   void setServerUrl(String serverUrl) {
-    state = state.copyWith(serverUrl: serverUrl.trim(), clearError: true);
+    final trimmed = serverUrl.trim();
+    final nextNormalized = _tryNormalize(trimmed);
+    final prevNormalized = _tryNormalize(state.serverUrl);
+    final invalidateCaptcha =
+        nextNormalized != prevNormalized ||
+        (state.captchaServerUrl != null &&
+            state.captchaServerUrl != nextNormalized);
+    if (invalidateCaptcha) {
+      ++_captchaEpoch;
+    }
+    state = state.copyWith(
+      serverUrl: trimmed,
+      clearCaptcha: invalidateCaptcha,
+      isLoadingCaptcha: invalidateCaptcha ? false : state.isLoadingCaptcha,
+      clearError: true,
+    );
   }
 
   void clearError() {
@@ -191,23 +225,29 @@ class YoukoMixController extends Notifier<YoukoMixState> {
     }
     try {
       final normalized = normalizeYoukoMixServerUrl(target);
+      final metaEpoch = ++_captchaEpoch;
       final meta = await _api.fetchMeta(normalized);
-      if (!ref.mounted) {
+      if (!ref.mounted || metaEpoch != _captchaEpoch) {
         return;
       }
       _storage.setActiveServerUrl(normalized);
       if (meta.apiEndpoints.isNotEmpty) {
-        _storage.setApiEndpoints(meta.apiEndpoints);
+        _storage.setApiEndpoints(meta.apiEndpoints, origin: normalized);
       }
+      final serverMismatch =
+          state.captchaServerUrl != null &&
+          state.captchaServerUrl != normalized;
       state = state.copyWith(
         serverUrl: normalized,
         meta: meta,
-        clearCaptcha: !meta.captchaEnabled,
+        clearCaptcha: !meta.captchaEnabled || serverMismatch,
         webAuthUrl: meta.webAuthUrl.isNotEmpty
             ? meta.webAuthUrl
             : state.webAuthUrl,
       );
-      if (meta.captchaEnabled && state.captchaChallenge == null) {
+      if (meta.captchaEnabled &&
+          (state.captchaChallenge == null ||
+              state.captchaServerUrl != normalized)) {
         await refreshCaptcha(normalized);
       }
     } catch (_) {
@@ -217,7 +257,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
 
   Future<void> refreshCaptcha([String? rawServerUrl]) async {
     final target = (rawServerUrl ?? state.serverUrl).trim();
-    if (target.isEmpty || state.isLoadingCaptcha) {
+    if (target.isEmpty) {
       return;
     }
     String normalized;
@@ -226,18 +266,25 @@ class YoukoMixController extends Notifier<YoukoMixState> {
     } on YoukoMixApiException {
       return;
     }
+    final reqEpoch = ++_captchaEpoch;
     state = state.copyWith(isLoadingCaptcha: true);
     try {
       final challenge = await _api.fetchCaptcha(normalized);
-      if (!ref.mounted) {
+      if (!ref.mounted || reqEpoch != _captchaEpoch) {
+        return;
+      }
+      final currentNormalized = _tryNormalize(state.serverUrl) ?? normalized;
+      if (currentNormalized != normalized) {
+        state = state.copyWith(isLoadingCaptcha: false);
         return;
       }
       state = state.copyWith(
         captchaChallenge: challenge,
+        captchaServerUrl: normalized,
         isLoadingCaptcha: false,
       );
     } catch (_) {
-      if (ref.mounted) {
+      if (ref.mounted && reqEpoch == _captchaEpoch) {
         state = state.copyWith(isLoadingCaptcha: false);
       }
     }
@@ -252,13 +299,19 @@ class YoukoMixController extends Notifier<YoukoMixState> {
     if (state.isBusy) {
       return false;
     }
-    final activeCaptchaId = state.captchaChallenge?.captchaId.trim() ?? '';
-    final trimmedCaptchaCode = captchaCode?.trim() ?? '';
     state = state.copyWith(isBusy: true, clearError: true, clearMfa: true);
     String normalized = '';
+    String activeCaptchaId = '';
     try {
       normalized = normalizeYoukoMixServerUrl(serverUrl);
       _storage.setActiveServerUrl(normalized);
+      final validBoundCaptcha =
+          state.captchaServerUrl == normalized ||
+          state.captchaServerUrl == null;
+      activeCaptchaId = validBoundCaptcha
+          ? (state.captchaChallenge?.captchaId.trim() ?? '')
+          : '';
+      final trimmedCaptchaCode = captchaCode?.trim() ?? '';
       final outcome = (activeCaptchaId.isEmpty && trimmedCaptchaCode.isEmpty)
           ? await _api.login(
               serverUrl: normalized,
@@ -299,6 +352,8 @@ class YoukoMixController extends Notifier<YoukoMixState> {
             isBusy: false,
             serverUrl: normalized,
             captchaChallenge: challenge,
+            captchaServerUrl: challenge != null ? normalized : null,
+            clearCaptcha: challenge == null,
             webAuthUrl: webAuthUrl,
             errorMessage: message,
           );
@@ -471,7 +526,10 @@ class YoukoMixController extends Notifier<YoukoMixState> {
             accessToken: currentSession.accessToken,
           );
       if (rawBootstrap.apiEndpoints.isNotEmpty) {
-        _storage.setApiEndpoints(rawBootstrap.apiEndpoints);
+        _storage.setApiEndpoints(
+          rawBootstrap.apiEndpoints,
+          origin: currentSession.serverUrl,
+        );
       }
       final basePreference =
           overridePreference ?? currentSession.preferredSubMode;
@@ -634,6 +692,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
 
   Future<void> logout() async {
     ++_authEpoch;
+    ++_captchaEpoch;
     final currentSession = state.session;
     state = state.copyWith(isBusy: true, isSyncing: false, clearError: true);
     if (currentSession != null) {
@@ -657,6 +716,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
 
   Future<void> _completeAuthenticatedSession(YoukoMixSession session) async {
     ++_authEpoch;
+    ++_captchaEpoch;
     await _storage.saveSession(session);
     await ref.read(profilesActionProvider.notifier).purgeUnmanagedProfiles();
     if (!ref.mounted) {
@@ -676,6 +736,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
 
   Future<void> _forceSignOut(String message) async {
     ++_authEpoch;
+    ++_captchaEpoch;
     await _purgeLocalSessionState();
     if (!ref.mounted) {
       return;

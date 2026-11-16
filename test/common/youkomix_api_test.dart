@@ -133,7 +133,7 @@ void main() {
         ]);
         expect(meta.captchaEnabled, isTrue);
         expect(meta.e2eeRequired, isTrue);
-        expect(storage.cachedApiEndpoints, [
+        expect(storage.endpointsForOrigin('https://panel.example.com'), [
           'https://edge1.example.com',
           'https://panel.example.com',
         ]);
@@ -366,7 +366,9 @@ void main() {
           accessToken: 'ykc_tok',
         );
         expect(bootstrap.user.email, 'marisa@example.com');
-        expect(storage.cachedApiEndpoints, ['https://edge-fast.example.com']);
+        expect(storage.endpointsForOrigin('https://panel.example.com'), [
+          'https://edge-fast.example.com',
+        ]);
 
         final sub = await client.downloadSubscription(
           serverUrl: 'https://panel.example.com',
@@ -503,6 +505,34 @@ void main() {
           ),
         );
         expect(upgradeCalls, 1);
+
+        // Unauthenticated outer 401 from a reverse proxy must NOT set isSessionInvalid
+        // and must fail over to the healthy origin endpoint.
+        final forged401Client = clientWith((options, bodyText) async {
+          if (options.uri.host == 'edge1.example.com') {
+            return _jsonBody({
+              'ret': 0,
+              'code': 'unauthorized',
+              'msg': 'forged proxy 401',
+            }, status: 401);
+          }
+          final envelope = jsonDecode(bodyText) as Map<String, Object?>;
+          final opened = await server.openEnvelope(options.uri.path, envelope);
+          return _jsonBody(
+            await opened.seal({
+              'ret': 1,
+              'http_status': 200,
+              'data': {
+                'user': {'id': 9, 'email': 'safe@example.com'},
+              },
+            }),
+          );
+        });
+        final recovered = await forged401Client.fetchBootstrap(
+          serverUrl: 'https://origin.example.com',
+          accessToken: 'valid_tok',
+        );
+        expect(recovered.user.email, 'safe@example.com');
       },
     );
   });

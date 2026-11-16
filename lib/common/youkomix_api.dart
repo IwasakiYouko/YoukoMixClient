@@ -55,12 +55,16 @@ class YoukoMixApiException implements Exception {
   });
 
   bool get isUnauthorized =>
+      fromAuthenticatedEnvelope &&
       statusCode == 401 &&
       (errorCode == 'unauthorized' ||
           errorCode == 'exchange_expired' ||
           errorCode == 'mfa_expired');
 
-  bool get isSessionInvalid => statusCode == 401 && errorCode == 'unauthorized';
+  bool get isSessionInvalid =>
+      fromAuthenticatedEnvelope &&
+      statusCode == 401 &&
+      errorCode == 'unauthorized';
 
   bool get isUpgradeRequired =>
       statusCode == 426 || errorCode == 'client_upgrade_required';
@@ -150,7 +154,6 @@ class YoukoMixApiClient {
   final Dio _dio;
   final YoukoMixSessionStorage _storage;
   final YoukoMixServerPublicKey? _pinnedServerKey;
-  YoukoMixServerPublicKey? _discoveredServerKey;
 
   YoukoMixApiClient({
     Dio? dio,
@@ -209,7 +212,7 @@ class YoukoMixApiClient {
     );
     final meta = YoukoMixMeta.fromJson(data, fallbackBaseUrl: base);
     if (meta.apiEndpoints.isNotEmpty) {
-      _storage.setApiEndpoints(meta.apiEndpoints);
+      _storage.setApiEndpoints(meta.apiEndpoints, origin: base);
     }
     return meta;
   }
@@ -270,13 +273,14 @@ class YoukoMixApiClient {
       }
       final session = YoukoMixSession.fromJson(data, fallbackServerUrl: base);
       if (session.apiEndpoints.isNotEmpty) {
-        _storage.setApiEndpoints(session.apiEndpoints);
+        _storage.setApiEndpoints(session.apiEndpoints, origin: base);
       }
       return YoukoMixLoginAuthenticated(session);
     } on YoukoMixApiException catch (error) {
-      if (error.errorCode == 'captcha_required' ||
-          error.errorCode == 'captcha_invalid' ||
-          error.errorCode == 'web_auth_required') {
+      if (error.fromAuthenticatedEnvelope &&
+          (error.errorCode == 'captcha_required' ||
+              error.errorCode == 'captcha_invalid' ||
+              error.errorCode == 'web_auth_required')) {
         final webUrl =
             error.data['web_auth_url']?.toString() ?? '$base/user/client-auth';
         final rawCaptcha = error.data['captcha'];
@@ -310,7 +314,7 @@ class YoukoMixApiClient {
     );
     final session = YoukoMixSession.fromJson(data, fallbackServerUrl: base);
     if (session.apiEndpoints.isNotEmpty) {
-      _storage.setApiEndpoints(session.apiEndpoints);
+      _storage.setApiEndpoints(session.apiEndpoints, origin: base);
     }
     return session;
   }
@@ -333,7 +337,7 @@ class YoukoMixApiClient {
     );
     final session = YoukoMixSession.fromJson(data, fallbackServerUrl: base);
     if (session.apiEndpoints.isNotEmpty) {
-      _storage.setApiEndpoints(session.apiEndpoints);
+      _storage.setApiEndpoints(session.apiEndpoints, origin: base);
     }
     return session;
   }
@@ -362,7 +366,7 @@ class YoukoMixApiClient {
     );
     final bootstrap = YoukoMixBootstrap.fromJson(data);
     if (bootstrap.apiEndpoints.isNotEmpty) {
-      _storage.setApiEndpoints(bootstrap.apiEndpoints);
+      _storage.setApiEndpoints(bootstrap.apiEndpoints, origin: base);
     }
     return bootstrap;
   }
@@ -436,20 +440,15 @@ class YoukoMixApiClient {
     return YoukoMixReleaseInfo.fromJson(data);
   }
 
-  Future<YoukoMixServerPublicKey> _ensureServerPublicKey(String base) async {
-    final existing = _pinnedServerKey ?? _discoveredServerKey;
-    if (existing != null) {
-      return existing;
-    }
-    await fetchMeta(base);
-    final resolved = _pinnedServerKey ?? _discoveredServerKey;
-    if (resolved == null) {
+  YoukoMixServerPublicKey _requirePinnedServerKey() {
+    final pinned = _pinnedServerKey;
+    if (pinned == null) {
       throw const YoukoMixApiException(
-        message: '未能获取面板安全公钥，请检查网络或面板版本',
-        errorCode: 'invalid_server_pubkey',
+        message: '客户端未配置预置安全公钥，已拒绝建立安全信道',
+        errorCode: 'missing_server_pubkey',
       );
     }
-    return resolved;
+    return pinned;
   }
 
   Future<Map<String, Object?>> _requestEncryptedWithFailover({
@@ -459,7 +458,7 @@ class YoukoMixApiClient {
     String? accessToken,
     Map<String, String>? extraHeaders,
   }) async {
-    final serverKey = await _ensureServerPublicKey(base);
+    final serverKey = _requirePinnedServerKey();
     return _withEndpointFailover(
       base,
       (endpoint) => _requestEncryptedSingle(
@@ -477,7 +476,7 @@ class YoukoMixApiClient {
     String base,
     Future<T> Function(String endpoint) operation,
   ) async {
-    await _storage.ensureEndpointsLoaded();
+    await _storage.ensureEndpointsLoaded(base);
     final candidates = _storage.candidateEndpoints(base);
     final targets = candidates.isNotEmpty ? candidates : <String>[base];
     YoukoMixApiException? lastError;
@@ -486,7 +485,7 @@ class YoukoMixApiClient {
       final endpoint = targets[i];
       try {
         final result = await operation(endpoint);
-        _storage.promoteEndpoint(endpoint);
+        _storage.promoteEndpoint(endpoint, origin: base);
         return result;
       } on YoukoMixApiException catch (error) {
         lastError = error;
@@ -508,22 +507,12 @@ class YoukoMixApiClient {
     if (error.fromAuthenticatedEnvelope || error.isUpgradeRequired) {
       return false;
     }
-    if (error.errorCode == 'clock_skew') {
-      return false;
-    }
-    final status = error.statusCode ?? 0;
-    if (status >= 500) {
-      return true;
-    }
     return switch (error.errorCode) {
-      'network_timeout' ||
-      'network_error' ||
-      'bad_certificate' ||
-      'invalid_response' ||
-      'invalid_envelope' ||
-      'signature_invalid' ||
-      'decrypt_failed' => true,
-      _ => false,
+      'clock_skew' ||
+      'missing_server_pubkey' ||
+      'invalid_server_pubkey' ||
+      'invalid_server_url' => false,
+      _ => true,
     };
   }
 
@@ -531,6 +520,7 @@ class YoukoMixApiClient {
     required String endpoint,
     required String routeKey,
   }) async {
+    final serverKey = _requirePinnedServerKey();
     final jsonMap = await _sendRawHttpJson(
       method: 'GET',
       url: '$endpoint$routeKey',
@@ -538,9 +528,8 @@ class YoukoMixApiClient {
     final verified = await YoukoMixCrypto.verifyPublicResponse(
       routeKey: routeKey,
       json: jsonMap,
-      pinnedKey: _pinnedServerKey,
+      pinnedKey: serverKey,
     );
-    _discoveredServerKey ??= verified.serverKey;
     return verified.data;
   }
 
@@ -624,10 +613,17 @@ class YoukoMixApiClient {
       }
 
       if (status < 200 || status >= 300) {
+        final rawCode = jsonMap['code']?.toString() ?? '';
+        final safeCode = switch (rawCode) {
+          'client_upgrade_required' ||
+          'clock_skew' ||
+          'rate_limited' => rawCode,
+          _ => 'proxy_http_error',
+        };
         final payload = jsonMap['data'];
         throw YoukoMixApiException(
           message: jsonMap['msg']?.toString() ?? '请求失败 ($status)',
-          errorCode: jsonMap['code']?.toString() ?? 'api_error',
+          errorCode: safeCode,
           statusCode: status,
           data: payload is Map ? Map<String, Object?>.from(payload) : const {},
         );

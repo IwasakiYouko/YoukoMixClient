@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:collection/collection.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter/foundation.dart';
 
@@ -138,25 +137,19 @@ abstract final class YoukoMixCrypto {
   static Future<YoukoMixVerifiedPublicPayload> verifyPublicResponse({
     required String routeKey,
     required Map<String, Object?> json,
-    YoukoMixServerPublicKey? pinnedKey,
+    required YoukoMixServerPublicKey? pinnedKey,
   }) async {
-    final rawPubkey = json['server_pubkey']?.toString().trim() ?? '';
-    final advertisedKey = YoukoMixServerPublicKey.tryParse(rawPubkey);
-    if (pinnedKey != null &&
-        advertisedKey != null &&
-        !const ListEquality<int>().equals(
-          pinnedKey.ed25519Bytes,
-          advertisedKey.ed25519Bytes,
-        )) {
+    if (pinnedKey == null) {
       throw const YoukoMixApiException(
-        message: '服务端安全公钥不匹配，连接已被拦截',
-        errorCode: 'signature_invalid',
+        message: '客户端未配置预置安全公钥，已拒绝建立信任',
+        errorCode: 'missing_server_pubkey',
       );
     }
-    final effectiveKey = pinnedKey ?? advertisedKey;
-    if (effectiveKey == null) {
+    final rawPubkey = json['server_pubkey']?.toString().trim() ?? '';
+    final advertisedKey = YoukoMixServerPublicKey.tryParse(rawPubkey);
+    if (advertisedKey != null && advertisedKey != pinnedKey) {
       throw const YoukoMixApiException(
-        message: '面板响应缺少安全签名公钥',
+        message: '服务端安全公钥不匹配，连接已被拦截',
         errorCode: 'signature_invalid',
       );
     }
@@ -174,7 +167,7 @@ abstract final class YoukoMixCrypto {
     final message = utf8.encode('v1|pub|$routeKey|$payloadB64');
     final verified = await _ed25519.verify(
       message,
-      signature: Signature(sigBytes, publicKey: effectiveKey.ed25519PublicKey),
+      signature: Signature(sigBytes, publicKey: pinnedKey.ed25519PublicKey),
     );
     if (!verified) {
       throw const YoukoMixApiException(
@@ -198,7 +191,7 @@ abstract final class YoukoMixCrypto {
       }
       return YoukoMixVerifiedPublicPayload(
         data: Map<String, Object?>.from(decoded),
-        serverKey: effectiveKey,
+        serverKey: pinnedKey,
       );
     } on FormatException {
       throw const YoukoMixApiException(

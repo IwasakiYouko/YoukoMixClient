@@ -37,6 +37,22 @@ void main() {
         expect(verified.data['app_name'], '人间之里');
         expect(verified.serverKey, keyA);
 
+        // Missing pinned key must fail closed without trusting advertisedKey.
+        await expectLater(
+          YoukoMixCrypto.verifyPublicResponse(
+            routeKey: '/api/v1/client/meta',
+            json: signed,
+            pinnedKey: null,
+          ),
+          throwsA(
+            isA<YoukoMixApiException>().having(
+              (e) => e.errorCode,
+              'errorCode',
+              'missing_server_pubkey',
+            ),
+          ),
+        );
+
         // Wrong pinned key must fail closed.
         await expectLater(
           YoukoMixCrypto.verifyPublicResponse(
