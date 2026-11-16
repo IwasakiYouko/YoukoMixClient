@@ -2168,8 +2168,15 @@ class MessageLookup extends MessageLookupByLibrary {
       "Back to password sign-in",
     ),
     "youkomixBalance": MessageLookupByLibrary.simpleMessage("Balance"),
+    "youkomixCaptchaCode": MessageLookupByLibrary.simpleMessage("Captcha code"),
+    "youkomixCaptchaHint": MessageLookupByLibrary.simpleMessage(
+      "Enter characters",
+    ),
+    "youkomixCaptchaRefresh": MessageLookupByLibrary.simpleMessage(
+      "Tap to refresh",
+    ),
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
-      "Browser verification is required. Complete verification in your browser to return automatically",
+      "Security verification is enabled. Enter the graphical code below",
     ),
     "youkomixEmail": MessageLookupByLibrary.simpleMessage("Email"),
     "youkomixEmailHint": MessageLookupByLibrary.simpleMessage(

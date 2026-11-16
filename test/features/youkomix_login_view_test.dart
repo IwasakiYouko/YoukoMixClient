@@ -21,6 +21,7 @@ import 'package:prism_ui/prism_ui.dart';
 import '../helpers/host_scaffold.dart';
 import '../helpers/test_app.dart';
 import '../helpers/test_profiles.dart';
+import '../helpers/youkomix_e2ee_server.dart';
 
 class _MockApiClient extends Mock implements YoukoMixApiClient {}
 
@@ -314,6 +315,108 @@ void main() {
         isTrue,
       );
       expect(storage.saved?.accessToken, 'ymx_manual_tok');
+    },
+  );
+
+  testWidgets(
+    'renders inline native PNG CAPTCHA, refreshes challenge on tap, and signs in without opening browser',
+    (tester) async {
+      tester.view.physicalSize = const Size(1200, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final ch1 = YoukoMixCaptchaChallenge.fromJson(const {
+        'captcha_id': 'cch_ui_1',
+        'image_base64': tinyValidPngBase64,
+        'expires_in': 180,
+      });
+      final ch2 = YoukoMixCaptchaChallenge.fromJson(const {
+        'captcha_id': 'cch_ui_2',
+        'image_base64': tinyValidPngBase64,
+        'expires_in': 180,
+      });
+      var fetchCount = 0;
+      when(() => api.fetchCaptcha('https://panel.example.com')).thenAnswer((
+        _,
+      ) async {
+        fetchCount++;
+        return fetchCount == 1 ? ch1 : ch2;
+      });
+      when(
+        () => api.login(
+          serverUrl: 'https://panel.example.com',
+          email: 'reimu@example.com',
+          password: 'secret',
+          captchaId: 'cch_ui_2',
+          captchaCode: 'K9P7W',
+        ),
+      ).thenAnswer(
+        (_) async => const YoukoMixLoginAuthenticated(
+          YoukoMixSession(
+            serverUrl: 'https://panel.example.com',
+            accessToken: 'ymx_captcha_ok',
+            expiresAt: 1999999999,
+          ),
+        ),
+      );
+      when(
+        () => api.fetchBootstrap(
+          serverUrl: 'https://panel.example.com',
+          accessToken: 'ymx_captcha_ok',
+        ),
+      ).thenAnswer((_) async => const YoukoMixBootstrap());
+      when(
+        () => api.downloadSubscription(
+          serverUrl: 'https://panel.example.com',
+          accessToken: 'ymx_captcha_ok',
+          userAgent: any(named: 'userAgent'),
+        ),
+      ).thenAnswer(
+        (_) async => YoukoMixSubscriptionPayload(
+          bytes: Uint8List.fromList(utf8.encode('proxies: []\n')),
+          mode: 'standard',
+          title: '人间之里',
+        ),
+      );
+
+      final container = buildContainer();
+      container
+          .read(youkomixControllerProvider.notifier)
+          .setServerUrl('https://panel.example.com');
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const TestApp(child: HostScaffold(body: YoukoMixLoginView())),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final l10n = AppLocalizations.current;
+
+      expect(
+        find.byKey(const ValueKey('youkomix-captcha-card')),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const ValueKey('youkomix-captcha-card')));
+      await tester.pumpAndSettle();
+      expect(
+        container.read(youkomixControllerProvider).captchaChallenge?.captchaId,
+        'cch_ui_2',
+      );
+
+      await tester.enterText(fieldFor(l10n.youkomixEmail), 'reimu@example.com');
+      await tester.enterText(fieldFor(l10n.password), 'secret');
+      await tester.enterText(fieldFor(l10n.youkomixCaptchaCode), 'K9P7W');
+      await tester.tap(find.text(l10n.youkomixLogin));
+      await tester.pumpAndSettle();
+
+      expect(launchedUrls, isEmpty);
+      expect(
+        container.read(youkomixControllerProvider).isAuthenticated,
+        isTrue,
+      );
+      expect(storage.saved?.accessToken, 'ymx_captcha_ok');
     },
   );
 }

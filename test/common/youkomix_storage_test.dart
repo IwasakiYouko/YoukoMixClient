@@ -28,6 +28,10 @@ void main() {
       serverUrl: 'https://panel.example.com/',
       accessToken: 'ymx_live_token',
       expiresAt: futureExpiry,
+      apiEndpoints: const [
+        'https://edge1.example.com',
+        'https://panel.example.com',
+      ],
       bootstrap: const YoukoMixBootstrap(
         user: YoukoMixUser(id: 5, email: 'alice@example.com'),
       ),
@@ -35,6 +39,27 @@ void main() {
 
     await storage.saveSession(session);
     expect(storage.activeServerUrl, 'https://panel.example.com');
+    expect(storage.candidateEndpoints('https://panel.example.com'), [
+      'https://edge1.example.com',
+      'https://panel.example.com',
+    ]);
+
+    storage.promoteEndpoint('https://panel.example.com', persist: false);
+    expect(storage.candidateEndpoints('https://panel.example.com'), [
+      'https://panel.example.com',
+      'https://edge1.example.com',
+    ]);
+    // Different server origin must remain isolated from panel.example.com's cache.
+    expect(storage.candidateEndpoints('https://other.example.com'), [
+      'https://other.example.com',
+    ]);
+
+    // Update independent endpoint file after session save and verify loadSession keeps fresher cache.
+    storage.setApiEndpoints(const [
+      'https://fresh-edge.example.com',
+      'https://panel.example.com',
+    ], origin: 'https://panel.example.com');
+    await storage.flushPendingWrites();
 
     final freshReader = YoukoMixSessionStorage(
       homeDirProvider: () async => tempDir.path,
@@ -42,6 +67,10 @@ void main() {
     final loaded = await freshReader.loadSession();
     expect(loaded, session);
     expect(freshReader.activeServerUrl, 'https://panel.example.com');
+    expect(freshReader.candidateEndpoints('https://panel.example.com'), [
+      'https://fresh-edge.example.com',
+      'https://panel.example.com',
+    ]);
 
     await storage.clearSession();
     expect(await storage.loadSession(), isNull);

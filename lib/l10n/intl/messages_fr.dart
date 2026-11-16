@@ -2345,8 +2345,15 @@ class MessageLookup extends MessageLookupByLibrary {
       "Retour au mot de passe",
     ),
     "youkomixBalance": MessageLookupByLibrary.simpleMessage("Solde"),
+    "youkomixCaptchaCode": MessageLookupByLibrary.simpleMessage("Code captcha"),
+    "youkomixCaptchaHint": MessageLookupByLibrary.simpleMessage(
+      "Saisir les caractères",
+    ),
+    "youkomixCaptchaRefresh": MessageLookupByLibrary.simpleMessage(
+      "Appuyer pour actualiser",
+    ),
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
-      "Vérification requise dans le navigateur. Terminez-la pour revenir automatiquement",
+      "La vérification de sécurité est activée. Saisissez le code de l\'image ci-dessous",
     ),
     "youkomixEmail": MessageLookupByLibrary.simpleMessage("E-mail"),
     "youkomixEmailHint": MessageLookupByLibrary.simpleMessage(

@@ -56,6 +56,9 @@ Future<void> main(List<String> args) async {
   final serverUrl =
       (results['server-url'] as String?) ??
       Platform.environment['YOUKOMIX_SERVER_URL'];
+  final serverPubkey =
+      (results['server-pubkey'] as String?) ??
+      Platform.environment['YOUKOMIX_SERVER_PUBKEY'];
   final rootDir = Directory.current.path;
   final skipped = packagesNotBuildingAssets(
     File(p.join(rootDir, 'pubspec.yaml')).readAsStringSync(),
@@ -82,6 +85,7 @@ Future<void> main(List<String> args) async {
     arch,
     androidArch: androidArch,
     serverUrl: serverUrl,
+    serverPubkey: serverPubkey,
     verbose: verbose,
   );
   exit(exitCode);
@@ -111,6 +115,11 @@ ArgParser createSetupArgParser() {
       valueHelp: 'https://panel.example.com',
       help: 'Default YoukoMix panel base URL (or YOUKOMIX_SERVER_URL env)',
     )
+    ..addOption(
+      'server-pubkey',
+      valueHelp: '<ed25519_b64u>.<x25519_b64u>',
+      help: 'Pinned YoukoMix server public key (or YOUKOMIX_SERVER_PUBKEY env)',
+    )
     ..addFlag(
       'verbose',
       abbr: 'v',
@@ -133,11 +142,17 @@ List<String> createFlutterBuildArgs({
   return flutterBuildArgs;
 }
 
-Map<String, String> createBuildEnvironment(String env, {String? serverUrl}) {
+Map<String, String> createBuildEnvironment(
+  String env, {
+  String? serverUrl,
+  String? serverPubkey,
+}) {
   final cleanedUrl = serverUrl?.trim() ?? '';
+  final cleanedPubkey = serverPubkey?.trim() ?? '';
   return {
     'APP_ENV': env,
     if (cleanedUrl.isNotEmpty) 'YOUKOMIX_SERVER_URL': cleanedUrl,
+    if (cleanedPubkey.isNotEmpty) 'YOUKOMIX_SERVER_PUBKEY': cleanedPubkey,
   };
 }
 
@@ -175,11 +190,18 @@ Future<int> _package(
   String arch, {
   String? androidArch,
   String? serverUrl,
+  String? serverPubkey,
   required bool verbose,
 }) async {
   final file = File(p.join(rootDir, 'env.json'));
   await file.writeAsString(
-    jsonEncode(createBuildEnvironment(env, serverUrl: serverUrl)),
+    jsonEncode(
+      createBuildEnvironment(
+        env,
+        serverUrl: serverUrl,
+        serverPubkey: serverPubkey,
+      ),
+    ),
   );
 
   final flutterBuildArgs = createFlutterBuildArgs(

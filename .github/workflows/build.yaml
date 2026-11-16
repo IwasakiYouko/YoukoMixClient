@@ -451,6 +451,7 @@ jobs:
         env:
           ANDROID_NDK_HOME: ${{ steps.build-ndk.outputs.ndk-path }}
           YOUKOMIX_SERVER_URL: ${{ vars.YOUKOMIX_SERVER_URL }}
+          YOUKOMIX_SERVER_PUBKEY: ${{ vars.YOUKOMIX_SERVER_PUBKEY }}
         run: dart setup.dart ${{ matrix.platform }} ${{ env.IS_STABLE == 'true' && '--env stable' || '' }} -v
 
       - name: Upload

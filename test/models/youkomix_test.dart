@@ -2,6 +2,8 @@ import 'package:fl_clash/common/link.dart';
 import 'package:fl_clash/models/youkomix.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/youkomix_e2ee_server.dart';
+
 void main() {
   group('stripAnnouncementHtml', () {
     test('converts HTML breaks, paragraphs, entities, and strips tags', () {
@@ -36,6 +38,15 @@ void main() {
       final roundTrip = YoukoMixMeta.fromJson(meta.toJson());
       expect(roundTrip, meta);
       expect(roundTrip.hashCode, meta.hashCode);
+
+      final cap = YoukoMixCaptchaChallenge.fromJson(const {
+        'captcha_id': 'cch_model_1',
+        'image_base64': 'data:image/png;base64,$tinyValidPngBase64',
+        'expires_in': 180,
+      });
+      expect(cap.isValid, isTrue);
+      expect(cap.captchaId, 'cch_model_1');
+      expect(YoukoMixCaptchaChallenge.fromJson(cap.toJson()), cap);
     });
   });
 

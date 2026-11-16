@@ -2341,8 +2341,17 @@ class MessageLookup extends MessageLookupByLibrary {
       "Volver al inicio con contraseña",
     ),
     "youkomixBalance": MessageLookupByLibrary.simpleMessage("Saldo"),
+    "youkomixCaptchaCode": MessageLookupByLibrary.simpleMessage(
+      "Código captcha",
+    ),
+    "youkomixCaptchaHint": MessageLookupByLibrary.simpleMessage(
+      "Introduce el código",
+    ),
+    "youkomixCaptchaRefresh": MessageLookupByLibrary.simpleMessage(
+      "Toca para actualizar",
+    ),
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
-      "Se requiere verificación en el navegador. Complétala para volver automáticamente",
+      "La verificación de seguridad está activa. Introduce el código de la imagen",
     ),
     "youkomixEmail": MessageLookupByLibrary.simpleMessage("Correo electrónico"),
     "youkomixEmailHint": MessageLookupByLibrary.simpleMessage(

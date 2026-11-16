@@ -2284,8 +2284,17 @@ class MessageLookup extends MessageLookupByLibrary {
       "Назад ко входу по паролю",
     ),
     "youkomixBalance": MessageLookupByLibrary.simpleMessage("Баланс"),
+    "youkomixCaptchaCode": MessageLookupByLibrary.simpleMessage(
+      "Код с картинки",
+    ),
+    "youkomixCaptchaHint": MessageLookupByLibrary.simpleMessage(
+      "Введите символы",
+    ),
+    "youkomixCaptchaRefresh": MessageLookupByLibrary.simpleMessage(
+      "Нажмите для обновления",
+    ),
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
-      "Требуется проверка в браузере. Завершите её для автоматического возврата",
+      "Защита входа включена. Введите код с картинки ниже",
     ),
     "youkomixEmail": MessageLookupByLibrary.simpleMessage("Эл. почта"),
     "youkomixEmailHint": MessageLookupByLibrary.simpleMessage(

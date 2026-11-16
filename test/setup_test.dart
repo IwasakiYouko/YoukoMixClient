@@ -27,10 +27,12 @@ void main() {
         setup.createBuildEnvironment(
           'stable',
           serverUrl: '  https://panel.youkomix.example  ',
+          serverPubkey: '  ed25519_pk.x25519_pk  ',
         ),
         {
           'APP_ENV': 'stable',
           'YOUKOMIX_SERVER_URL': 'https://panel.youkomix.example',
+          'YOUKOMIX_SERVER_PUBKEY': 'ed25519_pk.x25519_pk',
         },
       );
     });

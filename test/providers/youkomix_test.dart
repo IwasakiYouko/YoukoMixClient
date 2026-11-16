@@ -18,6 +18,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../helpers/app_paths.dart';
 import '../helpers/test_profiles.dart';
+import '../helpers/youkomix_e2ee_server.dart';
 
 class _MockApiClient extends Mock implements YoukoMixApiClient {}
 
@@ -250,6 +251,81 @@ void main() {
         isFalse,
       );
       expect(launchedUrls, ['https://panel.example.com/user/client-auth']);
+
+      // Inline graphical CAPTCHA keeps login inside the app without browser launch.
+      launchedUrls.clear();
+      final inlineChallenge = YoukoMixCaptchaChallenge.fromJson(const {
+        'captcha_id': 'cch_prov_1',
+        'image_base64': tinyValidPngBase64,
+        'expires_in': 180,
+      });
+      when(
+        () => api.login(
+          serverUrl: 'https://panel.example.com',
+          email: 'inline@example.com',
+          password: 'pass',
+        ),
+      ).thenAnswer(
+        (_) async => YoukoMixLoginCaptchaRequired(
+          challenge: inlineChallenge,
+          webAuthUrl: 'https://panel.example.com/user/client-auth',
+          message: '请输入图形验证码',
+        ),
+      );
+      expect(
+        await notifier.login(
+          serverUrl: 'https://panel.example.com',
+          email: 'inline@example.com',
+          password: 'pass',
+        ),
+        isFalse,
+      );
+      expect(launchedUrls, isEmpty);
+      expect(
+        container.read(youkomixControllerProvider).captchaChallenge?.captchaId,
+        'cch_prov_1',
+      );
+
+      // Switching server URL invalidates previous server's CAPTCHA challenge.
+      notifier.setServerUrl('https://another-panel.example.com');
+      expect(
+        container.read(youkomixControllerProvider).captchaChallenge,
+        isNull,
+      );
+
+      // Returning challenge == null clears any stale CAPTCHA challenge.
+      notifier.setServerUrl('https://panel.example.com');
+      await notifier.login(
+        serverUrl: 'https://panel.example.com',
+        email: 'inline@example.com',
+        password: 'pass',
+      );
+      expect(
+        container.read(youkomixControllerProvider).captchaChallenge?.captchaId,
+        'cch_prov_1',
+      );
+      when(
+        () => api.login(
+          serverUrl: 'https://panel.example.com',
+          email: 'webonly@example.com',
+          password: 'pass',
+          captchaId: 'cch_prov_1',
+        ),
+      ).thenAnswer(
+        (_) async => const YoukoMixLoginCaptchaRequired(
+          webAuthUrl: 'https://panel.example.com/user/client-auth',
+          message: '硬件密钥需网页验证',
+        ),
+      );
+      await notifier.login(
+        serverUrl: 'https://panel.example.com',
+        email: 'webonly@example.com',
+        password: 'pass',
+      );
+      expect(
+        container.read(youkomixControllerProvider).captchaChallenge,
+        isNull,
+      );
     },
   );
 
@@ -308,6 +384,27 @@ void main() {
 
       expect(await notifier.handleRawDeepLink('youkomix://sync'), isTrue);
 
+      // Unauthenticated proxy 401 does NOT force sign-out.
+      when(
+        () => api.fetchBootstrap(
+          serverUrl: 'https://panel.example.com',
+          accessToken: 'ymx_exchange',
+        ),
+      ).thenThrow(
+        const YoukoMixApiException(
+          message: 'Bad proxy 401',
+          errorCode: 'unauthorized',
+          statusCode: 401,
+          fromAuthenticatedEnvelope: false,
+        ),
+      );
+      expect(await notifier.syncSubscription(), isFalse);
+      expect(
+        container.read(youkomixControllerProvider).isAuthenticated,
+        isTrue,
+      );
+
+      // Authenticated E2EE 401 DOES sign out and wipe local profile.
       when(
         () => api.fetchBootstrap(
           serverUrl: 'https://panel.example.com',
@@ -318,6 +415,7 @@ void main() {
           message: 'Unauthorized',
           errorCode: 'unauthorized',
           statusCode: 401,
+          fromAuthenticatedEnvelope: true,
         ),
       );
       expect(await notifier.syncSubscription(), isFalse);

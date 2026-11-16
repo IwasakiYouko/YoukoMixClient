@@ -9253,11 +9253,41 @@ class AppLocalizations {
     );
   }
 
-  /// `Browser verification is required. Complete verification in your browser to return automatically`
+  /// `Security verification is enabled. Enter the graphical code below`
   String get youkomixCaptchaRequiredTip {
     return Intl.message(
-      'Browser verification is required. Complete verification in your browser to return automatically',
+      'Security verification is enabled. Enter the graphical code below',
       name: 'youkomixCaptchaRequiredTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Captcha code`
+  String get youkomixCaptchaCode {
+    return Intl.message(
+      'Captcha code',
+      name: 'youkomixCaptchaCode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter characters`
+  String get youkomixCaptchaHint {
+    return Intl.message(
+      'Enter characters',
+      name: 'youkomixCaptchaHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Tap to refresh`
+  String get youkomixCaptchaRefresh {
+    return Intl.message(
+      'Tap to refresh',
+      name: 'youkomixCaptchaRefresh',
       desc: '',
       args: [],
     );
