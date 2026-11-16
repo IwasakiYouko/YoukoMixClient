@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.1 (2026-11-16)
+
+**Bug Fixes**
+
+- **youkomix** Allow switching between exclusive and standard subscriptions (#4) (fd283f7)
+
 ## v1.0.0 (2026-11-16)
 
 **Breaking Changes**

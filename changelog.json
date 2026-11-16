@@ -2,6 +2,24 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "1.0.1",
+      "tag": "v1.0.1",
+      "date": "2026-11-16",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "fix",
+          "entries": [
+            {
+              "id": "fd283f7",
+              "scope": "youkomix",
+              "text": "Allow switching between exclusive and standard subscriptions (#4)"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "1.0.0",
       "tag": "v1.0.0",
       "date": "2026-11-16",
