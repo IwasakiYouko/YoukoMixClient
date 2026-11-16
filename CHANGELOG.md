@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.0 (2026-11-17)
+
+**Features**
+
+- **youkomix** Add E2EE envelope, endpoint failover, native CAPTCHA, and APK v1-v3 signing (#5) (6ef8021)
+
 ## v1.0.1 (2026-11-16)
 
 **Bug Fixes**
