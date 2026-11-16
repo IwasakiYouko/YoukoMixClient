@@ -109,22 +109,24 @@ class BackupAction extends _$BackupAction {
       proxyDialers: const [],
       mitmModules: data.mitmModules,
     );
-    final keptManagedProfiles = isOverride
-        ? (await database.profilesDao.query().get())
-              .where((item) => item.id == youkomixManagedProfileId)
-              .toList()
-        : const <Profile>[];
     final previousProviders = await database.clashProvidersDao.query().get();
     final putBack = stagingDirPath == null
         ? null
         : await _copyStagedFiles(sanitizedData, stagingDirPath);
     try {
+      final keptManagedProfiles = <Profile>[];
       if (isOverride) {
-        final unmanaged = (await database.profilesDao.query().get())
-            .where((item) => item.id != youkomixManagedProfileId)
-            .toList();
-        for (final item in unmanaged) {
-          await database.deleteProfile(item.id);
+        final currentProfiles = await database.profilesDao.query().get();
+        final scriptIds = {for (final s in sanitizedData.scripts) s.id};
+        for (final item in currentProfiles) {
+          if (item.id != youkomixManagedProfileId) {
+            await database.deleteProfile(item.id);
+            continue;
+          }
+          final keepScript =
+              item.scriptId == null || scriptIds.contains(item.scriptId);
+          final cleaned = keepScript ? item : item.copyWith(scriptId: null);
+          keptManagedProfiles.add(cleaned);
         }
       }
       await database.restore(

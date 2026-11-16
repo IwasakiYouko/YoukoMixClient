@@ -104,9 +104,11 @@ class ProfilesCard extends ConsumerWidget {
       if (user.isExpired || user.userClass <= 0) {
         endText = appLocalizations.youkomixExpired;
         endWarn = true;
+      } else if (user.classExpire.isEmpty) {
+        endText = appLocalizations.youkomixNeverExpire;
       } else {
         endText = appLocalizations.profileDaysLeft(user.classExpireDays);
-        endTooltip = user.classExpire.isEmpty ? null : user.classExpire;
+        endTooltip = user.classExpire;
         endWarn = user.classExpireDays <= _soonDays;
       }
     } else if (profileExpiry != null) {

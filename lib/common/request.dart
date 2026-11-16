@@ -12,6 +12,8 @@ import 'package:fl_clash/state.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' show join;
 
+final _sha256Hex = RegExp(r'^[0-9a-fA-F]{64}$');
+
 class Request {
   late final Dio dio;
   late final Dio _clashDio;
@@ -119,9 +121,11 @@ class Request {
   /// The release page redirect still answers once the hourly API quota is spent.
   Future<Map<String, dynamic>> latestRelease() async {
     final serverUrl = youkomixStorage.activeServerUrl;
-    if (serverUrl != null && serverUrl.isNotEmpty) {
+    final serverUri = serverUrl == null ? null : Uri.tryParse(serverUrl);
+    if (serverUrl != null && serverUri != null && serverUri.scheme == 'https') {
       try {
-        final panelRelease = await youkomixApi.fetchRelease(serverUrl);
+        final api = YoukoMixApiClient(dio: releaseDio);
+        final panelRelease = await api.fetchRelease(serverUrl);
         final rawVersion = panelRelease.version.trim();
         if (rawVersion.isNotEmpty) {
           lastPanelRelease = panelRelease;
@@ -178,13 +182,15 @@ class Request {
     CancelToken? cancelToken,
   }) async {
     final panelAsset = lastPanelRelease?.assets[name];
+    final assetUri = panelAsset == null ? null : Uri.tryParse(panelAsset.url);
     final String? expected;
     final Uri uri;
     if (panelAsset != null &&
-        panelAsset.url.isNotEmpty &&
-        panelAsset.sha256.isNotEmpty) {
+        assetUri != null &&
+        assetUri.scheme == 'https' &&
+        _sha256Hex.hasMatch(panelAsset.sha256)) {
       expected = panelAsset.sha256.toLowerCase();
-      uri = Uri.parse(panelAsset.url);
+      uri = assetUri;
     } else {
       final sums = await releaseDio.getUri<String>(
         releaseAssetUri(tag, releaseChecksumsName),

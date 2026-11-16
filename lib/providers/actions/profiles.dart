@@ -97,10 +97,24 @@ class ProfilesAction extends _$ProfilesAction {
       bytes,
       validate: (path, key) => _core.validateProfile(path, key),
     );
-    ref.read(profilesProvider.notifier).put(saved);
+    final latest = ref
+        .read(profilesProvider)
+        .getProfile(youkomixManagedProfileId);
+    final merged = latest == null
+        ? saved
+        : saved.copyWith(
+            selectedMap: latest.selectedMap,
+            unfoldSet: latest.unfoldSet,
+            currentGroupName: latest.currentGroupName,
+            extendType: latest.extendType,
+            scriptId: latest.scriptId,
+            matchTarget: latest.matchTarget,
+            overrides: latest.overrides,
+          );
+    ref.read(profilesProvider.notifier).put(merged);
     ref.read(currentProfileIdProvider.notifier).value =
         youkomixManagedProfileId;
-    return saved;
+    return merged;
   }
 
   Future<String?> validateConfigWithData(List<int> data) async {
@@ -108,6 +122,15 @@ class ProfilesAction extends _$ProfilesAction {
   }
 
   Future<void> autoUpdateProfiles() async {
+    final existing = ref
+        .read(profilesProvider)
+        .getProfile(youkomixManagedProfileId);
+    if (existing != null && existing.lastUpdateDate != null) {
+      final elapsed = DateTime.now().difference(existing.lastUpdateDate!);
+      if (elapsed < existing.autoUpdateDuration) {
+        return;
+      }
+    }
     await ref
         .read(youkomixControllerProvider.notifier)
         .refreshIfAuthenticated();

@@ -60,11 +60,14 @@ class AboutView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final appLocalizations = context.appLocalizations;
     final isLoading = ref.watch(loadingProvider(LoadingTag.checkUpdate));
-    final serverUrl = ref.watch(
-      youkomixControllerProvider.select((state) => state.effectiveServerUrl),
+    final authPanelUrl = ref.watch(
+      youkomixControllerProvider.select((state) {
+        final explicit = state.bootstrap?.links.panelUrl ?? '';
+        return explicit.isNotEmpty ? explicit : state.effectiveServerUrl;
+      }),
     );
-    final panelUrl = serverUrl.isNotEmpty
-        ? serverUrl
+    final panelUrl = authPanelUrl.isNotEmpty
+        ? authPanelUrl
         : (youkomixStorage.activeServerUrl ?? '');
     return Scaffold(
       isLoading: isLoading,

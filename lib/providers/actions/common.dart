@@ -5,6 +5,7 @@ class CommonAction extends _$CommonAction {
   CoreController get _core => ref.read(coreHandlerProvider);
   bool _isUpdatingTraffic = false;
   CancelToken? _updateCancelToken;
+  String? _lastReleaseUrl;
 
   @override
   void build() {}
@@ -160,9 +161,11 @@ class CommonAction extends _$CommonAction {
         cancelText: isUser ? null : currentAppLocalizations.noLongerRemind,
       );
       if (res == true) {
+        final releaseUrl = data['html_url'] as String?;
         if (suffix == null) {
-          _openReleasePage(data['html_url'] as String?);
+          _openReleasePage(releaseUrl);
         } else {
+          _lastReleaseUrl = releaseUrl;
           unawaited(_downloadUpdate(tag, releaseAssetName(tag, suffix)));
         }
       } else if (!isUser && res == false) {
@@ -200,6 +203,7 @@ class CommonAction extends _$CommonAction {
     );
     if (release == null) return;
     final tag = release['tag_name'] as String;
+    _lastReleaseUrl = release['html_url'] as String?;
     await _downloadUpdate(tag, releaseAssetName(tag, suffix));
   }
 
@@ -295,7 +299,7 @@ class CommonAction extends _$CommonAction {
       confirmText: currentAppLocalizations.goDownload,
     );
     if (res == true) {
-      _openReleasePage();
+      _openReleasePage(_lastReleaseUrl);
     }
   }
 }
