@@ -50,7 +50,7 @@ class Picker {
       xFile.path,
       formats: const [BarcodeFormat.qrCode],
     );
-    final url = profileUrlFromQrCodes(
+    final url = youkoMixLinkFromQrCodes(
       capture?.barcodes.map((barcode) => barcode.rawValue) ?? const [],
     );
     if (url == null) {

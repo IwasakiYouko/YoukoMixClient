@@ -2,7 +2,12 @@ part of '../state.dart';
 
 @riverpod
 NavigationItemsState navigationItemsState(Ref ref) {
-  final openLogs = ref.watch(appSettingProvider).openLogs;
+  final openLogs = ref.watch(
+    appSettingProvider.select((state) => state.openLogs),
+  );
+  final developerMode = ref.watch(
+    appSettingProvider.select((state) => state.developerMode),
+  );
   final hasProfiles = ref.watch(
     profilesProvider.select((state) => state.isNotEmpty),
   );
@@ -15,6 +20,7 @@ NavigationItemsState navigationItemsState(Ref ref) {
         navigationPort?.getItems(
           openLogs: openLogs,
           hasProxies: !isInit ? hasProfiles : hasProxies,
+          developerMode: developerMode,
         ) ??
         const [],
   );

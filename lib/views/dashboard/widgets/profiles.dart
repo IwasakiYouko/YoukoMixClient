@@ -1,25 +1,32 @@
 import 'dart:math' as math;
 
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/youkomix/youkomix.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/views/dashboard/layout.dart';
 import 'package:fl_clash/views/dashboard/style.dart';
-import 'package:fl_clash/views/profiles/custom/custom.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:prism_ui/prism_ui.dart';
 
 import 'card.dart';
 import 'profile_detail.dart';
-import 'package:prism_ui/prism_ui.dart';
 
 typedef _Usage = ({int used, int total, double share});
 
-_Usage? _usageOf(Profile? profile) {
+_Usage? _usageOf(YoukoMixTraffic? traffic, Profile? profile) {
+  if (traffic != null && traffic.total > 0) {
+    final used = traffic.used;
+    return (
+      used: used,
+      total: traffic.total,
+      share: (used / traffic.total).clamp(0.0, 1.0).toDouble(),
+    );
+  }
   final info = profile?.subscriptionInfo;
   if (info == null || info.total <= 0) {
     return null;
@@ -40,29 +47,18 @@ DateTime? _expiryOf(Profile? profile) {
 int _daysLeft(DateTime expiry) =>
     math.max(0, expiry.difference(DateTime.now()).inDays);
 
-String _expiryText(BuildContext context, DateTime expiry) =>
-    context.appLocalizations.profileExpiresIn(expiry.show, _daysLeft(expiry));
-
-void _openProfile(BuildContext context, Profile? profile) {
-  switch (profile) {
-    case null:
-      showProfilesSheet(context);
-    case Profile(type: ProfileType.custom, :final id):
-      showCustomProfileSheet(context, id);
-    case _:
-      showProfileDetailSheet(context);
-  }
+void _openAccount(BuildContext context, {required bool hasProfile}) {
+  showYoukoMixAccountSheet(
+    context,
+    onShowRuntimeDetail: hasProfile
+        ? () => showProfileDetailSheet(context)
+        : null,
+  );
 }
 
 const _nearlyUsedShare = 0.9;
 
 String _percentOf(double share) => '${(share * 100).round()}%';
-
-String _sourceOf(BuildContext context, ProfileType type) => switch (type) {
-  ProfileType.url => context.appLocalizations.remote,
-  ProfileType.file => context.appLocalizations.local,
-  ProfileType.custom => context.appLocalizations.custom,
-};
 
 class ProfilesCard extends ConsumerWidget {
   const ProfilesCard({super.key});
@@ -75,12 +71,12 @@ class ProfilesCard extends ConsumerWidget {
     final mobile = !density.isDesktop;
     final compact = density.isCompact;
     final appLocalizations = context.appLocalizations;
+    final auth = ref.watch(youkomixControllerProvider);
     final profile = ref.watch(currentProfileProvider);
-    final switchable = ref.watch(
-      profilesProvider.select((profiles) => profiles.length > 1),
-    );
-    final usage = _usageOf(profile);
-    final expiry = _expiryOf(profile);
+    final user = auth.user;
+    final sub = auth.subscription;
+    final usage = _usageOf(auth.traffic, profile);
+    final profileExpiry = _expiryOf(profile);
     final updatedAt = profile?.lastUpdateDate;
     final label = DashboardText.label(context);
     final figure = mobile
@@ -89,61 +85,112 @@ class ProfilesCard extends ConsumerWidget {
     final name = mobile || !compact
         ? AppTextStyle.headline
         : AppTextStyle.callout;
-    final endText = switch ((profile, expiry)) {
-      (_, final expiry?) => appLocalizations.profileDaysLeft(_daysLeft(expiry)),
-      (final profile?, null) => _sourceOf(context, profile.type),
-      _ => null,
-    };
-    final Widget? end = switch ((endText, expiry)) {
-      (final text?, final expiry?) => Tooltip(
-        message: _expiryText(context, expiry),
+
+    final String titleText;
+    if (user != null) {
+      titleText = user.userName.isNotEmpty
+          ? user.userName
+          : (user.email.isNotEmpty ? user.email : appName);
+    } else if (profile != null) {
+      titleText = profile.realLabel;
+    } else {
+      titleText = appLocalizations.youkomixLogin;
+    }
+
+    String? endText;
+    String? endTooltip;
+    var endWarn = false;
+    if (user != null) {
+      if (user.isExpired || user.userClass <= 0) {
+        endText = appLocalizations.youkomixExpired;
+        endWarn = true;
+      } else if (user.classExpire.isEmpty) {
+        endText = appLocalizations.youkomixNeverExpire;
+      } else {
+        endText = appLocalizations.profileDaysLeft(user.classExpireDays);
+        endTooltip = user.classExpire;
+        endWarn = user.classExpireDays <= _soonDays;
+      }
+    } else if (profileExpiry != null) {
+      final days = _daysLeft(profileExpiry);
+      endText = appLocalizations.profileDaysLeft(days);
+      endTooltip = appLocalizations.profileExpiresIn(profileExpiry.show, days);
+      endWarn = days <= _soonDays;
+    }
+
+    final Widget? end = switch ((endText, endTooltip)) {
+      (final text?, final tip?) => Tooltip(
+        message: tip,
         child: Text(
           text,
           maxLines: 1,
-          style: _daysLeft(expiry) <= _soonDays
+          style: endWarn
               ? label.copyWith(color: DashboardColors.of(context).warn)
               : label,
         ),
       ),
-      (final text?, null) => Text(text, maxLines: 1, style: label),
+      (final text?, null) => Text(
+        text,
+        maxLines: 1,
+        style: endWarn
+            ? label.copyWith(color: DashboardColors.of(context).warn)
+            : label,
+      ),
       _ => null,
     };
-    final sync = profile != null && profile.type == ProfileType.url
-        ? _SyncButton(profile: profile)
-        : null;
+
+    final canSync = auth.isAuthenticated || profile != null;
+    final sync = canSync ? _SyncButton(profile: profile) : null;
+
     final nameRow = Row(
+      spacing: 8,
       children: [
         Flexible(
           child: EmojiText(
-            profile?.realLabel ?? appLocalizations.addProfile,
+            titleText,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: name.of(context, emphasized: true),
           ),
         ),
-        if (profile != null && switchable)
-          SizedBox(
-            height: name.leading,
-            child: DashboardIconButton(
-              glyph: AppGlyphs.swap,
-              tooltip: appLocalizations.switchProfile,
-              onPressed: () => showProfilesSheet(context),
+        if (user != null)
+          DecoratedBox(
+            decoration: ShapeDecoration(
+              color: context.colorScheme.primary.opacity15,
+              shape: AppShape.full,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              child: Text(
+                appLocalizations.youkomixLevelBadge(user.userClass),
+                maxLines: 1,
+                style: AppTextStyle.caption2
+                    .of(context, emphasized: true)
+                    .copyWith(color: context.colorScheme.primary),
+              ),
             ),
           ),
       ],
     );
+
+    final modeLabel = sub == null
+        ? null
+        : (sub.isExclusive
+              ? appLocalizations.youkomixSubModeExclusive
+              : appLocalizations.youkomixSubModeStandard);
+
     return DashboardCard(
-      semanticLabel: appLocalizations.profile,
-      onTap: mobile || profile == null
-          ? () => _openProfile(context, profile)
+      semanticLabel: appLocalizations.youkomixAccount,
+      onTap: mobile || !auth.isAuthenticated
+          ? () => _openAccount(context, hasProfile: profile != null)
           : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: mobile ? MainAxisSize.min : MainAxisSize.max,
         children: [
           DashboardCardHeader(
-            glyph: AppGlyphs.profiles,
-            title: appLocalizations.profile,
+            glyph: AppGlyphs.account,
+            title: appLocalizations.youkomixAccount,
             chevron: mobile,
             trailing: [
               if (mobile)
@@ -158,9 +205,10 @@ class ProfilesCard extends ConsumerWidget {
                       DashboardIconButton(
                         glyph: AppGlyphs.chevronForward,
                         tooltip: appLocalizations.details(
-                          appLocalizations.profile,
+                          appLocalizations.youkomixAccount,
                         ),
-                        onPressed: () => _openProfile(context, profile),
+                        onPressed: () =>
+                            _openAccount(context, hasProfile: profile != null),
                       ),
                     ],
                   ),
@@ -172,16 +220,18 @@ class ProfilesCard extends ConsumerWidget {
             DashboardCappedRow(spacing: _rowGap, start: nameRow, end: end)
           else
             nameRow,
-          if (profile != null && !compact)
+          if ((auth.isAuthenticated || profile != null) && !compact)
             LayoutBuilder(
               builder: (context, constraints) {
                 final time = updatedAt?.getLastUpdateTimeDesc(context);
                 final updated = time == null
                     ? null
                     : appLocalizations.profileUpdatedAt(time);
+                final leftText = modeLabel ?? updated;
+                final fallbackText = modeLabel ?? time;
                 final fits =
-                    updated == null ||
-                    _widthOf(updated, label) +
+                    leftText == null ||
+                    _widthOf(leftText, label) +
                             _rowGap +
                             _widthOf(endText ?? '', label) <=
                         constraints.maxWidth;
@@ -190,7 +240,7 @@ class ProfilesCard extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        (fits ? updated : time) ?? '',
+                        (fits ? leftText : fallbackText) ?? '',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: label,
@@ -201,12 +251,20 @@ class ProfilesCard extends ConsumerWidget {
                 );
               },
             ),
-          if (profile != null) ...[
+          if (usage != null) ...[
             if (mobile) const SizedBox(height: 14) else const Spacer(),
-            if (usage != null)
-              _UsageMeter(usage: usage, figure: figure, gap: mobile ? 8 : 6)
-            else
-              _ConfigStats(figure: figure),
+            _UsageMeter(usage: usage, figure: figure, gap: mobile ? 8 : 6),
+          ] else if (profile != null) ...[
+            if (mobile) const SizedBox(height: 14) else const Spacer(),
+            _ConfigStats(figure: figure),
+          ] else if (auth.isAuthenticated) ...[
+            if (mobile) const SizedBox(height: 14) else const Spacer(),
+            Text(
+              appLocalizations.youkomixOpenPanel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: label,
+            ),
           ],
         ],
       ),
@@ -222,12 +280,17 @@ double _widthOf(String text, TextStyle style) =>
 class _SyncButton extends ConsumerWidget {
   const _SyncButton({required this.profile});
 
-  final Profile profile;
+  final Profile? profile;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isUpdating = ref.watch(isUpdatingProvider(profile.updatingKey));
-    if (isUpdating) {
+    final syncing = ref.watch(
+      youkomixControllerProvider.select((s) => s.isSyncing || s.isBusy),
+    );
+    final profileUpdating = profile == null
+        ? false
+        : ref.watch(isUpdatingProvider(profile!.updatingKey));
+    if (syncing || profileUpdating) {
       return const SizedBox.square(
         dimension: 32,
         child: Center(child: ActivityIndicator(size: 18)),
@@ -235,7 +298,7 @@ class _SyncButton extends ConsumerWidget {
     }
     return DashboardIconButton(
       glyph: AppGlyphs.sync,
-      tooltip: context.appLocalizations.update,
+      tooltip: context.appLocalizations.youkomixSyncNodes,
       onPressed: () => syncProfile(ref, profile),
     );
   }
@@ -280,7 +343,6 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
       ],
     );
     return LayoutBuilder(
-      // The minimum width lets spaceBetween spread the row inside FittedBox.
       builder: (context, constraints) => FittedBox(
         fit: BoxFit.scaleDown,
         alignment: AlignmentDirectional.centerStart,
@@ -382,8 +444,6 @@ class _UsageMeter extends StatelessWidget {
   }
 }
 
-/// The M3 Expressive wavy linear indicator: a wave up to [value], a gap,
-/// then a flat track ending in a stop dot.
 class _WavyProgressPainter extends CustomPainter {
   const _WavyProgressPainter({
     required this.value,

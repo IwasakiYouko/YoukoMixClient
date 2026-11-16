@@ -12,6 +12,8 @@ import 'package:fl_clash/state.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path/path.dart' show join;
 
+final _sha256Hex = RegExp(r'^[0-9a-fA-F]{64}$');
+
 class Request {
   late final Dio dio;
   late final Dio _clashDio;
@@ -20,6 +22,8 @@ class Request {
   /// off, because what it fetches is installed, on Windows as administrator.
   @visibleForTesting
   late final Dio releaseDio;
+  @visibleForTesting
+  YoukoMixReleaseInfo? lastPanelRelease;
   String? userAgent;
 
   ProviderReader? _read;
@@ -116,6 +120,32 @@ class Request {
 
   /// The release page redirect still answers once the hourly API quota is spent.
   Future<Map<String, dynamic>> latestRelease() async {
+    final serverUrl = youkomixStorage.activeServerUrl;
+    final serverUri = serverUrl == null ? null : Uri.tryParse(serverUrl);
+    if (serverUrl != null && serverUri != null && serverUri.scheme == 'https') {
+      try {
+        final api = YoukoMixApiClient(dio: releaseDio);
+        final panelRelease = await api.fetchRelease(serverUrl);
+        final rawVersion = panelRelease.version.trim();
+        if (rawVersion.isNotEmpty) {
+          lastPanelRelease = panelRelease;
+          final tagName = rawVersion.startsWith('v')
+              ? rawVersion
+              : 'v$rawVersion';
+          return {
+            'tag_name': tagName,
+            if (panelRelease.releaseUrl.isNotEmpty)
+              'html_url': panelRelease.releaseUrl,
+          };
+        }
+      } catch (error) {
+        commonPrint.log(
+          'panel release check failed: ${compactError(error)}',
+          logLevel: LogLevel.warning,
+        );
+      }
+    }
+    lastPanelRelease = null;
     try {
       final response = await dio.get<Map<String, dynamic>>(
         'https://api.github.com/repos/$repository/releases/latest',
@@ -151,17 +181,29 @@ class Request {
     ProgressCallback? onReceiveProgress,
     CancelToken? cancelToken,
   }) async {
-    final sums = await releaseDio.getUri<String>(
-      releaseAssetUri(tag, releaseChecksumsName),
-      options: Options(responseType: ResponseType.plain),
-      cancelToken: cancelToken,
-    );
-    final expected = releaseChecksum(sums.data ?? '', name);
-    if (expected == null) {
-      throw ReleaseNotVerifiedException(name);
+    final panelAsset = lastPanelRelease?.assets[name];
+    final assetUri = panelAsset == null ? null : Uri.tryParse(panelAsset.url);
+    final String? expected;
+    final Uri uri;
+    if (panelAsset != null &&
+        assetUri != null &&
+        assetUri.scheme == 'https' &&
+        _sha256Hex.hasMatch(panelAsset.sha256)) {
+      expected = panelAsset.sha256.toLowerCase();
+      uri = assetUri;
+    } else {
+      final sums = await releaseDio.getUri<String>(
+        releaseAssetUri(tag, releaseChecksumsName),
+        options: Options(responseType: ResponseType.plain),
+        cancelToken: cancelToken,
+      );
+      expected = releaseChecksum(sums.data ?? '', name);
+      if (expected == null) {
+        throw ReleaseNotVerifiedException(name);
+      }
+      uri = releaseAssetUri(tag, name);
     }
     final path = join(directory, name);
-    final uri = releaseAssetUri(tag, name);
     if (app case final android?) {
       await android.downloadFile(
         uri,

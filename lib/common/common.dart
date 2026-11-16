@@ -51,3 +51,5 @@ export 'task.dart';
 export 'task_pool.dart';
 export 'webdav.dart';
 export 'yaml.dart';
+export 'youkomix_api.dart';
+export 'youkomix_storage.dart';

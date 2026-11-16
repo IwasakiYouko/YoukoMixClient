@@ -53,6 +53,9 @@ Future<void> main(List<String> args) async {
   }
 
   final env = results['env'] as String;
+  final serverUrl =
+      (results['server-url'] as String?) ??
+      Platform.environment['YOUKOMIX_SERVER_URL'];
   final rootDir = Directory.current.path;
   final skipped = packagesNotBuildingAssets(
     File(p.join(rootDir, 'pubspec.yaml')).readAsStringSync(),
@@ -78,6 +81,7 @@ Future<void> main(List<String> args) async {
     rootDir,
     arch,
     androidArch: androidArch,
+    serverUrl: serverUrl,
     verbose: verbose,
   );
   exit(exitCode);
@@ -102,6 +106,11 @@ ArgParser createSetupArgParser() {
       allowed: ['arm', 'arm64', 'amd64'],
       help: 'Target architecture (Android only)',
     )
+    ..addOption(
+      'server-url',
+      valueHelp: 'https://panel.example.com',
+      help: 'Default YoukoMix panel base URL (or YOUKOMIX_SERVER_URL env)',
+    )
     ..addFlag(
       'verbose',
       abbr: 'v',
@@ -124,8 +133,12 @@ List<String> createFlutterBuildArgs({
   return flutterBuildArgs;
 }
 
-Map<String, String> createBuildEnvironment(String env) {
-  return {'APP_ENV': env};
+Map<String, String> createBuildEnvironment(String env, {String? serverUrl}) {
+  final cleanedUrl = serverUrl?.trim() ?? '';
+  return {
+    'APP_ENV': env,
+    if (cleanedUrl.isNotEmpty) 'YOUKOMIX_SERVER_URL': cleanedUrl,
+  };
 }
 
 /// Packages whose build hook `pubspec.yaml` turns into a no-op.
@@ -161,10 +174,13 @@ Future<int> _package(
   String rootDir,
   String arch, {
   String? androidArch,
+  String? serverUrl,
   required bool verbose,
 }) async {
   final file = File(p.join(rootDir, 'env.json'));
-  await file.writeAsString(jsonEncode(createBuildEnvironment(env)));
+  await file.writeAsString(
+    jsonEncode(createBuildEnvironment(env, serverUrl: serverUrl)),
+  );
 
   final flutterBuildArgs = createFlutterBuildArgs(
     platform: platform,

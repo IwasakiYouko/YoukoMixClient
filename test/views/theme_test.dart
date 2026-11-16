@@ -82,13 +82,13 @@ void main() {
           widget is Semantics && widget.properties.label == Color(color).hex,
     );
 
-    testWidgets('starts on blue among the system colors', (tester) async {
+    testWidgets('starts on brand pink among the preset colors', (tester) async {
       container
           .read(themeSettingProvider.notifier)
           .update((_) => defaultThemeProps);
       await pumpThemeView(tester);
 
-      expect(readTheme().primaryColor, 0xFF007AFF);
+      expect(readTheme().primaryColor, defaultPrimaryColor);
       for (final color in defaultPrimaryColors) {
         expect(swatch(color), findsOneWidget);
       }

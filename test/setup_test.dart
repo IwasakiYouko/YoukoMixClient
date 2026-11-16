@@ -23,6 +23,16 @@ void main() {
 
     test('Flutter build environment does not depend on Core SHA256', () {
       expect(setup.createBuildEnvironment('dev'), {'APP_ENV': 'dev'});
+      expect(
+        setup.createBuildEnvironment(
+          'stable',
+          serverUrl: '  https://panel.youkomix.example  ',
+        ),
+        {
+          'APP_ENV': 'stable',
+          'YOUKOMIX_SERVER_URL': 'https://panel.youkomix.example',
+        },
+      );
     });
 
     test('omits verbose from flutter build args by default', () {

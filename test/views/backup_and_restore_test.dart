@@ -1,4 +1,3 @@
-import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/form/form.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/app.dart';
@@ -76,63 +75,6 @@ void main() {
     await tester.tap(find.widgetWithText(TextButton, 'Save'));
     await tester.pumpAndSettle();
   }
-
-  group('RestoreOptionsDialog', () {
-    Future<RestoreOption?> openAndChoose(
-      WidgetTester tester,
-      String label,
-    ) async {
-      tester.view.physicalSize = const Size(1200, 1400);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      RestoreOption? chosen;
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: TestApp(
-            child: Builder(
-              builder: (context) => HostScaffold(
-                body: TextButton(
-                  onPressed: () async {
-                    chosen = await showDialog<RestoreOption>(
-                      context: context,
-                      builder: (_) => const RestoreOptionsDialog(),
-                    );
-                  },
-                  child: const Text('open'),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pump();
-      await tester.tap(find.text('open'));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text(label));
-      await tester.pumpAndSettle();
-      return chosen;
-    }
-
-    testWidgets('returns onlyProfiles for the config-only option', (
-      tester,
-    ) async {
-      expect(
-        await openAndChoose(tester, 'Restore profiles only'),
-        RestoreOption.onlyProfiles,
-      );
-    });
-
-    testWidgets('returns all for the full-data option', (tester) async {
-      expect(
-        await openAndChoose(tester, 'Restore all data'),
-        RestoreOption.all,
-      );
-    });
-  });
 
   group('WebDAVForm', () {
     testWidgets('rejects an empty form and stores nothing', (tester) async {

@@ -62,7 +62,7 @@ class AppPath {
   }
 
   String get corePath {
-    return join(executableDirPath, 'FlClashCore$executableExtension');
+    return join(executableDirPath, '${appCodeName}Core$executableExtension');
   }
 
   String get helperPath {
@@ -100,7 +100,7 @@ class AppPath {
 
   Future<String> get lockFilePath async {
     final homeDirPath = await appPath.homeDirPath;
-    return join(homeDirPath, 'FlClash.lock');
+    return join(homeDirPath, '$appCodeName.lock');
   }
 
   Future<String> get configFilePath async {
@@ -192,9 +192,9 @@ class AppPath {
 final appPath = AppPath();
 
 String getBackupFileName() {
-  return '${appName}_backup_${DateTime.now().show}.zip';
+  return '${appCodeName}_backup_${DateTime.now().show}.zip';
 }
 
 String get logFileName {
-  return '${appName}_${DateTime.now().show}.log';
+  return '${appCodeName}_${DateTime.now().show}.log';
 }

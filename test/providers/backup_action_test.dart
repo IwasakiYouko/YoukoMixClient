@@ -5,10 +5,10 @@ import 'package:drift/native.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/database/database.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/action.dart';
 import 'package:fl_clash/providers/config.dart';
-import 'package:fl_clash/l10n/l10n.dart';
 import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart';
@@ -50,7 +50,6 @@ void main() {
     await testDatabase.close();
   });
 
-  // AppStateManager's listen keeps the settings alive while a restore awaits.
   ProviderContainer buildContainer() {
     final container = ProviderContainer()..listen(configProvider, (_, _) {});
     addTearDown(container.dispose);
@@ -88,31 +87,49 @@ void main() {
       return keptPath;
     }
 
-    test('restores the rows, files and settings a backup carries', () async {
-      await testDatabase.profilesDao.putAll([
-        _profile(1, 'Backed up').toCompanion(0),
-      ]);
-      final profileFile = File(await appPath.getProfilePath('1'))
-        ..createSync(recursive: true)
-        ..writeAsStringSync('proxies: []');
-      final source = buildContainer();
-      source.read(excludeSSIDsProvider.notifier).value = ['home-wifi'];
-      final archivePath = await backupToKept(actionOf(source));
+    test(
+      'restores scripts and settings while stripping profile YAMLs and rows',
+      () async {
+        await testDatabase.profilesDao.putAll([
+          _profile(9, 'Rogue').toCompanion(0),
+        ]);
+        final profileFile = File(await appPath.getProfilePath('9'))
+          ..createSync(recursive: true)
+          ..writeAsStringSync('proxies: []');
+        final script = Script(
+          id: 5,
+          label: 'My script',
+          lastUpdateTime: DateTime(2026),
+        );
+        await testDatabase.scriptsDao.putAll([script.toCompanion()]);
+        final scriptFile = File(await appPath.getScriptPath('5'))
+          ..createSync(recursive: true)
+          ..writeAsStringSync('function main(c){return c;}');
 
-      await testDatabase.delete(testDatabase.profiles).go();
-      profileFile.deleteSync();
-      final target = buildContainer();
-      final restored = await actionOf(
-        target,
-      ).restore(RestoreOption.all, (_) async => archivePath);
+        final source = buildContainer();
+        source.read(excludeSSIDsProvider.notifier).value = ['home-wifi'];
+        final archivePath = await backupToKept(actionOf(source));
 
-      expect(restored, isTrue);
-      final stored = await testDatabase.profilesDao.query().get();
-      expect(stored.map((item) => item.label), ['Backed up']);
-      expect(profileFile.readAsStringSync(), 'proxies: []');
-      expect(target.read(excludeSSIDsProvider), ['home-wifi']);
-      expect(workDirs(), isEmpty);
-    });
+        await testDatabase.delete(testDatabase.profiles).go();
+        await testDatabase.delete(testDatabase.scripts).go();
+        profileFile.deleteSync();
+        scriptFile.deleteSync();
+
+        final target = buildContainer();
+        final restored = await actionOf(
+          target,
+        ).restore(RestoreOption.all, (_) async => archivePath);
+
+        expect(restored, isTrue);
+        expect(await testDatabase.profilesDao.query().get(), isEmpty);
+        expect(profileFile.existsSync(), isFalse);
+        final restoredScripts = await testDatabase.scriptsDao.query().get();
+        expect(restoredScripts.map((s) => s.label), ['My script']);
+        expect(scriptFile.readAsStringSync(), 'function main(c){return c;}');
+        expect(target.read(excludeSSIDsProvider), ['home-wifi']);
+        expect(workDirs(), isEmpty);
+      },
+    );
 
     test('brings back the attachments of local modules and cleans the '
         'rest', () async {
@@ -169,7 +186,7 @@ void main() {
 
     test('an unreadable archive is reported and changes nothing', () async {
       await testDatabase.profilesDao.putAll([
-        _profile(9, 'Pre-existing').toCompanion(0),
+        _profile(youkomixManagedProfileId, 'Managed').toCompanion(0),
       ]);
       final bogus = File(join(kept.path, 'bogus.zip'))
         ..writeAsStringSync('not a zip');
@@ -187,7 +204,7 @@ void main() {
       );
 
       final stored = await testDatabase.profilesDao.query().get();
-      expect(stored.map((item) => item.label), ['Pre-existing']);
+      expect(stored.map((item) => item.label), ['Managed']);
       expect(workDirs(), isEmpty);
     });
 
@@ -204,63 +221,54 @@ void main() {
     });
   });
 
-  group('applyRestore writes the database', () {
-    test('inserts the profiles the backup carries', () async {
+  group('applyRestore enforces strict subscription boundary', () {
+    test('ignores profiles and custom proxies carried by an archive', () async {
       final container = buildContainer();
 
       await actionOf(container).applyRestore(
-        MigrationData(profiles: [_profile(1, 'From backup')]),
-        RestoreOption.onlyProfiles,
+        MigrationData(
+          profiles: [_profile(99, 'Injected third-party')],
+          customProxies: const [
+            CustomProxy(id: 1, definition: {'name': 'HK', 'type': 'ss'}),
+          ],
+        ),
+        RestoreOption.all,
       );
 
-      final stored = await testDatabase.profilesDao.query().get();
-      expect(stored.map((item) => item.label), ['From backup']);
+      expect(await testDatabase.profilesDao.query().get(), isEmpty);
+      expect(await testDatabase.customProxiesDao.query().get(), isEmpty);
     });
 
-    test('an override restore drops profiles the backup omits', () async {
-      final container = buildContainer();
-      await testDatabase.profilesDao.putAll([
-        _profile(9, 'Pre-existing').toCompanion(0),
-      ]);
-      container
-          .read(appSettingProvider.notifier)
-          .update(
-            (state) =>
-                state.copyWith(restoreStrategy: RestoreStrategy.override),
-          );
+    test(
+      'an override restore keeps managed profile #1 and drops unmanaged profiles',
+      () async {
+        final container = buildContainer();
+        await testDatabase.profilesDao.putAll([
+          _profile(youkomixManagedProfileId, 'Managed').toCompanion(0),
+          _profile(99, 'Rogue').toCompanion(1),
+        ]);
+        container
+            .read(appSettingProvider.notifier)
+            .update(
+              (state) =>
+                  state.copyWith(restoreStrategy: RestoreStrategy.override),
+            );
 
-      await actionOf(container).applyRestore(
-        MigrationData(profiles: [_profile(1, 'From backup')]),
-        RestoreOption.onlyProfiles,
-      );
+        await actionOf(container).applyRestore(
+          MigrationData(
+            profiles: [_profile(77, 'From backup')],
+            scripts: [
+              Script(id: 1, label: 'S1', lastUpdateTime: DateTime(2026)),
+            ],
+          ),
+          RestoreOption.all,
+        );
 
-      final stored = await testDatabase.profilesDao.query().get();
-      expect(stored.map((item) => item.label), ['From backup']);
-    });
-
-    test('a compatible restore keeps profiles the backup omits', () async {
-      final container = buildContainer();
-      await testDatabase.profilesDao.putAll([
-        _profile(9, 'Pre-existing').toCompanion(0),
-      ]);
-      container
-          .read(appSettingProvider.notifier)
-          .update(
-            (state) =>
-                state.copyWith(restoreStrategy: RestoreStrategy.compatible),
-          );
-
-      await actionOf(container).applyRestore(
-        MigrationData(profiles: [_profile(1, 'From backup')]),
-        RestoreOption.onlyProfiles,
-      );
-
-      final stored = await testDatabase.profilesDao.query().get();
-      expect(stored.map((item) => item.label).toSet(), {
-        'Pre-existing',
-        'From backup',
-      });
-    });
+        final stored = await testDatabase.profilesDao.query().get();
+        expect(stored.map((item) => item.id), [youkomixManagedProfileId]);
+        expect(stored.map((item) => item.label), ['Managed']);
+      },
+    );
 
     test('a restore drops the cache of a provider it replaced', () async {
       const dropped = ClashProvider(
@@ -296,33 +304,34 @@ void main() {
       expect(File(await dropped.path).existsSync(), isFalse);
       expect(File(await dropped.compiledPath).existsSync(), isFalse);
       expect(File(await kept.path).existsSync(), isTrue);
-      expect(
-        File(await kept.compiledPath).existsSync(),
-        isFalse,
-        reason: 'the restored source is compiled again on first use',
-      );
+      expect(File(await kept.compiledPath).existsSync(), isFalse);
     });
 
     test('rows that fail to restore take their files back out', () async {
-      final replaced = File(await appPath.getProfilePath('41'))
+      final replaced = File(await appPath.getScriptPath('41'))
         ..createSync(recursive: true)
         ..writeAsStringSync('current');
-      final added = File(await appPath.getProfilePath('42'));
+      final added = File(await appPath.getScriptPath('42'));
       final staging = Directory.systemTemp.createTempSync('flclash-staging-');
       addTearDown(() => staging.deleteSync(recursive: true));
       for (final id in [41, 42]) {
-        File(BackupEntries.resolve(staging.path, BackupEntries.profile(id)))
+        File(BackupEntries.resolve(staging.path, BackupEntries.script(id)))
           ..createSync(recursive: true)
           ..writeAsStringSync('from backup');
       }
       await testDatabase.customStatement(
-        'CREATE TRIGGER refuse_profiles BEFORE INSERT ON profiles '
+        'CREATE TRIGGER refuse_scripts BEFORE INSERT ON scripts '
         "BEGIN SELECT RAISE(ABORT, 'refused'); END",
       );
 
       await expectLater(
         actionOf(buildContainer()).applyRestore(
-          MigrationData(profiles: [_profile(41, 'One'), _profile(42, 'Two')]),
+          MigrationData(
+            scripts: [
+              Script(id: 41, label: 'One', lastUpdateTime: DateTime(2026)),
+              Script(id: 42, label: 'Two', lastUpdateTime: DateTime(2026)),
+            ],
+          ),
           RestoreOption.onlyProfiles,
           stagingDirPath: staging.path,
         ),
@@ -332,59 +341,34 @@ void main() {
       expect(replaced.readAsStringSync(), 'current');
       expect(added.existsSync(), isFalse);
     });
-
-    test('a backup carrying only proxy groups still writes them', () async {
-      await testDatabase.profiles.put(
-        const Profile(id: 7, autoUpdateDuration: Duration.zero).toCompanion(),
-      );
-      final container = buildContainer();
-
-      await actionOf(container).applyRestore(
-        const MigrationData(
-          proxyGroups: [
-            ProxyGroup(
-              id: 1,
-              profileId: 7,
-              name: 'Selector',
-              type: GroupType.Selector,
-            ),
-          ],
-        ),
-        RestoreOption.onlyProfiles,
-      );
-
-      final stored = await testDatabase.proxyGroupsDao.query(7).get();
-      expect(
-        stored.map((item) => item.name),
-        ['Selector'],
-        reason:
-            'proxyGroups belongs in the guard that decides whether the batch '
-            'runs, not only in the batch body',
-      );
-    });
   });
 
   group('applyRestore writes the settings providers', () {
-    test('restores every settings provider the config carries', () async {
-      final source = buildContainer();
-      source
-          .read(appSettingProvider.notifier)
-          .update((state) => state.copyWith(autoLaunch: true));
-      source.read(currentProfileIdProvider.notifier).value = 42;
-      source
-          .read(patchClashConfigProvider.notifier)
-          .update((state) => state.copyWith(mixedPort: 7899));
-      final configMap = configMapOf(source);
+    test(
+      'restores settings providers while preserving currentProfileId',
+      () async {
+        final source = buildContainer();
+        source
+            .read(appSettingProvider.notifier)
+            .update((state) => state.copyWith(autoLaunch: true));
+        source.read(currentProfileIdProvider.notifier).value = 42;
+        source
+            .read(patchClashConfigProvider.notifier)
+            .update((state) => state.copyWith(mixedPort: 7899));
+        final configMap = configMapOf(source);
 
-      final target = buildContainer();
-      await actionOf(
-        target,
-      ).applyRestore(MigrationData(configMap: configMap), RestoreOption.all);
+        final target = buildContainer();
+        target.read(currentProfileIdProvider.notifier).value =
+            youkomixManagedProfileId;
+        await actionOf(
+          target,
+        ).applyRestore(MigrationData(configMap: configMap), RestoreOption.all);
 
-      expect(target.read(currentProfileIdProvider), 42);
-      expect(target.read(appSettingProvider).autoLaunch, isTrue);
-      expect(target.read(patchClashConfigProvider).mixedPort, 7899);
-    });
+        expect(target.read(currentProfileIdProvider), youkomixManagedProfileId);
+        expect(target.read(appSettingProvider).autoLaunch, isTrue);
+        expect(target.read(patchClashConfigProvider).mixedPort, 7899);
+      },
+    );
 
     test('keeps the bound WebDAV account when the backup has none', () async {
       final configMap = configMapOf(buildContainer());
@@ -444,68 +428,6 @@ void main() {
       ).applyRestore(MigrationData(configMap: configMap), RestoreOption.all);
 
       expect(target.read(vpnSettingProvider).accessControlProps, listed);
-    });
-
-    test('leaves the settings untouched for an onlyProfiles restore', () async {
-      final source = buildContainer();
-      source.read(currentProfileIdProvider.notifier).value = 42;
-      final configMap = configMapOf(source);
-
-      final target = buildContainer();
-      final before = target.read(currentProfileIdProvider);
-
-      await actionOf(target).applyRestore(
-        MigrationData(configMap: configMap, profiles: [_profile(1, 'P')]),
-        RestoreOption.onlyProfiles,
-      );
-
-      expect(target.read(currentProfileIdProvider), before);
-      expect(await testDatabase.profilesDao.query().get(), hasLength(1));
-    });
-
-    test('a backup without a config still restores the database', () async {
-      final container = buildContainer();
-      final before = container.read(currentProfileIdProvider);
-
-      await actionOf(container).applyRestore(
-        MigrationData(profiles: [_profile(1, 'P')]),
-        RestoreOption.all,
-      );
-
-      expect(container.read(currentProfileIdProvider), before);
-      expect(await testDatabase.profilesDao.query().get(), hasLength(1));
-    });
-  });
-
-  group('a config with unreadable values', () {
-    test('restores the rest without keeping a dropped profile', () async {
-      final container = buildContainer();
-      await testDatabase.profilesDao.putAll([
-        _profile(9, 'Pre-existing').toCompanion(0),
-      ]);
-      container.read(currentProfileIdProvider.notifier).value = 9;
-      container
-          .read(appSettingProvider.notifier)
-          .update(
-            (state) =>
-                state.copyWith(restoreStrategy: RestoreStrategy.override),
-          );
-
-      await actionOf(container).applyRestore(
-        MigrationData(
-          configMap: const {
-            'currentProfileId': 'not an int',
-            'appSettingProps': {'hideIp': true},
-          },
-          profiles: [_profile(1, 'From backup')],
-        ),
-        RestoreOption.all,
-      );
-
-      final stored = await testDatabase.profilesDao.query().get();
-      expect(stored.map((item) => item.label), ['From backup']);
-      expect(container.read(currentProfileIdProvider), isNull);
-      expect(container.read(appSettingProvider).hideIp, true);
     });
   });
 }

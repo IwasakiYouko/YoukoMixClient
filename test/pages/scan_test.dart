@@ -226,7 +226,7 @@ void main() {
 
       await tester.pumpWidget(const SizedBox.shrink());
       platform.emit(
-        _capture(type: BarcodeType.url, rawValue: 'https://a.example'),
+        _capture(type: BarcodeType.url, rawValue: 'youkomix://auth?code=a'),
       );
       await tester.pumpAndSettle();
 
@@ -251,7 +251,7 @@ void main() {
       },
     );
 
-    testWidgets('a url barcode pops its raw value', (tester) async {
+    testWidgets('a youkomix auth barcode pops its raw value', (tester) async {
       String? result;
       var popped = false;
       await pumpScanPage(
@@ -263,43 +263,49 @@ void main() {
       );
 
       platform.emit(
-        _capture(type: BarcodeType.url, rawValue: 'https://sub.example/x'),
+        _capture(type: BarcodeType.url, rawValue: 'youkomix://auth?code=otc_x'),
       );
       await tester.pumpAndSettle();
 
       expect(popped, isTrue);
-      expect(result, 'https://sub.example/x');
+      expect(result, 'youkomix://auth?code=otc_x');
     });
 
-    testWidgets('an install-config link pops the url it carries', (
+    testWidgets('third-party urls and install-config links are rejected', (
       tester,
     ) async {
-      String? result;
-      await pumpScanPage(tester, onPopped: (value) => result = value);
+      var popped = false;
+      await pumpScanPage(tester, onPopped: (_) => popped = true);
 
       platform.emit(
         _textCapture([
+          'https://sub.example/y',
           'clash://install-config?url=https%3A%2F%2Fsub.example%2Fy',
+          'vmess://eyJhZGQiOiIxLjIuMy40In0=',
         ]),
       );
-      await tester.pumpAndSettle();
+      await pumpFrames(tester);
 
-      expect(result, 'https://sub.example/y');
+      expect(popped, isFalse);
+      expect(
+        find.text(currentAppLocalizations.invalidProfileQrcode),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('the first profile link in a capture wins', (tester) async {
+    testWidgets('the first youkomix link in a capture wins', (tester) async {
       String? result;
       await pumpScanPage(tester, onPopped: (value) => result = value);
 
       platform.emit(
-        _textCapture(['WIFI:S:home;;', ' https://sub.example/z\n']),
+        _textCapture(['WIFI:S:home;;', ' youkomix://auth?code=otc_z\n']),
       );
       await tester.pumpAndSettle();
 
-      expect(result, 'https://sub.example/z');
+      expect(result, 'youkomix://auth?code=otc_z');
     });
 
-    testWidgets('a code without a profile link keeps scanning with a hint', (
+    testWidgets('a code without a youkomix link keeps scanning with a hint', (
       tester,
     ) async {
       var popped = false;
@@ -319,7 +325,7 @@ void main() {
       expect(find.text(currentAppLocalizations.qrcodeDesc), findsOneWidget);
 
       platform.emit(
-        _capture(type: BarcodeType.url, rawValue: 'https://sub.example/x'),
+        _capture(type: BarcodeType.url, rawValue: 'youkomix://sync'),
       );
       await tester.pumpAndSettle();
 
@@ -332,10 +338,10 @@ void main() {
       var popCount = 0;
       await pumpScanPage(tester, onPopped: (_) => popCount++);
 
-      platform.emit(_textCapture(['https://a.example']));
-      platform.emit(_textCapture(['https://b.example']));
+      platform.emit(_textCapture(['youkomix://auth?code=a']));
+      platform.emit(_textCapture(['youkomix://auth?code=b']));
       await tester.pump();
-      platform.emit(_textCapture(['https://c.example']));
+      platform.emit(_textCapture(['youkomix://auth?code=c']));
       await tester.pumpAndSettle();
 
       expect(popCount, 1);
@@ -357,7 +363,7 @@ void main() {
       await tester.tap(find.byTooltip(currentAppLocalizations.close));
       await tester.pump();
       platform.emit(
-        _capture(type: BarcodeType.url, rawValue: 'https://a.example'),
+        _capture(type: BarcodeType.url, rawValue: 'youkomix://auth?code=a'),
       );
       await tester.pumpAndSettle();
 
@@ -381,7 +387,7 @@ void main() {
       );
       await pumpFrames(tester);
       platform.emit(
-        _capture(type: BarcodeType.url, rawValue: 'https://a.example'),
+        _capture(type: BarcodeType.url, rawValue: 'youkomix://auth?code=a'),
       );
       await pumpFrames(tester);
 
@@ -453,7 +459,7 @@ void main() {
       await pumpScanPage(tester, onPopped: (_) {});
 
       platform.emit(
-        _capture(type: BarcodeType.url, rawValue: 'https://sub.example/x'),
+        _capture(type: BarcodeType.url, rawValue: 'youkomix://auth?code=x'),
       );
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
@@ -541,7 +547,7 @@ void main() {
       expect(platform.startCalls, 2);
 
       platform.emit(
-        _capture(type: BarcodeType.url, rawValue: 'https://b.example'),
+        _capture(type: BarcodeType.url, rawValue: 'youkomix://auth?code=b'),
       );
       await tester.pumpAndSettle();
 
@@ -554,15 +560,13 @@ void main() {
       var popCount = 0;
       await pumpScanPage(tester, onPopped: (_) => popCount++);
 
-      // Without cancelling first, each resume adds another listener and the
-      // single capture below would be handled once per subscription.
       await sendLifecycle(tester, AppLifecycleState.resumed);
       await pumpFrames(tester);
       await sendLifecycle(tester, AppLifecycleState.resumed);
       await pumpFrames(tester);
 
       platform.emit(
-        _capture(type: BarcodeType.url, rawValue: 'https://c.example'),
+        _capture(type: BarcodeType.url, rawValue: 'youkomix://auth?code=c'),
       );
       await tester.pumpAndSettle();
 

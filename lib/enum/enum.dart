@@ -615,54 +615,6 @@ extension RuleActionExt on RuleAction {
     RuleAction.PROCESS_NAME_REGEX,
     RuleAction.PROCESS_PATH_REGEX,
   ].contains(this);
-
-  String getDesc(BuildContext context) {
-    final appLocalizations = context.appLocalizations;
-    return switch (this) {
-      RuleAction.DOMAIN => appLocalizations.ruleActionDomainDesc,
-      RuleAction.DOMAIN_SUFFIX => appLocalizations.ruleActionDomainSuffixDesc,
-      RuleAction.DOMAIN_KEYWORD => appLocalizations.ruleActionDomainKeywordDesc,
-      RuleAction.DOMAIN_REGEX => appLocalizations.ruleActionDomainRegexDesc,
-      RuleAction.DOMAIN_WILDCARD =>
-        appLocalizations.ruleActionDomainWildcardDesc,
-      RuleAction.GEOSITE => appLocalizations.ruleActionGeositeDesc,
-      RuleAction.IP_CIDR => appLocalizations.ruleActionIpCidrDesc,
-      RuleAction.IP_CIDR6 => appLocalizations.ruleActionIpCidr6Desc,
-      RuleAction.IP_SUFFIX => appLocalizations.ruleActionIpSuffixDesc,
-      RuleAction.IP_ASN => appLocalizations.ruleActionIpAsnDesc,
-      RuleAction.GEOIP => appLocalizations.ruleActionGeoipDesc,
-      RuleAction.SRC_GEOIP => appLocalizations.ruleActionSrcGeoipDesc,
-      RuleAction.SRC_IP_ASN => appLocalizations.ruleActionSrcIpAsnDesc,
-      RuleAction.SRC_IP_CIDR => appLocalizations.ruleActionSrcIpCidrDesc,
-      RuleAction.SRC_IP_SUFFIX => appLocalizations.ruleActionSrcIpSuffixDesc,
-      RuleAction.DST_PORT => appLocalizations.ruleActionDstPortDesc,
-      RuleAction.SRC_PORT => appLocalizations.ruleActionSrcPortDesc,
-      RuleAction.IN_PORT => appLocalizations.ruleActionInPortDesc,
-      RuleAction.IN_TYPE => appLocalizations.ruleActionInTypeDesc,
-      RuleAction.IN_USER => appLocalizations.ruleActionInUserDesc,
-      RuleAction.IN_NAME => appLocalizations.ruleActionInNameDesc,
-      RuleAction.REMATCH_NAME => appLocalizations.ruleActionRematchNameDesc,
-      RuleAction.PROCESS_PATH => appLocalizations.ruleActionProcessPathDesc,
-      RuleAction.PROCESS_PATH_REGEX =>
-        appLocalizations.ruleActionProcessPathRegexDesc,
-      RuleAction.PROCESS_PATH_WILDCARD =>
-        appLocalizations.ruleActionProcessPathWildcardDesc,
-      RuleAction.PROCESS_NAME => appLocalizations.ruleActionProcessNameDesc,
-      RuleAction.PROCESS_NAME_REGEX =>
-        appLocalizations.ruleActionProcessNameRegexDesc,
-      RuleAction.PROCESS_NAME_WILDCARD =>
-        appLocalizations.ruleActionProcessNameWildcardDesc,
-      RuleAction.UID => appLocalizations.ruleActionUidDesc,
-      RuleAction.NETWORK => appLocalizations.ruleActionNetworkDesc,
-      RuleAction.DSCP => appLocalizations.ruleActionDscpDesc,
-      RuleAction.RULE_SET => appLocalizations.ruleActionRuleSetDesc,
-      RuleAction.AND => appLocalizations.ruleActionAndDesc,
-      RuleAction.OR => appLocalizations.ruleActionOrDesc,
-      RuleAction.NOT => appLocalizations.ruleActionNotDesc,
-      RuleAction.SUB_RULE => appLocalizations.ruleActionSubRuleDesc,
-      RuleAction.MATCH => appLocalizations.ruleActionMatchDesc,
-    };
-  }
 }
 
 enum ProxyFieldKind { text, secret, number, toggle, choice, list, map }

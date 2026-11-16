@@ -11,6 +11,7 @@ class Navigation implements NavigationPort {
   List<NavigationItem> getItems({
     bool openLogs = false,
     bool hasProxies = false,
+    bool developerMode = false,
   }) {
     return [
       NavigationItem(
@@ -27,27 +28,24 @@ class Navigation implements NavigationPort {
             : [],
       ),
       NavigationItem(
-        glyph: AppGlyphs.profiles,
-        label: PageLabel.profiles,
-        builder: (_) => const ProfilesView(),
-      ),
-      NavigationItem(
         glyph: AppGlyphs.requests,
         label: PageLabel.requests,
         builder: (_) => const RequestsView(),
-        modes: [NavigationItemMode.desktop, NavigationItemMode.moreFull],
+        modes: developerMode
+            ? [NavigationItemMode.desktop, NavigationItemMode.moreFull]
+            : [],
       ),
       NavigationItem(
         glyph: AppGlyphs.dns,
         label: PageLabel.dns,
         builder: (_) => const DnsQueriesView(),
-        modes: [NavigationItemMode.moreFull],
+        modes: developerMode ? [NavigationItemMode.moreFull] : [],
       ),
       NavigationItem(
         glyph: AppGlyphs.resources,
         label: PageLabel.resources,
         builder: (_) => const ResourcesView(),
-        modes: [NavigationItemMode.more],
+        modes: developerMode ? [NavigationItemMode.more] : [],
       ),
       NavigationItem(
         glyph: AppGlyphs.logs,

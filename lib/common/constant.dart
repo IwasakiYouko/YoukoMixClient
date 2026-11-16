@@ -9,21 +9,22 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:flutter/widgets.dart';
 
-const appName = 'FlClash';
-const appHelperService = 'FlClashHelperService';
+const appName = '人间之里';
+const appCodeName = 'YoukoMix';
+const appHelperService = 'YoukoMixHelperService';
 const coreManifestName = 'manifest.json';
 const browserUa =
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-const packageName = 'com.follow.clash';
-final unixSocketPath = '/tmp/FlClashSocket_${Random().nextInt(10000)}.sock';
-final windowsPipeName = '\\\\.\\pipe\\FlClashCore_${_randomPipeId()}';
-const helperPort = 47890;
+const packageName = 'com.youkomix.client';
+final unixSocketPath = '/tmp/YoukoMixSocket_${Random().nextInt(10000)}.sock';
+final windowsPipeName = '\\\\.\\pipe\\YoukoMixCore_${_randomPipeId()}';
+const helperPort = 47895;
 const helperPortKey =
     'SYSTEM\\CurrentControlSet\\Services\\$appHelperService\\Runtime';
 const helperPortValue = 'Port';
-const helperSocketPath = '/run/flclash/helper.sock';
-const helperUnitPath = '/etc/systemd/system/flclash-helper.service';
-const helperProtocolVersionHeader = 'x-flclash-helper-protocol';
+const helperSocketPath = '/run/youkomix/helper.sock';
+const helperUnitPath = '/etc/systemd/system/youkomix-helper.service';
+const helperProtocolVersionHeader = 'x-youkomix-helper-protocol';
 final helperProtocolVersion = Platform.isWindows ? '8' : '6';
 const maxTextScale = 1.4;
 const minTextScale = 0.8;
@@ -129,7 +130,7 @@ const systemDnsRecordKey = 'system_dns_record';
 const bootRecordKey = 'boot_record';
 const appliedConfigMd5Key = 'applied_config_md5';
 const defaultSystemDnsFallback = '223.5.5.5';
-const repository = 'chen08209/FlClash';
+const repository = 'IwasakiYouko/YoukoMixClient';
 const maxMobileWidth = 600;
 const maxLaptopWidth = 840;
 const defaultTestUrl = 'https://www.gstatic.com/generate_204';
@@ -172,7 +173,7 @@ const proxiesListStoreKey = PageStorageKey<String>('proxies_list');
 const toolsStoreKey = PageStorageKey<String>('tools');
 const profilesStoreKey = PageStorageKey<String>('profiles');
 
-const defaultPrimaryColor = 0xFF007AFF;
+const defaultPrimaryColor = 0xFFE85D88;
 
 const maxLogsLength = 5000;
 const maxRequestsLength = 2000;
@@ -183,15 +184,13 @@ const pausedMaxDnsQueriesLength = maxDnsQueriesLength * 2;
 
 const trafficSampleLength = 30;
 
-// iOS 27's system colors but the deeper blue of earlier iOS, in the order of the
-// macOS accent colors.
 const defaultPrimaryColors = [
   defaultPrimaryColor,
-  0xFFCB30E0,
   0xFFFF2D55,
-  0xFFFF383C,
+  0xFFB86D8C,
+  0xFFCB30E0,
+  0xFF007AFF,
   0xFFFF8D28,
-  0xFFFFCC00,
   0xFF34C759,
   0xFF8E8E93,
 ];

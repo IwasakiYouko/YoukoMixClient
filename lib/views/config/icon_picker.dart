@@ -51,8 +51,6 @@ String _iconLabel(BuildContext context, IconSetIcon icon) {
   return icon.name.isEmpty ? context.appLocalizations.localImage : icon.label;
 }
 
-/// Pops with the chosen icon, an empty string to remove it, or null when the
-/// sheet is left without a choice.
 class IconPickerView extends ConsumerStatefulWidget {
   final String? value;
   final String groupName;
@@ -89,8 +87,6 @@ class _IconPickerViewState extends ConsumerState<IconPickerView> {
     }
   }
 
-  /// Null until the first match over [iconSets] lands; a later set list keeps
-  /// the previous matches meanwhile.
   List<ScoredIcon>? _setMatchesOf(List<IconSet> iconSets) {
     final key = (iconSets, widget.groupName);
     if (key == _matchesKey) {

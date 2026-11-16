@@ -121,6 +121,8 @@ final youkomixControllerProvider =
     NotifierProvider<YoukoMixController, YoukoMixState>(YoukoMixController.new);
 
 class YoukoMixController extends Notifier<YoukoMixState> {
+  int _authEpoch = 0;
+
   YoukoMixApiClient get _api => ref.read(youkomixApiProvider);
   YoukoMixSessionStorage get _storage => ref.read(youkomixStorageProvider);
 
@@ -350,6 +352,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
     if (currentSession == null || state.isSyncing) {
       return false;
     }
+    final syncEpoch = _authEpoch;
     final operation = ref
         .read(updatingKeysProvider.notifier)
         .start(youkomixSyncUpdatingKey);
@@ -366,7 +369,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
         accessToken: currentSession.accessToken,
         userAgent: _resolveUserAgent(),
       );
-      if (!ref.mounted) {
+      if (!ref.mounted || syncEpoch != _authEpoch) {
         return false;
       }
       final expireEpoch =
@@ -393,10 +396,15 @@ class YoukoMixController extends Notifier<YoukoMixState> {
             subscriptionInfo: subInfo,
             autoUpdateDuration: Duration(hours: payload.updateIntervalHours),
           );
+      if (!ref.mounted || syncEpoch != _authEpoch) {
+        await ref.read(profilesActionProvider.notifier).clearAllProfiles();
+        return false;
+      }
 
       final updatedSession = currentSession.copyWith(bootstrap: bootstrap);
       await _storage.saveSession(updatedSession);
-      if (!ref.mounted) {
+      if (!ref.mounted || syncEpoch != _authEpoch) {
+        await _storage.clearSession();
         return false;
       }
       ref
@@ -416,7 +424,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
       }
       return true;
     } on YoukoMixApiException catch (error) {
-      if (!ref.mounted) {
+      if (!ref.mounted || syncEpoch != _authEpoch) {
         return false;
       }
       if (error.isSessionInvalid) {
@@ -429,7 +437,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
       }
       return false;
     } on MessageException catch (error) {
-      if (ref.mounted) {
+      if (ref.mounted && syncEpoch == _authEpoch) {
         state = state.copyWith(isSyncing: false, errorMessage: error.message);
         if (showFeedback) {
           dialogs.showBanner(error.message, level: BannerLevel.error);
@@ -438,7 +446,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
       return false;
     } catch (error) {
       final msg = compactError(error);
-      if (ref.mounted) {
+      if (ref.mounted && syncEpoch == _authEpoch) {
         state = state.copyWith(isSyncing: false, errorMessage: msg);
         if (showFeedback) {
           dialogs.showBanner(msg, level: BannerLevel.error);
@@ -483,8 +491,9 @@ class YoukoMixController extends Notifier<YoukoMixState> {
   }
 
   Future<void> logout() async {
+    ++_authEpoch;
     final currentSession = state.session;
-    state = state.copyWith(isBusy: true, clearError: true);
+    state = state.copyWith(isBusy: true, isSyncing: false, clearError: true);
     if (currentSession != null) {
       try {
         await _api.logout(
@@ -505,6 +514,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
   }
 
   Future<void> _completeAuthenticatedSession(YoukoMixSession session) async {
+    ++_authEpoch;
     await _storage.saveSession(session);
     await ref.read(profilesActionProvider.notifier).purgeUnmanagedProfiles();
     if (!ref.mounted) {
@@ -514,6 +524,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
       serverUrl: session.serverUrl,
       session: session,
       isBusy: false,
+      isSyncing: false,
       clearMfa: true,
       clearError: true,
     );
@@ -521,6 +532,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
   }
 
   Future<void> _forceSignOut(String message) async {
+    ++_authEpoch;
     await _purgeLocalSessionState();
     if (!ref.mounted) {
       return;

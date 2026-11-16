@@ -33,7 +33,7 @@ class DAVClient {
     }
   }
 
-  String get root => '/$appName';
+  String get root => '/$appCodeName';
 
   String get backupFile => '$root/$fileName';
 

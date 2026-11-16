@@ -1,7 +1,6 @@
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/form/form.dart';
 import 'package:fl_clash/models/models.dart';
-import 'package:fl_clash/providers/action.dart';
 import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/database.dart';
@@ -20,9 +19,6 @@ import 'package:fl_clash/views/config/sniffer.dart';
 import 'package:fl_clash/views/config/tun.dart';
 import 'package:fl_clash/views/config/user_agents.dart';
 import 'package:fl_clash/views/hotkey.dart';
-import 'package:fl_clash/views/profiles/custom/custom.dart';
-import 'package:fl_clash/views/profiles/custom/custom_proxies.dart';
-import 'package:fl_clash/views/profiles/custom/rules.dart';
 import 'package:fl_clash/views/proxies/list.dart';
 import 'package:fl_clash/views/proxies/tab.dart';
 import 'package:fl_clash/views/theme.dart';
@@ -46,7 +42,6 @@ void main() {
   final cases = <String, Widget>{
     'dashboard': const DashboardView(),
     'proxies': const ProxiesView(),
-    'profiles': const ProfilesView(),
     'requests': const RequestsView(initialFeed: RequestFeed.recent),
     'dns queries': const DnsQueriesView(),
     'resources': const ResourcesView(),
@@ -354,207 +349,4 @@ void main() {
     }
     expect(tester.takeException(), null);
   });
-
-  testWidgets('custom profile editors render populated data', (tester) async {
-    tester.view.physicalSize = const Size(1400, 1000);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    final profile = Profile.custom();
-    final proxyGroups = List.generate(
-      8,
-      (index) => ProxyGroup(
-        id: 100 + index,
-        profileId: profile.id,
-        name: 'Group $index',
-        type: GroupType.Selector,
-        proxies: const ['DIRECT'],
-      ),
-    );
-    final rules = List.generate(
-      12,
-      (index) => Rule(
-        id: 200 + index,
-        content: 'example$index.com',
-        ruleTarget: 'DIRECT',
-        order: index.toString(),
-      ),
-    );
-    final customProxies = List.generate(
-      6,
-      (index) => CustomProxy(
-        id: 300 + index,
-        definition: {
-          'name': 'Node $index',
-          'type': 'socks5',
-          'server': '127.0.0.1',
-          'port': 1080 + index,
-        },
-      ),
-    );
-    final container = ProviderContainer(
-      overrides: [
-        profilesProvider.overrideWith(() => TestProfiles([profile])),
-        currentProfileIdProvider.overrideWithBuild((_, _) => profile.id),
-        profileRulesProvider.overrideWith2((_) => _TestProfileRules(rules)),
-        proxyGroupsProvider.overrideWith2((_) => _TestProxyGroups(proxyGroups)),
-        customProxiesProvider.overrideWith(
-          () => _TestCustomProxies(customProxies),
-        ),
-        customProxyCoreErrorsProvider.overrideWith(
-          (_) async => {customProxies.first.id: 'unsupport proxy type: nope'},
-        ),
-        proxyGroupProvider.overrideWithBuild((_, _) => proxyGroups.first),
-        setupActionProvider.overrideWith(_IdleSetupAction.new),
-        proxyDialersProvider.overrideWith2((_) => _TestProxyDialers()),
-        for (final kind in ProviderKind.values)
-          appProviderNamesProvider(kind).overrideWithValue(const {}),
-        customProfileDataProvider(profile.id).overrideWithValue(
-          CustomProfileData(
-            proxyGroups: proxyGroups,
-            proxyProviders: const {'provider'},
-            ruleTargets: {
-              ...RuleTarget.baseTargets,
-              ...proxyGroups.map((group) => group.name),
-            },
-          ),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
-    globalState.container = container;
-    container
-        .read(viewSizeProvider.notifier)
-        .update((_) => const Size(1400, 1000));
-
-    final views = <Widget>[
-      const CustomProxiesView(),
-      CustomRulesView(profile.id),
-      CustomProfileView(profileId: profile.id),
-    ];
-
-    for (final view in views) {
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: TestApp(child: view),
-        ),
-      );
-      await tester.pump();
-      expect(find.byWidget(view), findsOneWidget);
-      expect(tester.takeException(), null);
-
-      if (view is CustomProxiesView) {
-        await tester.pump();
-        expect(find.text('Node 5'), findsOneWidget);
-        expect(find.text('socks5'), findsWidgets);
-        expect(find.byType(CustomIssueButton), findsOneWidget);
-      }
-
-      if (view is CustomRulesView) {
-        final list = tester.widget<PrismReorderableListView>(
-          find.byType(PrismReorderableListView),
-        );
-        list.onReorderItem(0, 1);
-        await tester.pump();
-
-        await tester.tap(find.byType(Checkbox).first);
-        await tester.pump();
-        for (var i = 0; i < 2; i++) {
-          await tester.tap(find.byTooltip('Select all'));
-          await tester.pumpAndSettle();
-        }
-        expect(find.byTooltip('Add'), findsOneWidget);
-
-        container
-            .read(viewSizeProvider.notifier)
-            .update((_) => const Size(500, 1000));
-        await tester.tap(find.byTooltip('Add'));
-        await tester.pumpAndSettle();
-        await tester.tap(
-          find.descendant(
-            of: find.byType(PopupMenu),
-            matching: find.text('Add'),
-          ),
-        );
-        await tester.pumpAndSettle();
-        expect(find.byType(PagedSheet), findsOneWidget);
-        globalState.navigatorKey.currentState!.pop();
-        await tester.pumpAndSettle();
-        container
-            .read(viewSizeProvider.notifier)
-            .update((_) => const Size(1400, 1000));
-      }
-
-      if (view is CustomProfileView) {
-        await tester.pumpAndSettle();
-        final list = tester.widget<SliverPrismReorderableList>(
-          find.byType(SliverPrismReorderableList),
-        );
-        list.onReorderItem!(0, 1);
-        await tester.pump();
-
-        container
-            .read(viewSizeProvider.notifier)
-            .update((_) => const Size(500, 1000));
-        await tester.tap(find.byTooltip('Add'));
-        await tester.pumpAndSettle();
-        expect(find.byType(PagedSheet), findsOneWidget);
-        globalState.navigatorKey.currentState!.pop();
-        await tester.pumpAndSettle();
-        container
-            .read(viewSizeProvider.notifier)
-            .update((_) => const Size(1400, 1000));
-      }
-    }
-
-    await tester.pumpWidget(const SizedBox.shrink());
-  });
-}
-
-class _IdleSetupAction extends SetupAction {
-  @override
-  void autoApplyProfile() {}
-}
-
-class _TestProxyDialers extends ProxyDialers {
-  @override
-  Stream<Map<int, String>> build(int profileId) => Stream.value(const {});
-}
-
-class _TestProfileRules extends ProfileRules {
-  final List<Rule> initial;
-
-  _TestProfileRules(this.initial);
-
-  @override
-  Stream<List<Rule>> build(int profileId) => Stream.value(initial);
-
-  @override
-  void order(int oldIndex, int newIndex) {}
-}
-
-class _TestCustomProxies extends CustomProxies {
-  final List<CustomProxy> initial;
-
-  _TestCustomProxies(this.initial);
-
-  @override
-  Stream<List<CustomProxy>> build() => Stream.value(initial);
-
-  @override
-  void order(int oldIndex, int newIndex) {}
-}
-
-class _TestProxyGroups extends ProxyGroups {
-  final List<ProxyGroup> initial;
-
-  _TestProxyGroups(this.initial);
-
-  @override
-  Stream<List<ProxyGroup>> build(int profileId) => Stream.value(initial);
-
-  @override
-  void order(int oldIndex, int newIndex) {}
 }

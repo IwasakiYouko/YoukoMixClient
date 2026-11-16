@@ -41,6 +41,19 @@ void main() {
     test('accepts a path that is already gone', () async {
       await expectLater(safeDeletePath(join(root.path, 'missing')), completes);
     });
+
+    test('tolerates concurrent safeDelete calls on the same file', () async {
+      final file = File(join(root.path, 'concurrent.yaml'))
+        ..writeAsStringSync('mixed-port: 7890');
+
+      await Future.wait([
+        file.safeDelete(),
+        file.safeDelete(),
+        file.safeDelete(),
+      ]);
+
+      expect(file.existsSync(), isFalse);
+    });
   });
 
   group('writeAsStringAtomically', () {
