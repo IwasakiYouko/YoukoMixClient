@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.3.0 (2026-11-18)
+
+**Features**
+
+- **youkomix** Adapt non-commercial mode, daily check-in, and visual hierarchy (e7af046)
+
 ## v1.2.0 (2026-11-18)
 
 **Features**

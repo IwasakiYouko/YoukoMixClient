@@ -2,6 +2,24 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "1.3.0",
+      "tag": "v1.3.0",
+      "date": "2026-11-18",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "feat",
+          "entries": [
+            {
+              "id": "e7af046",
+              "scope": "youkomix",
+              "text": "Adapt non-commercial mode, daily check-in, and visual hierarchy"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "1.2.0",
       "tag": "v1.2.0",
       "date": "2026-11-18",
