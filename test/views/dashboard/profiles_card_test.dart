@@ -483,4 +483,31 @@ void main() {
 
     expect(stats, (groups: 2, proxies: 5, rules: 1, providers: 2));
   });
+
+  testWidgets(
+    'surfaces upgrade notice warning icon on dashboard card and opens account sheet',
+    (tester) async {
+      final base = _session();
+      final withNotice = base.copyWith(
+        bootstrap: base.bootstrap!.copyWith(
+          upgradeNotice: const YoukoMixUpgradeNotice(
+            enabled: true,
+            mode: 'scheduled',
+            cutoverAt: 1795204020,
+            title: '开启 X25519MLKEM768 更新通知',
+            message: '系统即将全面开启 X25519MLKEM768 支持，请确保及时将客户端及本地配置更新至最新版本。',
+          ),
+        ),
+      );
+      setUpProfiles([_profile(1)], session: withNotice);
+      await pumpDesktopCard(tester);
+      expect(tester.takeException(), isNull);
+      expect(find.byTooltip('开启 X25519MLKEM768 更新通知'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('开启 X25519MLKEM768 更新通知'));
+      await tester.pumpAndSettle();
+      expect(find.byType(YoukoMixAccountSheet), findsOneWidget);
+      expect(find.text('开启 X25519MLKEM768 更新通知'), findsOneWidget);
+    },
+  );
 }

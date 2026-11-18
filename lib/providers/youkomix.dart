@@ -104,6 +104,8 @@ class YoukoMixState {
   List<YoukoMixAnnouncement> get announcements =>
       bootstrap?.announcements ?? const [];
 
+  YoukoMixUpgradeNotice? get upgradeNotice => bootstrap?.upgradeNotice;
+
   String get effectiveServerUrl =>
       (session != null && session!.serverUrl.isNotEmpty)
       ? session!.serverUrl

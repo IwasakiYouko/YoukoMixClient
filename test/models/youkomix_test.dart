@@ -138,6 +138,13 @@ void main() {
           'announcements': [
             {'id': 1, 'title': '欢迎', 'content': '<p>你好</p>'},
           ],
+          'upgrade_notice': {
+            'enabled': true,
+            'mode': 'scheduled',
+            'cutover_at': 1795204020,
+            'title': '开启 X25519MLKEM768 更新通知',
+            'message': '系统即将全面开启 X25519MLKEM768 支持，请确保及时将客户端及本地配置更新至最新版本。',
+          },
         },
       }, fallbackServerUrl: 'https://panel.example.com');
 
@@ -152,6 +159,11 @@ void main() {
         'https://panel.example.com/user/client-auth',
       );
       expect(session.bootstrap?.announcements.single.displayBody, '你好');
+      expect(session.bootstrap?.upgradeNotice?.enabled, isTrue);
+      expect(session.bootstrap?.upgradeNotice?.isEnforced, isFalse);
+      expect(session.bootstrap?.upgradeNotice?.cutoverAt, 1795204020);
+      expect(session.bootstrap?.upgradeNotice?.cutoverDate, isNotNull);
+      expect(session.bootstrap?.upgradeNotice?.title, '开启 X25519MLKEM768 更新通知');
 
       final serialized = session.toJson();
       final decoded = YoukoMixSession.fromJson(serialized);
@@ -188,6 +200,28 @@ void main() {
         parseYoukoMixDeepLink('youkomix://sync?mode=exclusive'),
         const YoukoMixSyncDeepLink(mode: YoukoMixSubPreference.exclusive),
       );
+
+      final enforcedNotice = YoukoMixUpgradeNotice.fromJson(const {
+        'enabled': 1,
+        'mode': 'REQUIRED',
+        'cutover_at': '1795204020',
+        'title': '开启 X25519MLKEM768 更新通知',
+        'message': '系统已全面开启 X25519MLKEM768 支持，若遇到连接异常，请将客户端及本地配置更新至最新版本。',
+      });
+      expect(enforcedNotice.isEnforced, isTrue);
+      expect(enforcedNotice.shouldDisplay, isTrue);
+      expect(
+        YoukoMixUpgradeNotice.fromJson(enforcedNotice.toJson()),
+        enforcedNotice,
+      );
+
+      final cleared = session.bootstrap!.copyWith(clearUpgradeNotice: true);
+      expect(cleared.upgradeNotice, isNull);
+
+      final disabledBootstrap = YoukoMixBootstrap.fromJson(const {
+        'upgrade_notice': {'enabled': false, 'title': '忽略'},
+      });
+      expect(disabledBootstrap.upgradeNotice, isNull);
     });
   });
 }

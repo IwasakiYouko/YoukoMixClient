@@ -351,4 +351,109 @@ void main() {
       );
     },
   );
+
+  testWidgets(
+    'renders X25519MLKEM768 upgrade notice card and syncs configuration on tap',
+    (tester) async {
+      tester.view.physicalSize = const Size(1200, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      const notice = YoukoMixUpgradeNotice(
+        enabled: true,
+        mode: 'required',
+        cutoverAt: 1795204020,
+        title: '开启 X25519MLKEM768 更新通知',
+        message: '系统已全面开启 X25519MLKEM768 支持，若遇到连接异常，请将客户端及本地配置更新至最新版本。',
+      );
+      const session = YoukoMixSession(
+        serverUrl: 'https://panel.example.com',
+        accessToken: 'ymx_acc_token',
+        expiresAt: 1999999999,
+        bootstrap: YoukoMixBootstrap(
+          user: YoukoMixUser(
+            id: 1,
+            email: 'reimu@example.com',
+            userName: '博丽灵梦',
+            userClass: 2,
+          ),
+          subscription: YoukoMixSubscriptionState(
+            exclusiveEnabled: false,
+            activeMode: 'standard',
+          ),
+          upgradeNotice: notice,
+        ),
+      );
+      when(
+        () => api.downloadSubscription(
+          serverUrl: any(named: 'serverUrl'),
+          accessToken: any(named: 'accessToken'),
+          userAgent: any(named: 'userAgent'),
+        ),
+      ).thenAnswer(
+        (_) async => YoukoMixSubscriptionPayload(
+          bytes: Uint8List.fromList(
+            utf8.encode('proxies:\n  - {name: STD-01, type: ss}\n'),
+          ),
+          mode: 'standard',
+          title: '人间之里',
+        ),
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          youkomixGateEnabledProvider.overrideWithValue(true),
+          youkomixInitialSessionProvider.overrideWithValue(session),
+          youkomixApiProvider.overrideWithValue(api),
+          youkomixStorageProvider.overrideWithValue(storage),
+          profilesProvider.overrideWith(() => TestProfiles(const [])),
+          profilesActionProvider.overrideWith(_MemoryProfilesAction.new),
+          coreHandlerProvider.overrideWithValue(CoreController.scoped(core)),
+          setupActionProvider.overrideWith(_IdleSetupAction.new),
+        ],
+      );
+      addTearDown(container.dispose);
+      globalState.container = container;
+      container.read(viewSizeProvider.notifier).value = const Size(1200, 1000);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: TestApp(
+            child: Builder(
+              builder: (context) => HostScaffold(
+                body: TextButton(
+                  onPressed: () => showYoukoMixAccountSheet(context),
+                  child: const Text('open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      final l10n = AppLocalizations.current;
+      expect(find.text('开启 X25519MLKEM768 更新通知'), findsOneWidget);
+      expect(
+        find.text('系统已全面开启 X25519MLKEM768 支持，若遇到连接异常，请将客户端及本地配置更新至最新版本。'),
+        findsOneWidget,
+      );
+      expect(container.read(youkomixControllerProvider).upgradeNotice, notice);
+
+      await tester.tap(find.text(l10n.sync));
+      await tester.pumpAndSettle(const Duration(seconds: 4));
+
+      verify(
+        () => api.downloadSubscription(
+          serverUrl: 'https://panel.example.com',
+          accessToken: 'ymx_acc_token',
+          userAgent: any(named: 'userAgent'),
+        ),
+      ).called(1);
+    },
+  );
 }

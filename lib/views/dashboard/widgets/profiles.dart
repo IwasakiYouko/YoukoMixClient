@@ -142,6 +142,20 @@ class ProfilesCard extends ConsumerWidget {
 
     final canSync = auth.isAuthenticated || profile != null;
     final sync = canSync ? _SyncButton(profile: profile) : null;
+    final upgradeNotice = auth.upgradeNotice;
+    final upgradeNoticeButton =
+        upgradeNotice != null && upgradeNotice.shouldDisplay
+        ? DashboardIconButton(
+            glyph: AppGlyphs.warning,
+            tooltip: upgradeNotice.title.isNotEmpty
+                ? upgradeNotice.title
+                : appLocalizations.tip,
+            color: upgradeNotice.isEnforced
+                ? context.colorScheme.error
+                : DashboardColors.of(context).warn,
+            onPressed: () => _openAccount(context, hasProfile: profile != null),
+          )
+        : null;
     final channelSwitch =
         !compact && auth.isAuthenticated && (sub?.exclusiveEnabled ?? false)
         ? const _SubChannelButton()
@@ -199,6 +213,7 @@ class ProfilesCard extends ConsumerWidget {
             chevron: mobile,
             trailing: [
               if (mobile) ...[
+                ?upgradeNoticeButton,
                 ?channelSwitch,
                 ?sync,
               ] else
@@ -207,6 +222,7 @@ class ProfilesCard extends ConsumerWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      ?upgradeNoticeButton,
                       ?channelSwitch,
                       ?sync,
                       DashboardIconButton(

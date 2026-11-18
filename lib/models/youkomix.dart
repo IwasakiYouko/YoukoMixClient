@@ -609,6 +609,64 @@ class YoukoMixLinks {
 }
 
 @immutable
+class YoukoMixUpgradeNotice {
+  final bool enabled;
+  final String mode;
+  final int cutoverAt;
+  final String title;
+  final String message;
+
+  const YoukoMixUpgradeNotice({
+    this.enabled = false,
+    this.mode = 'compat',
+    this.cutoverAt = 0,
+    this.title = '',
+    this.message = '',
+  });
+
+  bool get isEnforced => mode == 'required';
+
+  bool get shouldDisplay =>
+      enabled && (title.trim().isNotEmpty || message.trim().isNotEmpty);
+
+  DateTime? get cutoverDate => cutoverAt > 0
+      ? DateTime.fromMillisecondsSinceEpoch(cutoverAt * 1000)
+      : null;
+
+  factory YoukoMixUpgradeNotice.fromJson(Map<String, Object?> json) {
+    final rawMode = _toString(json['mode']).trim().toLowerCase();
+    return YoukoMixUpgradeNotice(
+      enabled: _toBool(json['enabled']),
+      mode: rawMode.isEmpty ? 'compat' : rawMode,
+      cutoverAt: _toInt(json['cutover_at']),
+      title: _toString(json['title']).trim(),
+      message: _toString(json['message']).trim(),
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'enabled': enabled,
+    'mode': mode,
+    'cutover_at': cutoverAt,
+    'title': title,
+    'message': message,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is YoukoMixUpgradeNotice &&
+          other.enabled == enabled &&
+          other.mode == mode &&
+          other.cutoverAt == cutoverAt &&
+          other.title == title &&
+          other.message == message;
+
+  @override
+  int get hashCode => Object.hash(enabled, mode, cutoverAt, title, message);
+}
+
+@immutable
 class YoukoMixBootstrap {
   final YoukoMixUser user;
   final YoukoMixTraffic traffic;
@@ -617,6 +675,7 @@ class YoukoMixBootstrap {
   final YoukoMixLinks links;
   final List<String> apiEndpoints;
   final String downloadBaseUrl;
+  final YoukoMixUpgradeNotice? upgradeNotice;
 
   const YoukoMixBootstrap({
     this.user = const YoukoMixUser(),
@@ -626,6 +685,7 @@ class YoukoMixBootstrap {
     this.links = const YoukoMixLinks(),
     this.apiEndpoints = const [],
     this.downloadBaseUrl = '',
+    this.upgradeNotice,
   });
 
   YoukoMixBootstrap copyWith({
@@ -636,6 +696,8 @@ class YoukoMixBootstrap {
     YoukoMixLinks? links,
     List<String>? apiEndpoints,
     String? downloadBaseUrl,
+    YoukoMixUpgradeNotice? upgradeNotice,
+    bool clearUpgradeNotice = false,
   }) {
     return YoukoMixBootstrap(
       user: user ?? this.user,
@@ -645,6 +707,9 @@ class YoukoMixBootstrap {
       links: links ?? this.links,
       apiEndpoints: apiEndpoints ?? this.apiEndpoints,
       downloadBaseUrl: downloadBaseUrl ?? this.downloadBaseUrl,
+      upgradeNotice: clearUpgradeNotice
+          ? null
+          : (upgradeNotice ?? this.upgradeNotice),
     );
   }
 
@@ -655,6 +720,7 @@ class YoukoMixBootstrap {
     final annRaw = json['announcements'];
     final linksRaw = json['links'];
     final panelRaw = json['panel'];
+    final upgradeNoticeRaw = json['upgrade_notice'];
     YoukoMixLinks resolvedLinks = const YoukoMixLinks();
     List<String> resolvedEndpoints = parseYoukoMixEndpointList(
       json['api_endpoints'],
@@ -662,6 +728,15 @@ class YoukoMixBootstrap {
     String resolvedDownloadBase = _toString(
       json['download_base_url'],
     ).trim().replaceAll(RegExp(r'/+$'), '');
+    YoukoMixUpgradeNotice? resolvedUpgradeNotice;
+    if (upgradeNoticeRaw is Map) {
+      final parsedNotice = YoukoMixUpgradeNotice.fromJson(
+        Map<String, Object?>.from(upgradeNoticeRaw),
+      );
+      if (parsedNotice.shouldDisplay) {
+        resolvedUpgradeNotice = parsedNotice;
+      }
+    }
 
     if (panelRaw is Map) {
       final panelMap = Map<String, Object?>.from(panelRaw);
@@ -715,6 +790,7 @@ class YoukoMixBootstrap {
       links: resolvedLinks,
       apiEndpoints: resolvedEndpoints,
       downloadBaseUrl: resolvedDownloadBase,
+      upgradeNotice: resolvedUpgradeNotice,
     );
   }
 
@@ -726,6 +802,7 @@ class YoukoMixBootstrap {
     'links': links.toJson(),
     if (apiEndpoints.isNotEmpty) 'api_endpoints': apiEndpoints,
     if (downloadBaseUrl.isNotEmpty) 'download_base_url': downloadBaseUrl,
+    if (upgradeNotice != null) 'upgrade_notice': upgradeNotice!.toJson(),
   };
 
   @override
@@ -744,7 +821,8 @@ class YoukoMixBootstrap {
             other.apiEndpoints,
             apiEndpoints,
           ) &&
-          other.downloadBaseUrl == downloadBaseUrl;
+          other.downloadBaseUrl == downloadBaseUrl &&
+          other.upgradeNotice == upgradeNotice;
 
   @override
   int get hashCode => Object.hash(
@@ -755,6 +833,7 @@ class YoukoMixBootstrap {
     links,
     const ListEquality<String>().hash(apiEndpoints),
     downloadBaseUrl,
+    upgradeNotice,
   );
 }
 

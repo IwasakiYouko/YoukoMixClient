@@ -821,6 +821,7 @@ class DashboardIconButton extends StatelessWidget {
     required this.glyph,
     required this.tooltip,
     required this.onPressed,
+    this.color,
   });
 
   static const size = 32.0;
@@ -829,6 +830,7 @@ class DashboardIconButton extends StatelessWidget {
   final Glyph glyph;
   final String tooltip;
   final VoidCallback? onPressed;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -847,7 +849,7 @@ class DashboardIconButton extends StatelessWidget {
             minimumSize: const Size.square(size),
             fixedSize: const Size.square(size),
             tapTargetSize: TapTargetSize.shrinkWrap,
-            foregroundColor: context.colorScheme.onSurfaceVariant,
+            foregroundColor: color ?? context.colorScheme.onSurfaceVariant,
           ),
           onPressed: onPressed,
           icon: GlyphIcon(glyph, size: glyphSize),

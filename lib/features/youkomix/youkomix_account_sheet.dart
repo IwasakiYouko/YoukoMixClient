@@ -78,6 +78,7 @@ class YoukoMixAccountSheet extends ConsumerWidget {
     final exclusiveChannelTitle = subscription.exclusiveTitle.trim().isNotEmpty
         ? subscription.exclusiveTitle.trim()
         : appLocalizations.youkomixSubChannelExclusive;
+    final upgradeNotice = bootstrap?.upgradeNotice;
     final announcements = bootstrap?.announcements ?? const [];
     final subscriptionInfo = profile?.subscriptionInfo;
     final expireDate = user.classExpireDate;
@@ -137,6 +138,20 @@ class YoukoMixAccountSheet extends ConsumerWidget {
                       : appLocalizations.youkomixSubModeStandard,
                   isExclusive: isExclusive,
                 ),
+                if (upgradeNotice != null && upgradeNotice.shouldDisplay)
+                  _UpgradeNoticeCard(
+                    notice: upgradeNotice,
+                    isSyncing: authState.isSyncing,
+                    onSync: authState.isSyncing || authState.isBusy
+                        ? null
+                        : () {
+                            unawaited(
+                              ref
+                                  .read(youkomixControllerProvider.notifier)
+                                  .syncSubscription(showFeedback: true),
+                            );
+                          },
+                  ),
                 if (subscription.exclusiveEnabled)
                   generateSection(
                     title: appLocalizations.youkomixSubChannel,
@@ -503,6 +518,92 @@ class _AccountHeaderCard extends StatelessWidget {
                     ],
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _UpgradeNoticeCard extends StatelessWidget {
+  final YoukoMixUpgradeNotice notice;
+  final bool isSyncing;
+  final VoidCallback? onSync;
+
+  const _UpgradeNoticeCard({
+    required this.notice,
+    required this.isSyncing,
+    required this.onSync,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+    final appLocalizations = context.appLocalizations;
+    final enforced = notice.isEnforced;
+    final containerColor = enforced
+        ? colorScheme.errorContainer
+        : colorScheme.warningContainer;
+    final contentColor = enforced
+        ? colorScheme.onErrorContainer
+        : colorScheme.onWarningContainer;
+    final accentColor = enforced ? colorScheme.error : colorScheme.warning;
+    final titleText = notice.title.isNotEmpty
+        ? notice.title
+        : appLocalizations.tip;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: ShapeDecoration(
+          color: containerColor,
+          shape: AppShape.all(AppCorner.lg),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 10,
+          children: [
+            Row(
+              spacing: 8,
+              children: [
+                GlyphIcon(
+                  AppGlyphs.warning,
+                  fill: 1,
+                  size: 18,
+                  color: accentColor,
+                ),
+                Expanded(
+                  child: Text(
+                    titleText,
+                    style: AppTextStyle.headline
+                        .of(context, emphasized: true)
+                        .copyWith(color: contentColor),
+                  ),
+                ),
+              ],
+            ),
+            if (notice.message.isNotEmpty)
+              Text(
+                notice.message,
+                style: AppTextStyle.subheadline
+                    .of(context)
+                    .copyWith(color: contentColor),
+              ),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: FilledButton.icon(
+                onPressed: isSyncing ? null : onSync,
+                style: enforced
+                    ? ButtonStyle.from(
+                        backgroundColor: colorScheme.error,
+                        foregroundColor: colorScheme.onError,
+                      )
+                    : null,
+                icon: const GlyphIcon(AppGlyphs.sync, size: 16),
+                label: Text(appLocalizations.sync),
               ),
             ),
           ],
