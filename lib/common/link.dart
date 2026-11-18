@@ -108,6 +108,21 @@ String? youkoMixLinkFromQrCodes(Iterable<String?> values) {
   return null;
 }
 
+final _oneTimeCodeTokenPattern = RegExp(r'\b(ykx_[A-Za-z0-9_-]{8,})\b');
+
+String? extractYoukoMixOneTimeCode(String? raw) {
+  final text = raw?.trim();
+  if (text == null || text.isEmpty || text.length > 512) {
+    return null;
+  }
+  final parsed = parseYoukoMixDeepLink(text);
+  if (parsed is YoukoMixAuthDeepLink) {
+    return text;
+  }
+  final match = _oneTimeCodeTokenPattern.firstMatch(text);
+  return match?.group(1);
+}
+
 class LinkManager {
   static LinkManager? _instance;
   StreamSubscription? subscription;

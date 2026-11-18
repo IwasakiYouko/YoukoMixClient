@@ -275,7 +275,12 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m101(count) => "${Intl.plural(count, other: '${count}y ago')}";
 
-  static String m102(level) => "Lv.${level}";
+  static String m102(minVersion) =>
+      "This version is older than the minimum required version (v${minVersion}). Update now to stay connected.";
+
+  static String m103(online, limit) => "${online} / ${limit}";
+
+  static String m104(level) => "Lv.${level}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -2178,6 +2183,20 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
       "Security verification is enabled. Enter the graphical code below",
     ),
+    "youkomixClientUpdateRequiredDesc": m102,
+    "youkomixClientUpdateRequiredTitle": MessageLookupByLibrary.simpleMessage(
+      "Client update required",
+    ),
+    "youkomixClipboardAuthDetected": MessageLookupByLibrary.simpleMessage(
+      "One-time code found on clipboard — tap to sign in",
+    ),
+    "youkomixCopyDiagnostics": MessageLookupByLibrary.simpleMessage(
+      "Copy diagnostic summary",
+    ),
+    "youkomixDeviceCount": m103,
+    "youkomixDiagnosticsCopied": MessageLookupByLibrary.simpleMessage(
+      "Redacted diagnostic summary copied to clipboard",
+    ),
     "youkomixEmail": MessageLookupByLibrary.simpleMessage("Email"),
     "youkomixEmailHint": MessageLookupByLibrary.simpleMessage(
       "Enter your account email",
@@ -2189,7 +2208,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage(
       "Forgot password",
     ),
-    "youkomixLevelBadge": m102,
+    "youkomixGotIt": MessageLookupByLibrary.simpleMessage("Got it"),
+    "youkomixLevelBadge": m104,
     "youkomixLoggingIn": MessageLookupByLibrary.simpleMessage("Signing in…"),
     "youkomixLogin": MessageLookupByLibrary.simpleMessage("Sign in"),
     "youkomixLogout": MessageLookupByLibrary.simpleMessage("Sign out"),
@@ -2211,8 +2231,24 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixNoAnnouncements": MessageLookupByLibrary.simpleMessage(
       "No announcements",
     ),
+    "youkomixOnlineDevices": MessageLookupByLibrary.simpleMessage(
+      "Active devices",
+    ),
     "youkomixOpenPanel": MessageLookupByLibrary.simpleMessage("Open panel"),
+    "youkomixQuotaAlertTitle": MessageLookupByLibrary.simpleMessage(
+      "Plan notice",
+    ),
+    "youkomixQuotaExhaustedDesc": MessageLookupByLibrary.simpleMessage(
+      "Your data allowance for this cycle is exhausted. Open the panel store to top up.",
+    ),
+    "youkomixQuotaExpiredDesc": MessageLookupByLibrary.simpleMessage(
+      "Your plan has expired or is inactive. Open the panel store to renew your plan.",
+    ),
+    "youkomixQuotaWarningDesc": MessageLookupByLibrary.simpleMessage(
+      "Your plan is expiring soon or running low on data. Consider renewing early.",
+    ),
     "youkomixRegister": MessageLookupByLibrary.simpleMessage("Create account"),
+    "youkomixRenewPlan": MessageLookupByLibrary.simpleMessage("Renew plan"),
     "youkomixScanAuthQr": MessageLookupByLibrary.simpleMessage(
       "Scan QR code to sign in",
     ),
@@ -2223,6 +2259,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixSessionExpired": MessageLookupByLibrary.simpleMessage(
       "Your session has expired. Please sign in again",
     ),
+    "youkomixSpeedLimit": MessageLookupByLibrary.simpleMessage("Speed limit"),
     "youkomixSubChannel": MessageLookupByLibrary.simpleMessage(
       "Subscription channel",
     ),
@@ -2244,6 +2281,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixSubModeStandard": MessageLookupByLibrary.simpleMessage(
       "Standard subscription",
     ),
+    "youkomixSubmitTicket": MessageLookupByLibrary.simpleMessage(
+      "Submit ticket",
+    ),
     "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage("Sync nodes"),
     "youkomixSyncSuccess": MessageLookupByLibrary.simpleMessage(
       "Subscription nodes synced",
@@ -2252,11 +2292,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixTagline": MessageLookupByLibrary.simpleMessage(
       "Dedicated high-speed network client",
     ),
+    "youkomixTodayTraffic": MessageLookupByLibrary.simpleMessage("Used today"),
+    "youkomixUnlimited": MessageLookupByLibrary.simpleMessage("Unlimited"),
     "youkomixVerify": MessageLookupByLibrary.simpleMessage(
       "Verify and sign in",
     ),
     "youkomixWebAuth": MessageLookupByLibrary.simpleMessage(
       "Sign in via browser",
+    ),
+    "youkomixWebAuthWaitingDesc": MessageLookupByLibrary.simpleMessage(
+      "Approve in your browser to return automatically, or paste the one-time code below.",
+    ),
+    "youkomixWebAuthWaitingTitle": MessageLookupByLibrary.simpleMessage(
+      "Waiting for browser authorization",
     ),
     "zhCN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
   };

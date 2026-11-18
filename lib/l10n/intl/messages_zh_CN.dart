@@ -242,7 +242,12 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m101(count) => "${count} 年前";
 
-  static String m102(level) => "Lv.${level}";
+  static String m102(minVersion) =>
+      "当前版本低于站点最低要求版本（v${minVersion}），请立即更新客户端以保证正常连接。";
+
+  static String m103(online, limit) => "${online} / ${limit} 台";
+
+  static String m104(level) => "Lv.${level}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -1686,12 +1691,25 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
       "当前站点已开启安全登录保护，请输入下方图形验证码",
     ),
+    "youkomixClientUpdateRequiredDesc": m102,
+    "youkomixClientUpdateRequiredTitle": MessageLookupByLibrary.simpleMessage(
+      "需要升级客户端版本",
+    ),
+    "youkomixClipboardAuthDetected": MessageLookupByLibrary.simpleMessage(
+      "检测到剪贴板授权码，点击一键登录",
+    ),
+    "youkomixCopyDiagnostics": MessageLookupByLibrary.simpleMessage("复制诊断信息"),
+    "youkomixDeviceCount": m103,
+    "youkomixDiagnosticsCopied": MessageLookupByLibrary.simpleMessage(
+      "脱敏诊断信息已复制，可直接粘贴至工单",
+    ),
     "youkomixEmail": MessageLookupByLibrary.simpleMessage("邮箱"),
     "youkomixEmailHint": MessageLookupByLibrary.simpleMessage("输入注册邮箱"),
     "youkomixEnterAuthCode": MessageLookupByLibrary.simpleMessage("输入一次性授权码"),
     "youkomixExpired": MessageLookupByLibrary.simpleMessage("套餐已到期"),
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage("找回密码"),
-    "youkomixLevelBadge": m102,
+    "youkomixGotIt": MessageLookupByLibrary.simpleMessage("我知道了"),
+    "youkomixLevelBadge": m104,
     "youkomixLoggingIn": MessageLookupByLibrary.simpleMessage("正在登录…"),
     "youkomixLogin": MessageLookupByLibrary.simpleMessage("登录"),
     "youkomixLogout": MessageLookupByLibrary.simpleMessage("退出登录"),
@@ -1705,8 +1723,20 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixMfaTitle": MessageLookupByLibrary.simpleMessage("两步验证"),
     "youkomixNeverExpire": MessageLookupByLibrary.simpleMessage("长期有效"),
     "youkomixNoAnnouncements": MessageLookupByLibrary.simpleMessage("暂无最新公告"),
+    "youkomixOnlineDevices": MessageLookupByLibrary.simpleMessage("在线设备"),
     "youkomixOpenPanel": MessageLookupByLibrary.simpleMessage("打开面板"),
+    "youkomixQuotaAlertTitle": MessageLookupByLibrary.simpleMessage("套餐状态提醒"),
+    "youkomixQuotaExhaustedDesc": MessageLookupByLibrary.simpleMessage(
+      "当前周期可用流量已耗尽，请前往控制面板重置或升级流量包。",
+    ),
+    "youkomixQuotaExpiredDesc": MessageLookupByLibrary.simpleMessage(
+      "当前套餐已到期或未开通，请前往控制面板购买或续费套餐以恢复连接。",
+    ),
+    "youkomixQuotaWarningDesc": MessageLookupByLibrary.simpleMessage(
+      "当前套餐即将到期或剩余流量不足，建议提前续费以免影响连接。",
+    ),
     "youkomixRegister": MessageLookupByLibrary.simpleMessage("注册账号"),
+    "youkomixRenewPlan": MessageLookupByLibrary.simpleMessage("前往续费"),
     "youkomixScanAuthQr": MessageLookupByLibrary.simpleMessage("扫码授权登录"),
     "youkomixServerUrl": MessageLookupByLibrary.simpleMessage("面板地址"),
     "youkomixServerUrlHint": MessageLookupByLibrary.simpleMessage(
@@ -1715,6 +1745,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixSessionExpired": MessageLookupByLibrary.simpleMessage(
       "登录状态已过期，请重新登录",
     ),
+    "youkomixSpeedLimit": MessageLookupByLibrary.simpleMessage("速率上限"),
     "youkomixSubChannel": MessageLookupByLibrary.simpleMessage("订阅类型"),
     "youkomixSubChannelExclusive": MessageLookupByLibrary.simpleMessage("专属订阅"),
     "youkomixSubChannelExclusiveDesc": MessageLookupByLibrary.simpleMessage(
@@ -1726,12 +1757,21 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "youkomixSubModeExclusive": MessageLookupByLibrary.simpleMessage("专属订阅已绑定"),
     "youkomixSubModeStandard": MessageLookupByLibrary.simpleMessage("标准订阅模式"),
+    "youkomixSubmitTicket": MessageLookupByLibrary.simpleMessage("提交工单"),
     "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage("同步节点"),
     "youkomixSyncSuccess": MessageLookupByLibrary.simpleMessage("节点配置已同步"),
     "youkomixSyncing": MessageLookupByLibrary.simpleMessage("正在同步节点…"),
     "youkomixTagline": MessageLookupByLibrary.simpleMessage("专属高速网络接入客户端"),
+    "youkomixTodayTraffic": MessageLookupByLibrary.simpleMessage("今日已用"),
+    "youkomixUnlimited": MessageLookupByLibrary.simpleMessage("不限"),
     "youkomixVerify": MessageLookupByLibrary.simpleMessage("验证并登录"),
     "youkomixWebAuth": MessageLookupByLibrary.simpleMessage("网页安全授权登录"),
+    "youkomixWebAuthWaitingDesc": MessageLookupByLibrary.simpleMessage(
+      "在浏览器确认授权后将自动返回客户端；若未自动唤起，可在下方直接粘贴一次性授权码。",
+    ),
+    "youkomixWebAuthWaitingTitle": MessageLookupByLibrary.simpleMessage(
+      "等待浏览器完成安全授权",
+    ),
     "zhCN": MessageLookupByLibrary.simpleMessage("中文简体"),
   };
 }

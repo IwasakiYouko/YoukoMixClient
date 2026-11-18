@@ -131,6 +131,9 @@ class ProfilesAction extends _$ProfilesAction {
     if (existing != null && existing.lastUpdateDate != null) {
       final elapsed = DateTime.now().difference(existing.lastUpdateDate!);
       if (elapsed < existing.autoUpdateDuration) {
+        await ref
+            .read(youkomixControllerProvider.notifier)
+            .refreshBootstrapIfNeeded();
         return;
       }
     }

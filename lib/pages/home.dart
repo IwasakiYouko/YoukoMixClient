@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/youkomix/youkomix.dart';
 import 'package:fl_clash/manager/app_manager.dart';
 import 'package:fl_clash/models/common.dart';
+import 'package:fl_clash/models/youkomix.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/widgets/widgets.dart';
@@ -33,31 +36,77 @@ class HomePage extends ConsumerWidget {
     }
     return HomeBackScopeContainer(
       key: const ValueKey('home-authenticated'),
-      child: AppSidebarContainer(
-        child: _HomeShell(
-          child: Consumer(
-            builder: (_, ref, _) {
-              final navigationItems = ref
-                  .watch(currentNavigationItemsStateProvider)
-                  .value;
-              final isMobile = ref.watch(isMobileViewProvider);
-              return _HomePageView(
-                navigationItems: navigationItems,
-                pageBuilder: (_, index) {
-                  final navigationItem = navigationItems[index];
-                  return _NavigationPage(
-                    key: ValueKey(navigationItem.label),
-                    item: navigationItem,
-                    isMobile: isMobile,
-                    view: navigationItem.builder(context),
-                  );
-                },
-              );
-            },
+      child: _PinnedAnnouncementPromptHost(
+        child: AppSidebarContainer(
+          child: _HomeShell(
+            child: Consumer(
+              builder: (_, ref, _) {
+                final navigationItems = ref
+                    .watch(currentNavigationItemsStateProvider)
+                    .value;
+                final isMobile = ref.watch(isMobileViewProvider);
+                return _HomePageView(
+                  navigationItems: navigationItems,
+                  pageBuilder: (_, index) {
+                    final navigationItem = navigationItems[index];
+                    return _NavigationPage(
+                      key: ValueKey(navigationItem.label),
+                      item: navigationItem,
+                      isMobile: isMobile,
+                      view: navigationItem.builder(context),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ),
       ),
     );
+  }
+}
+
+class _PinnedAnnouncementPromptHost extends ConsumerStatefulWidget {
+  final Widget child;
+
+  const _PinnedAnnouncementPromptHost({required this.child});
+
+  @override
+  ConsumerState<_PinnedAnnouncementPromptHost> createState() =>
+      _PinnedAnnouncementPromptHostState();
+}
+
+class _PinnedAnnouncementPromptHostState
+    extends ConsumerState<_PinnedAnnouncementPromptHost> {
+  int _lastPresentedId = 0;
+
+  void _maybePresent(YoukoMixAnnouncement? pending) {
+    if (pending == null || pending.id <= _lastPresentedId) {
+      return;
+    }
+    _lastPresentedId = pending.id;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      unawaited(
+        ref
+            .read(youkomixControllerProvider.notifier)
+            .acknowledgePinnedAnnouncement(pending.id),
+      );
+      showYoukoMixPinnedAnnouncementSheet(context, pending);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pending = ref.watch(
+      youkomixControllerProvider.select(
+        (state) => state.pendingPinnedAnnouncement,
+      ),
+    );
+    _maybePresent(pending);
+    return widget.child;
   }
 }
 

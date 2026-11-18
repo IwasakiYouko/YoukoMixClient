@@ -250,7 +250,12 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m101(count) => "${Intl.plural(count, other: '${count}년 전')}";
 
-  static String m102(level) => "Lv.${level}";
+  static String m102(minVersion) =>
+      "현재 버전이 최소 요구 버전(v${minVersion})보다 낮습니다. 정상 연결을 위해 업데이트해 주세요.";
+
+  static String m103(online, limit) => "${online} / ${limit}대";
+
+  static String m104(level) => "Lv.${level}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -1840,12 +1845,25 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
       "보안 로그인이 활성화되어 있습니다. 아래 이미지 보안문자를 입력하세요",
     ),
+    "youkomixClientUpdateRequiredDesc": m102,
+    "youkomixClientUpdateRequiredTitle": MessageLookupByLibrary.simpleMessage(
+      "클라이언트 업데이트 필요",
+    ),
+    "youkomixClipboardAuthDetected": MessageLookupByLibrary.simpleMessage(
+      "클립보드 인증 코드로 바로 로그인",
+    ),
+    "youkomixCopyDiagnostics": MessageLookupByLibrary.simpleMessage("진단 정보 복사"),
+    "youkomixDeviceCount": m103,
+    "youkomixDiagnosticsCopied": MessageLookupByLibrary.simpleMessage(
+      "비식별 진단 정보가 복사되었습니다",
+    ),
     "youkomixEmail": MessageLookupByLibrary.simpleMessage("이메일"),
     "youkomixEmailHint": MessageLookupByLibrary.simpleMessage("계정 이메일 입력"),
     "youkomixEnterAuthCode": MessageLookupByLibrary.simpleMessage("일회용 코드 입력"),
     "youkomixExpired": MessageLookupByLibrary.simpleMessage("플랜 만료됨"),
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage("비밀번호 찾기"),
-    "youkomixLevelBadge": m102,
+    "youkomixGotIt": MessageLookupByLibrary.simpleMessage("확인"),
+    "youkomixLevelBadge": m104,
     "youkomixLoggingIn": MessageLookupByLibrary.simpleMessage("로그인 중…"),
     "youkomixLogin": MessageLookupByLibrary.simpleMessage("로그인"),
     "youkomixLogout": MessageLookupByLibrary.simpleMessage("로그아웃"),
@@ -1861,8 +1879,20 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixNoAnnouncements": MessageLookupByLibrary.simpleMessage(
       "공지사항이 없습니다",
     ),
+    "youkomixOnlineDevices": MessageLookupByLibrary.simpleMessage("활성 기기"),
     "youkomixOpenPanel": MessageLookupByLibrary.simpleMessage("패널 열기"),
+    "youkomixQuotaAlertTitle": MessageLookupByLibrary.simpleMessage("플랜 알림"),
+    "youkomixQuotaExhaustedDesc": MessageLookupByLibrary.simpleMessage(
+      "이번 주기 데이터 제공량을 모두 사용했습니다. 패널에서 충전해 주세요.",
+    ),
+    "youkomixQuotaExpiredDesc": MessageLookupByLibrary.simpleMessage(
+      "현재 플랜이 만료되었거나 비활성 상태입니다. 패널 스토어에서 갱신해 주세요.",
+    ),
+    "youkomixQuotaWarningDesc": MessageLookupByLibrary.simpleMessage(
+      "플랜 만료가 임박했거나 남은 데이터가 부족합니다. 미리 갱신하는 것을 권장합니다.",
+    ),
     "youkomixRegister": MessageLookupByLibrary.simpleMessage("회원가입"),
+    "youkomixRenewPlan": MessageLookupByLibrary.simpleMessage("플랜 갱신"),
     "youkomixScanAuthQr": MessageLookupByLibrary.simpleMessage("QR 코드로 로그인"),
     "youkomixServerUrl": MessageLookupByLibrary.simpleMessage("패널 주소"),
     "youkomixServerUrlHint": MessageLookupByLibrary.simpleMessage(
@@ -1871,6 +1901,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixSessionExpired": MessageLookupByLibrary.simpleMessage(
       "세션이 만료되었습니다. 다시 로그인하세요",
     ),
+    "youkomixSpeedLimit": MessageLookupByLibrary.simpleMessage("속도 제한"),
     "youkomixSubChannel": MessageLookupByLibrary.simpleMessage("구독 유형"),
     "youkomixSubChannelExclusive": MessageLookupByLibrary.simpleMessage(
       "전용 구독",
@@ -1886,14 +1917,23 @@ class MessageLookup extends MessageLookupByLibrary {
       "전용 구독 연결됨",
     ),
     "youkomixSubModeStandard": MessageLookupByLibrary.simpleMessage("표준 구독 모드"),
+    "youkomixSubmitTicket": MessageLookupByLibrary.simpleMessage("문의 티켓 제출"),
     "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage("노드 동기화"),
     "youkomixSyncSuccess": MessageLookupByLibrary.simpleMessage(
       "노드 구성을 동기화했습니다",
     ),
     "youkomixSyncing": MessageLookupByLibrary.simpleMessage("노드 동기화 중…"),
     "youkomixTagline": MessageLookupByLibrary.simpleMessage("전용 고속 네트워크 클라이언트"),
+    "youkomixTodayTraffic": MessageLookupByLibrary.simpleMessage("오늘 사용량"),
+    "youkomixUnlimited": MessageLookupByLibrary.simpleMessage("무제한"),
     "youkomixVerify": MessageLookupByLibrary.simpleMessage("확인 및 로그인"),
     "youkomixWebAuth": MessageLookupByLibrary.simpleMessage("브라우저 보안 인증 로그인"),
+    "youkomixWebAuthWaitingDesc": MessageLookupByLibrary.simpleMessage(
+      "브라우저에서 승인하면 자동으로 돌아옵니다. 자동 전환되지 않으면 아래에 일회용 코드를 붙여넣으세요.",
+    ),
+    "youkomixWebAuthWaitingTitle": MessageLookupByLibrary.simpleMessage(
+      "브라우저 인증 완료 대기 중",
+    ),
     "zhCN": MessageLookupByLibrary.simpleMessage("중국어 간체"),
   };
 }

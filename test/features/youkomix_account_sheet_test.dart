@@ -456,4 +456,137 @@ void main() {
       ).called(1);
     },
   );
+
+  testWidgets(
+    'renders rich Markdown announcements without raw syntax, device/speed metrics, renewal CTA, and ticket action',
+    (tester) async {
+      tester.view.physicalSize = const Size(1200, 1100);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      const session = YoukoMixSession(
+        serverUrl: 'https://panel.example.com',
+        accessToken: 'ymx_acc_token',
+        expiresAt: 1999999999,
+        bootstrap: YoukoMixBootstrap(
+          user: YoukoMixUser(
+            id: 1,
+            email: 'reimu@example.com',
+            userName: '博丽灵梦',
+            userClass: 1,
+            isExpired: true,
+            onlineIpCount: 3,
+            nodeIpLimit: 3,
+            nodeSpeedLimit: 200,
+          ),
+          traffic: YoukoMixTraffic(
+            upload: 1024 * 1024 * 1024,
+            download: 2 * 1024 * 1024 * 1024,
+            today: 512 * 1024 * 1024,
+            total: 10 * 1024 * 1024 * 1024,
+          ),
+          subscription: YoukoMixSubscriptionState(
+            exclusiveEnabled: false,
+            activeMode: 'standard',
+          ),
+          announcements: [
+            YoukoMixAnnouncement(
+              id: 25,
+              date: '2026-11-18',
+              title: '系统升级公告',
+              markdown:
+                  '## 一、升级时间\n将于 **72 小时后** 全面开启 `X25519MLKEM768`。\n- 第一步：更新客户端\n- 第二步：同步配置',
+              isPinned: true,
+            ),
+          ],
+          links: YoukoMixLinks(panelUrl: 'https://panel.example.com/user'),
+        ),
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          youkomixGateEnabledProvider.overrideWithValue(true),
+          youkomixInitialSessionProvider.overrideWithValue(session),
+          youkomixApiProvider.overrideWithValue(api),
+          youkomixStorageProvider.overrideWithValue(storage),
+          youkomixUrlLauncherProvider.overrideWithValue((url) async {
+            launchedUrls.add(url);
+            return true;
+          }),
+          profilesProvider.overrideWith(
+            () => TestProfiles(const [
+              Profile(
+                id: youkomixManagedProfileId,
+                label: '人间之里',
+                autoUpdateDuration: Duration(hours: 6),
+                subscriptionInfo: SubscriptionInfo(
+                  upload: 1024 * 1024 * 1024,
+                  download: 2 * 1024 * 1024 * 1024,
+                  total: 10 * 1024 * 1024 * 1024,
+                ),
+              ),
+            ]),
+          ),
+          currentProfileIdProvider.overrideWithBuild(
+            (_, _) => youkomixManagedProfileId,
+          ),
+          profilesActionProvider.overrideWith(_MemoryProfilesAction.new),
+          coreHandlerProvider.overrideWithValue(CoreController.scoped(core)),
+          setupActionProvider.overrideWith(_IdleSetupAction.new),
+        ],
+      );
+      addTearDown(container.dispose);
+      globalState.container = container;
+      container.read(viewSizeProvider.notifier).value = const Size(1200, 1100);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: TestApp(
+            child: Builder(
+              builder: (context) => HostScaffold(
+                body: TextButton(
+                  onPressed: () => showYoukoMixAccountSheet(context),
+                  child: const Text('open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      final l10n = AppLocalizations.current;
+      expect(find.text('3 / 3'), findsOneWidget);
+      expect(find.text('200 Mbps'), findsOneWidget);
+      expect(find.text(l10n.youkomixRenewPlan), findsOneWidget);
+
+      await tester.tap(find.text(l10n.youkomixRenewPlan));
+      await tester.pumpAndSettle();
+      expect(launchedUrls.last, 'https://panel.example.com/user/shop');
+
+      await tester.scrollUntilVisible(
+        find.text(l10n.youkomixSubmitTicket),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.tap(find.text(l10n.youkomixSubmitTicket));
+      await tester.pumpAndSettle();
+      expect(launchedUrls.last, 'https://panel.example.com/user/ticket');
+
+      await tester.tap(find.text('系统升级公告'));
+      await tester.pumpAndSettle();
+      expect(find.byType(YoukoMixAnnouncementsSheet), findsOneWidget);
+      expect(find.textContaining('##'), findsNothing);
+      expect(find.textContaining('**'), findsNothing);
+      expect(find.text('X25519MLKEM768'), findsOneWidget);
+      expect(
+        container.read(youkomixControllerProvider).hasUnreadAnnouncements,
+        isFalse,
+      );
+    },
+  );
 }

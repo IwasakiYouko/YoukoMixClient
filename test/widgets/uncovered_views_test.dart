@@ -220,6 +220,16 @@ void main() {
 
     expect(find.byType(AboutView), findsOneWidget);
     expect(find.text('Telegram'), findsNothing);
+    expect(find.text(AppLocalizations.current.project), findsNothing);
+    expect(
+      find.text(AppLocalizations.current.youkomixCopyDiagnostics),
+      findsOneWidget,
+    );
+
+    container
+        .read(appSettingProvider.notifier)
+        .update((state) => state.copyWith(developerMode: true));
+    await tester.pump();
     expect(find.text(AppLocalizations.current.project), findsOneWidget);
     final hero = find.byWidgetPredicate(
       (widget) => widget.runtimeType.toString() == '_AboutHero',

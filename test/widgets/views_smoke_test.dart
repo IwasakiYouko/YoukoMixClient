@@ -111,10 +111,51 @@ void main() {
 
   final toolDestinations = <String, Type>{
     'Theme': ThemeView,
-    'Backup and restore': BackupAndRestore,
     'General': GeneralView,
     'Advanced configuration': AdvancedConfigView,
   };
+
+  testWidgets('tools hides backup unless developerMode is enabled', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final container = ProviderContainer(
+      overrides: [profilesProvider.overrideWith(TestProfiles.new)],
+    );
+    addTearDown(container.dispose);
+    globalState.container = container;
+    container
+        .read(viewSizeProvider.notifier)
+        .update((_) => const Size(1400, 1000));
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const TestApp(child: ToolsView()),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Backup and restore'), findsNothing);
+
+    container
+        .read(appSettingProvider.notifier)
+        .update((state) => state.copyWith(developerMode: true));
+    await tester.pump();
+
+    final target = find.text('Backup and restore');
+    await tester.scrollUntilVisible(
+      target,
+      500,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(target);
+    await tester.pumpAndSettle();
+    expect(find.byType(BackupAndRestore), findsOneWidget);
+  });
 
   for (final entry in toolDestinations.entries) {
     testWidgets('tools opens ${entry.key}', (tester) async {

@@ -46,7 +46,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
     );
   }
 
-  Widget _getSettingList() {
+  Widget _getSettingList(bool enableDeveloperMode) {
     return generateSection(
       title: context.appLocalizations.settings,
       items: [
@@ -54,7 +54,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
         const _ThemeItem(),
         if (system.isDesktop) const _HotkeyItem(),
         if (system.isAndroid) const _AccessItem(),
-        const _BackupItem(),
+        if (enableDeveloperMode) const _BackupItem(),
         const _AdvancedConfigItem(),
         const _GeneralItem(),
       ],
@@ -78,7 +78,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
           );
         },
       ),
-      _getSettingList(),
+      _getSettingList(developerMode),
       _getOtherList(developerMode),
     ];
     return Scaffold(

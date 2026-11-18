@@ -9492,6 +9492,191 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Active devices`
+  String get youkomixOnlineDevices {
+    return Intl.message(
+      'Active devices',
+      name: 'youkomixOnlineDevices',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{online} / {limit}`
+  String youkomixDeviceCount(Object online, Object limit) {
+    return Intl.message(
+      '$online / $limit',
+      name: 'youkomixDeviceCount',
+      desc: '',
+      args: [online, limit],
+    );
+  }
+
+  /// `Unlimited`
+  String get youkomixUnlimited {
+    return Intl.message(
+      'Unlimited',
+      name: 'youkomixUnlimited',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Speed limit`
+  String get youkomixSpeedLimit {
+    return Intl.message(
+      'Speed limit',
+      name: 'youkomixSpeedLimit',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Used today`
+  String get youkomixTodayTraffic {
+    return Intl.message(
+      'Used today',
+      name: 'youkomixTodayTraffic',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Renew plan`
+  String get youkomixRenewPlan {
+    return Intl.message(
+      'Renew plan',
+      name: 'youkomixRenewPlan',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Plan notice`
+  String get youkomixQuotaAlertTitle {
+    return Intl.message(
+      'Plan notice',
+      name: 'youkomixQuotaAlertTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your plan has expired or is inactive. Open the panel store to renew your plan.`
+  String get youkomixQuotaExpiredDesc {
+    return Intl.message(
+      'Your plan has expired or is inactive. Open the panel store to renew your plan.',
+      name: 'youkomixQuotaExpiredDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your data allowance for this cycle is exhausted. Open the panel store to top up.`
+  String get youkomixQuotaExhaustedDesc {
+    return Intl.message(
+      'Your data allowance for this cycle is exhausted. Open the panel store to top up.',
+      name: 'youkomixQuotaExhaustedDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your plan is expiring soon or running low on data. Consider renewing early.`
+  String get youkomixQuotaWarningDesc {
+    return Intl.message(
+      'Your plan is expiring soon or running low on data. Consider renewing early.',
+      name: 'youkomixQuotaWarningDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Client update required`
+  String get youkomixClientUpdateRequiredTitle {
+    return Intl.message(
+      'Client update required',
+      name: 'youkomixClientUpdateRequiredTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This version is older than the minimum required version (v{minVersion}). Update now to stay connected.`
+  String youkomixClientUpdateRequiredDesc(Object minVersion) {
+    return Intl.message(
+      'This version is older than the minimum required version (v$minVersion). Update now to stay connected.',
+      name: 'youkomixClientUpdateRequiredDesc',
+      desc: '',
+      args: [minVersion],
+    );
+  }
+
+  /// `Submit ticket`
+  String get youkomixSubmitTicket {
+    return Intl.message(
+      'Submit ticket',
+      name: 'youkomixSubmitTicket',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Copy diagnostic summary`
+  String get youkomixCopyDiagnostics {
+    return Intl.message(
+      'Copy diagnostic summary',
+      name: 'youkomixCopyDiagnostics',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Redacted diagnostic summary copied to clipboard`
+  String get youkomixDiagnosticsCopied {
+    return Intl.message(
+      'Redacted diagnostic summary copied to clipboard',
+      name: 'youkomixDiagnosticsCopied',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Got it`
+  String get youkomixGotIt {
+    return Intl.message('Got it', name: 'youkomixGotIt', desc: '', args: []);
+  }
+
+  /// `Waiting for browser authorization`
+  String get youkomixWebAuthWaitingTitle {
+    return Intl.message(
+      'Waiting for browser authorization',
+      name: 'youkomixWebAuthWaitingTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Approve in your browser to return automatically, or paste the one-time code below.`
+  String get youkomixWebAuthWaitingDesc {
+    return Intl.message(
+      'Approve in your browser to return automatically, or paste the one-time code below.',
+      name: 'youkomixWebAuthWaitingDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `One-time code found on clipboard — tap to sign in`
+  String get youkomixClipboardAuthDetected {
+    return Intl.message(
+      'One-time code found on clipboard — tap to sign in',
+      name: 'youkomixClipboardAuthDetected',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

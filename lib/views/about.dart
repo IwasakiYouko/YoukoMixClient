@@ -6,6 +6,7 @@ import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/ui/ui.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -56,19 +57,48 @@ class AboutView extends ConsumerWidget {
     );
   }
 
+  Future<void> _copyDiagnostics(BuildContext context, WidgetRef ref) async {
+    final tunEnabled = ref.read(
+      patchClashConfigProvider.select((state) => state.tun.enable),
+    );
+    final systemProxyEnabled = ref.read(
+      networkSettingProvider.select((state) => state.systemProxy),
+    );
+    final summary = ref
+        .read(youkomixControllerProvider.notifier)
+        .buildDiagnosticSummary(
+          isTunEnabled: tunEnabled,
+          isSystemProxyEnabled: systemProxyEnabled,
+        );
+    await Clipboard.setData(ClipboardData(text: summary));
+    if (context.mounted) {
+      dialogs.showBanner(
+        context.appLocalizations.youkomixDiagnosticsCopied,
+        level: BannerLevel.success,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appLocalizations = context.appLocalizations;
     final isLoading = ref.watch(loadingProvider(LoadingTag.checkUpdate));
-    final authPanelUrl = ref.watch(
-      youkomixControllerProvider.select((state) {
-        final explicit = state.bootstrap?.links.panelUrl ?? '';
-        return explicit.isNotEmpty ? explicit : state.effectiveServerUrl;
-      }),
+    final developerMode = ref.watch(
+      appSettingProvider.select((state) => state.developerMode),
     );
+    final authState = ref.watch(youkomixControllerProvider);
+    final explicitPanel = authState.bootstrap?.links.panelUrl ?? '';
+    final authPanelUrl = explicitPanel.isNotEmpty
+        ? explicitPanel
+        : authState.effectiveServerUrl;
     final panelUrl = authPanelUrl.isNotEmpty
         ? authPanelUrl
         : (youkomixStorage.activeServerUrl ?? '');
+    final ticketUrl = authState.resolvePanelSubpath('/user/ticket').isNotEmpty
+        ? authState.resolvePanelSubpath('/user/ticket')
+        : (panelUrl.isNotEmpty
+              ? '${panelUrl.replaceAll(RegExp(r'/+$'), '').replaceFirst(RegExp(r'/user$'), '')}/user/ticket'
+              : '');
     return Scaffold(
       isLoading: isLoading,
       title: appLocalizations.about,
@@ -106,18 +136,34 @@ class AboutView extends ConsumerWidget {
                       ? Uri.parse(panelUrl).host
                       : panelUrl,
                 ),
-              _buildLinkItem(
-                glyph: AppGlyphs.code,
-                title: appLocalizations.project,
-                url: 'https://github.com/$repository',
-                label: 'github.com/$repository',
+              if (ticketUrl.isNotEmpty)
+                _buildLinkItem(
+                  glyph: AppGlyphs.send,
+                  title: appLocalizations.youkomixSubmitTicket,
+                  url: ticketUrl,
+                  label: Uri.tryParse(ticketUrl)?.host.isNotEmpty == true
+                      ? '${Uri.parse(ticketUrl).host}/user/ticket'
+                      : ticketUrl,
+                ),
+              ListItem(
+                leading: const _LinkBadge(glyph: AppGlyphs.copy),
+                title: Text(appLocalizations.youkomixCopyDiagnostics),
+                onTap: () => unawaited(_copyDiagnostics(context, ref)),
               ),
-              _buildLinkItem(
-                glyph: AppGlyphs.cpu,
-                title: appLocalizations.core,
-                url: 'https://github.com/chen08209/Clash.Meta/tree/FlClash',
-                label: 'github.com/chen08209/Clash.Meta',
-              ),
+              if (developerMode) ...[
+                _buildLinkItem(
+                  glyph: AppGlyphs.code,
+                  title: appLocalizations.project,
+                  url: 'https://github.com/$repository',
+                  label: 'github.com/$repository',
+                ),
+                _buildLinkItem(
+                  glyph: AppGlyphs.cpu,
+                  title: appLocalizations.core,
+                  url: 'https://github.com/chen08209/Clash.Meta/tree/FlClash',
+                  label: 'github.com/chen08209/Clash.Meta',
+                ),
+              ],
             ],
           ),
           generateSection(

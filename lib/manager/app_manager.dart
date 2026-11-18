@@ -90,6 +90,11 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
     _updateVisible(state);
     if (state == AppLifecycleState.resumed) {
       unawaited(ref.read(locationPermissionsProvider.notifier).refresh());
+      unawaited(
+        ref
+            .read(youkomixControllerProvider.notifier)
+            .refreshBootstrapIfNeeded(),
+      );
       // A certificate removed meanwhile stops decryption before the next start.
       if (mitmFeature && ref.read(patchClashConfigProvider).mitm.enable) {
         unawaited(ref.read(mitmTrustStateProvider.notifier).refresh());

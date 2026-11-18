@@ -275,7 +275,12 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m101(count) =>
       "${Intl.plural(count, one: '${count} г. назад', few: '${count} г. назад', many: '${count} л. назад', other: '${count} г. назад')}";
 
-  static String m102(level) => "Lv.${level}";
+  static String m102(minVersion) =>
+      "Текущая версия ниже минимально требуемой (v${minVersion}). Обновите клиент.";
+
+  static String m103(online, limit) => "${online} / ${limit}";
+
+  static String m104(level) => "Lv.${level}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -2296,6 +2301,20 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
       "Защита входа включена. Введите код с картинки ниже",
     ),
+    "youkomixClientUpdateRequiredDesc": m102,
+    "youkomixClientUpdateRequiredTitle": MessageLookupByLibrary.simpleMessage(
+      "Требуется обновление клиента",
+    ),
+    "youkomixClipboardAuthDetected": MessageLookupByLibrary.simpleMessage(
+      "Обнаружен код в буфере обмена — нажмите для входа",
+    ),
+    "youkomixCopyDiagnostics": MessageLookupByLibrary.simpleMessage(
+      "Скопировать сводку диагностики",
+    ),
+    "youkomixDeviceCount": m103,
+    "youkomixDiagnosticsCopied": MessageLookupByLibrary.simpleMessage(
+      "Обезличенная сводка скопирована в буфер обмена",
+    ),
     "youkomixEmail": MessageLookupByLibrary.simpleMessage("Эл. почта"),
     "youkomixEmailHint": MessageLookupByLibrary.simpleMessage(
       "Введите почту аккаунта",
@@ -2307,7 +2326,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage(
       "Забыли пароль?",
     ),
-    "youkomixLevelBadge": m102,
+    "youkomixGotIt": MessageLookupByLibrary.simpleMessage("Понятно"),
+    "youkomixLevelBadge": m104,
     "youkomixLoggingIn": MessageLookupByLibrary.simpleMessage("Вход…"),
     "youkomixLogin": MessageLookupByLibrary.simpleMessage("Войти"),
     "youkomixLogout": MessageLookupByLibrary.simpleMessage("Выйти"),
@@ -2327,8 +2347,24 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixNoAnnouncements": MessageLookupByLibrary.simpleMessage(
       "Нет объявлений",
     ),
+    "youkomixOnlineDevices": MessageLookupByLibrary.simpleMessage(
+      "Активные устройства",
+    ),
     "youkomixOpenPanel": MessageLookupByLibrary.simpleMessage("Открыть панель"),
+    "youkomixQuotaAlertTitle": MessageLookupByLibrary.simpleMessage(
+      "Уведомление о тарифе",
+    ),
+    "youkomixQuotaExhaustedDesc": MessageLookupByLibrary.simpleMessage(
+      "Лимит трафика исчерпан. Откройте панель для пополнения.",
+    ),
+    "youkomixQuotaExpiredDesc": MessageLookupByLibrary.simpleMessage(
+      "Ваш тариф истёк или не активен. Перейдите в магазин панели для продления.",
+    ),
+    "youkomixQuotaWarningDesc": MessageLookupByLibrary.simpleMessage(
+      "Срок действия тарифа или остаток трафика подходит к концу. Рекомендуем продлить заранее.",
+    ),
     "youkomixRegister": MessageLookupByLibrary.simpleMessage("Регистрация"),
+    "youkomixRenewPlan": MessageLookupByLibrary.simpleMessage("Продлить тариф"),
     "youkomixScanAuthQr": MessageLookupByLibrary.simpleMessage(
       "Войти по QR-коду",
     ),
@@ -2338,6 +2374,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "youkomixSessionExpired": MessageLookupByLibrary.simpleMessage(
       "Сессия истекла. Войдите снова",
+    ),
+    "youkomixSpeedLimit": MessageLookupByLibrary.simpleMessage(
+      "Лимит скорости",
     ),
     "youkomixSubChannel": MessageLookupByLibrary.simpleMessage("Тип подписки"),
     "youkomixSubChannelExclusive": MessageLookupByLibrary.simpleMessage(
@@ -2358,6 +2397,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixSubModeStandard": MessageLookupByLibrary.simpleMessage(
       "Стандартная подписка",
     ),
+    "youkomixSubmitTicket": MessageLookupByLibrary.simpleMessage(
+      "Создать тикет",
+    ),
     "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage(
       "Синхронизировать узлы",
     ),
@@ -2370,11 +2412,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixTagline": MessageLookupByLibrary.simpleMessage(
       "Выделенный высокоскоростной клиент",
     ),
+    "youkomixTodayTraffic": MessageLookupByLibrary.simpleMessage("За сегодня"),
+    "youkomixUnlimited": MessageLookupByLibrary.simpleMessage("Без лимита"),
     "youkomixVerify": MessageLookupByLibrary.simpleMessage(
       "Подтвердить и войти",
     ),
     "youkomixWebAuth": MessageLookupByLibrary.simpleMessage(
       "Вход через браузер",
+    ),
+    "youkomixWebAuthWaitingDesc": MessageLookupByLibrary.simpleMessage(
+      "Подтвердите вход в браузере или вставьте одноразовый код ниже.",
+    ),
+    "youkomixWebAuthWaitingTitle": MessageLookupByLibrary.simpleMessage(
+      "Ожидание авторизации в браузере",
     ),
     "zhCN": MessageLookupByLibrary.simpleMessage("Упрощённый китайский"),
   };

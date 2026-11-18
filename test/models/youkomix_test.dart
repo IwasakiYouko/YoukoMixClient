@@ -107,12 +107,23 @@ void main() {
         'date': '2026-11-15',
         'title': '维护通知',
         'content': '<p>HTML 内容</p>',
-        'markdown': '纯文本通知',
+        'markdown': '## 标题\n请开启 **X25519MLKEM768** 并查看 `配置说明`',
         'is_pinned': 1,
       });
       expect(ann.isPinned, isTrue);
-      expect(ann.displayBody, '纯文本通知');
+      expect(ann.displayBody, '标题\n请开启 X25519MLKEM768 并查看 配置说明');
+      expect(ann.displayBody, isNot(contains('##')));
+      expect(ann.displayBody, isNot(contains('**')));
+      expect(ann.displayBody, isNot(contains('`')));
       expect(YoukoMixAnnouncement.fromJson(ann.toJson()), ann);
+
+      final htmlOnlyAnn = YoukoMixAnnouncement.fromJson(const {
+        'id': 4,
+        'title': 'HTML 通知',
+        'content': '<h2>重要</h2><p>请阅读<strong>说明</strong></p>',
+      });
+      expect(htmlOnlyAnn.richMarkdownSource, contains('## 重要'));
+      expect(htmlOnlyAnn.richMarkdownSource, contains('**说明**'));
     });
   });
 
@@ -222,6 +233,29 @@ void main() {
         'upgrade_notice': {'enabled': false, 'title': '忽略'},
       });
       expect(disabledBootstrap.upgradeNotice, isNull);
+
+      expect(isYoukoMixVersionBelow('1.1.0', '1.2.0'), isTrue);
+      expect(isYoukoMixVersionBelow('1.2.0+2026111802', '1.2.0'), isFalse);
+      expect(isYoukoMixVersionBelow('v1.3.0', '1.2.5'), isFalse);
+      expect(isYoukoMixVersionBelow('', '1.2.0'), isFalse);
+
+      expect(
+        extractYoukoMixOneTimeCode(' copied ykx_AbCdEf12345678 token '),
+        'ykx_AbCdEf12345678',
+      );
+      expect(
+        extractYoukoMixOneTimeCode(
+          'youkomix://auth?code=ykx_12345678&server=https://panel.example.com',
+        ),
+        'youkomix://auth?code=ykx_12345678&server=https://panel.example.com',
+      );
+      expect(extractYoukoMixOneTimeCode('hello world'), isNull);
+
+      final readSession = session.copyWith(
+        lastReadAnnouncementId: 8,
+        lastPromptedPinnedId: 8,
+      );
+      expect(YoukoMixSession.fromJson(readSession.toJson()), readSession);
     });
   });
 }

@@ -19,6 +19,13 @@ int _toInt(Object? value) {
 
 String _toString(Object? value) => value?.toString() ?? '';
 
+double _toDouble(Object? value) {
+  if (value is double) return value;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value.trim()) ?? 0.0;
+  return 0.0;
+}
+
 String _toMoney(Object? value) {
   if (value is num) return value.toStringAsFixed(2);
   if (value is String && value.trim().isNotEmpty) {
@@ -84,6 +91,115 @@ String stripAnnouncementHtml(String raw) {
       .replaceAll('&#039;', "'")
       .replaceAll('&#39;', "'");
   return stripped.replaceAll(_multiBlankLinePattern, '\n\n').trim();
+}
+
+String stripAnnouncementMarkdown(String raw) {
+  if (raw.isEmpty) return '';
+  return raw
+      .replaceAll('\r\n', '\n')
+      .replaceAll(RegExp(r'```[\s\S]*?```'), '')
+      .replaceAllMapped(
+        RegExp(r'!\[([^\]]*)\]\([^)]+\)'),
+        (match) => match.group(1) ?? '',
+      )
+      .replaceAllMapped(
+        RegExp(r'\[([^\]]+)\]\([^)]+\)'),
+        (match) => match.group(1) ?? '',
+      )
+      .replaceAll(RegExp(r'^\s*#{1,6}\s+', multiLine: true), '')
+      .replaceAll(RegExp(r'^\s*>\s?', multiLine: true), '')
+      .replaceAll(RegExp(r'^\s*(?:[-*_]\s*){3,}$', multiLine: true), '')
+      .replaceAll(RegExp(r'^\s*[-*+]\s+', multiLine: true), '')
+      .replaceAllMapped(RegExp(r'`([^`]+)`'), (match) => match.group(1) ?? '')
+      .replaceAllMapped(
+        RegExp(r'\*\*\*([^*]+)\*\*\*'),
+        (match) => match.group(1) ?? '',
+      )
+      .replaceAllMapped(
+        RegExp(r'\*\*([^*]+)\*\*'),
+        (match) => match.group(1) ?? '',
+      )
+      .replaceAllMapped(RegExp(r'__([^_]+)__'), (match) => match.group(1) ?? '')
+      .replaceAllMapped(RegExp(r'~~([^~]+)~~'), (match) => match.group(1) ?? '')
+      .replaceAllMapped(
+        RegExp(r'\*([^*\n]+)\*'),
+        (match) => match.group(1) ?? '',
+      )
+      .replaceAll(_multiBlankLinePattern, '\n\n')
+      .trim();
+}
+
+String stripAnnouncementMarkup(String raw) {
+  if (raw.isEmpty) return '';
+  return stripAnnouncementMarkdown(stripAnnouncementHtml(raw));
+}
+
+String htmlToMarkdownFallback(String html) {
+  if (html.trim().isEmpty) return '';
+  final converted = html
+      .replaceAllMapped(
+        RegExp(r'<h1[^>]*>([\s\S]*?)</h1>', caseSensitive: false),
+        (match) => '\n# ${match.group(1) ?? ''}\n',
+      )
+      .replaceAllMapped(
+        RegExp(r'<h2[^>]*>([\s\S]*?)</h2>', caseSensitive: false),
+        (match) => '\n## ${match.group(1) ?? ''}\n',
+      )
+      .replaceAllMapped(
+        RegExp(r'<h[3-6][^>]*>([\s\S]*?)</h[3-6]>', caseSensitive: false),
+        (match) => '\n### ${match.group(1) ?? ''}\n',
+      )
+      .replaceAllMapped(
+        RegExp(
+          r'<(?:strong|b)[^>]*>([\s\S]*?)</(?:strong|b)>',
+          caseSensitive: false,
+        ),
+        (match) => '**${match.group(1) ?? ''}**',
+      )
+      .replaceAllMapped(
+        RegExp(r'<(?:em|i)[^>]*>([\s\S]*?)</(?:em|i)>', caseSensitive: false),
+        (match) => '*${match.group(1) ?? ''}*',
+      )
+      .replaceAllMapped(
+        RegExp(r'<code[^>]*>([\s\S]*?)</code>', caseSensitive: false),
+        (match) => '`${match.group(1) ?? ''}`',
+      )
+      .replaceAllMapped(
+        RegExp(
+          r'''<a[^>]*href=['"](https?://[^'"]+)['"][^>]*>([\s\S]*?)</a>''',
+          caseSensitive: false,
+        ),
+        (match) => '[${match.group(2) ?? ''}](${match.group(1) ?? ''})',
+      )
+      .replaceAllMapped(
+        RegExp(r'<li[^>]*>([\s\S]*?)</li>', caseSensitive: false),
+        (match) => '\n- ${match.group(1) ?? ''}\n',
+      );
+  return stripAnnouncementHtml(converted);
+}
+
+bool isYoukoMixVersionBelow(String currentVersion, String minRequiredVersion) {
+  String clean(String v) =>
+      v.trim().replaceFirst(RegExp(r'^[vV]'), '').split(RegExp(r'[+-]')).first;
+
+  final curText = clean(currentVersion);
+  final minText = clean(minRequiredVersion);
+  if (curText.isEmpty || minText.isEmpty) {
+    return false;
+  }
+  final curParts = curText.split('.');
+  final minParts = minText.split('.');
+  final count = curParts.length > minParts.length
+      ? curParts.length
+      : minParts.length;
+  for (var i = 0; i < count; i++) {
+    final curNum = i < curParts.length ? (int.tryParse(curParts[i]) ?? 0) : 0;
+    final minNum = i < minParts.length ? (int.tryParse(minParts[i]) ?? 0) : 0;
+    if (curNum != minNum) {
+      return curNum < minNum;
+    }
+  }
+  return false;
 }
 
 @immutable
@@ -275,6 +391,7 @@ class YoukoMixUser {
   final String money;
   final int onlineIpCount;
   final int nodeIpLimit;
+  final double nodeSpeedLimit;
 
   const YoukoMixUser({
     this.id = 0,
@@ -287,6 +404,7 @@ class YoukoMixUser {
     this.money = '0.00',
     this.onlineIpCount = 0,
     this.nodeIpLimit = 0,
+    this.nodeSpeedLimit = 0,
   });
 
   static DateTime? parseExpireDate(String raw) {
@@ -317,6 +435,7 @@ class YoukoMixUser {
       money: _toMoney(json['money']),
       onlineIpCount: _toInt(json['online_ip_count']),
       nodeIpLimit: _toInt(json['node_iplimit']),
+      nodeSpeedLimit: _toDouble(json['node_speedlimit']),
     );
   }
 
@@ -331,6 +450,7 @@ class YoukoMixUser {
     'money': money,
     'online_ip_count': onlineIpCount,
     'node_iplimit': nodeIpLimit,
+    'node_speedlimit': nodeSpeedLimit,
   };
 
   @override
@@ -346,7 +466,8 @@ class YoukoMixUser {
           other.isExpired == isExpired &&
           other.money == money &&
           other.onlineIpCount == onlineIpCount &&
-          other.nodeIpLimit == nodeIpLimit;
+          other.nodeIpLimit == nodeIpLimit &&
+          other.nodeSpeedLimit == nodeSpeedLimit;
 
   @override
   int get hashCode => Object.hash(
@@ -360,6 +481,7 @@ class YoukoMixUser {
     money,
     onlineIpCount,
     nodeIpLimit,
+    nodeSpeedLimit,
   );
 }
 
@@ -540,7 +662,14 @@ class YoukoMixAnnouncement {
 
   String get displayBody {
     final preferred = markdown.trim().isNotEmpty ? markdown : content;
-    return stripAnnouncementHtml(preferred);
+    return stripAnnouncementMarkup(preferred);
+  }
+
+  String get richMarkdownSource {
+    if (markdown.trim().isNotEmpty) {
+      return markdown.trim();
+    }
+    return htmlToMarkdownFallback(content);
   }
 
   factory YoukoMixAnnouncement.fromJson(Map<String, Object?> json) {
@@ -845,6 +974,8 @@ class YoukoMixSession {
   final YoukoMixSubPreference preferredSubMode;
   final List<String> apiEndpoints;
   final YoukoMixBootstrap? bootstrap;
+  final int lastReadAnnouncementId;
+  final int lastPromptedPinnedId;
 
   const YoukoMixSession({
     required this.serverUrl,
@@ -853,6 +984,8 @@ class YoukoMixSession {
     this.preferredSubMode = YoukoMixSubPreference.auto,
     this.apiEndpoints = const [],
     this.bootstrap,
+    this.lastReadAnnouncementId = 0,
+    this.lastPromptedPinnedId = 0,
   });
 
   YoukoMixSession copyWith({
@@ -862,6 +995,8 @@ class YoukoMixSession {
     YoukoMixSubPreference? preferredSubMode,
     List<String>? apiEndpoints,
     YoukoMixBootstrap? bootstrap,
+    int? lastReadAnnouncementId,
+    int? lastPromptedPinnedId,
   }) {
     return YoukoMixSession(
       serverUrl: serverUrl ?? this.serverUrl,
@@ -870,6 +1005,9 @@ class YoukoMixSession {
       preferredSubMode: preferredSubMode ?? this.preferredSubMode,
       apiEndpoints: apiEndpoints ?? this.apiEndpoints,
       bootstrap: bootstrap ?? this.bootstrap,
+      lastReadAnnouncementId:
+          lastReadAnnouncementId ?? this.lastReadAnnouncementId,
+      lastPromptedPinnedId: lastPromptedPinnedId ?? this.lastPromptedPinnedId,
     );
   }
 
@@ -897,6 +1035,8 @@ class YoukoMixSession {
           ? explicitEndpoints
           : (parsedBootstrap?.apiEndpoints ?? const []),
       bootstrap: parsedBootstrap,
+      lastReadAnnouncementId: _toInt(json['last_read_announcement_id']),
+      lastPromptedPinnedId: _toInt(json['last_prompted_pinned_id']),
     );
   }
 
@@ -907,6 +1047,10 @@ class YoukoMixSession {
     'preferred_sub_mode': preferredSubMode.apiValue,
     if (apiEndpoints.isNotEmpty) 'api_endpoints': apiEndpoints,
     if (bootstrap != null) 'bootstrap': bootstrap!.toJson(),
+    if (lastReadAnnouncementId > 0)
+      'last_read_announcement_id': lastReadAnnouncementId,
+    if (lastPromptedPinnedId > 0)
+      'last_prompted_pinned_id': lastPromptedPinnedId,
   };
 
   @override
@@ -921,7 +1065,9 @@ class YoukoMixSession {
             other.apiEndpoints,
             apiEndpoints,
           ) &&
-          other.bootstrap == bootstrap;
+          other.bootstrap == bootstrap &&
+          other.lastReadAnnouncementId == lastReadAnnouncementId &&
+          other.lastPromptedPinnedId == lastPromptedPinnedId;
 
   @override
   int get hashCode => Object.hash(
@@ -931,6 +1077,8 @@ class YoukoMixSession {
     preferredSubMode,
     const ListEquality<String>().hash(apiEndpoints),
     bootstrap,
+    lastReadAnnouncementId,
+    lastPromptedPinnedId,
   );
 }
 

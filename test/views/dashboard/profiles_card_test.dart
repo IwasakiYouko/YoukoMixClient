@@ -510,4 +510,37 @@ void main() {
       expect(find.text('开启 X25519MLKEM768 更新通知'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'shows unread announcement red dot on dashboard card and clears when opened',
+    (tester) async {
+      final base = _session();
+      final withUnread = base.copyWith(
+        bootstrap: base.bootstrap!.copyWith(
+          announcements: const [
+            YoukoMixAnnouncement(id: 30, title: '最新通知', markdown: '请及时更新客户端配置'),
+          ],
+        ),
+      );
+      setUpProfiles([_profile(1)], session: withUnread);
+      await pumpDesktopCard(tester);
+      expect(
+        find.byKey(const ValueKey('youkomix-unread-ann-dot')),
+        findsOneWidget,
+      );
+
+      await tester.tap(
+        find.byTooltip(AppLocalizations.current.youkomixAnnouncements),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(YoukoMixAnnouncementsSheet), findsOneWidget);
+
+      globalState.navigatorKey.currentState!.pop();
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('youkomix-unread-ann-dot')),
+        findsNothing,
+      );
+    },
+  );
 }

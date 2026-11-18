@@ -283,13 +283,6 @@ void main() {
       await tester.pumpAndSettle();
       final l10n = AppLocalizations.current;
 
-      await tester.tap(find.text(l10n.youkomixWebAuth));
-      await tester.pumpAndSettle();
-      expect(
-        launchedUrls.last,
-        startsWith('https://panel.example.com/user/client-auth'),
-      );
-
       await tester.tap(find.text(l10n.youkomixRegister));
       await tester.pumpAndSettle();
       expect(launchedUrls.last, 'https://panel.example.com/auth/register');
@@ -298,16 +291,25 @@ void main() {
       await tester.pumpAndSettle();
       expect(launchedUrls.last, 'https://panel.example.com/password/reset');
 
-      await tester.tap(find.text(l10n.youkomixEnterAuthCode));
+      await tester.tap(find.text(l10n.youkomixWebAuth));
       await tester.pumpAndSettle();
+      expect(
+        launchedUrls.last,
+        startsWith('https://panel.example.com/user/client-auth'),
+      );
+      expect(
+        find.byKey(const ValueKey('youkomix-webauth-waiting-card')),
+        findsOneWidget,
+      );
+
       await tester.enterText(
         find.descendant(
-          of: find.byType(AlertDialog),
+          of: find.byKey(const ValueKey('youkomix-webauth-waiting-card')),
           matching: find.byType(TextFormField),
         ),
         'ymxc_manual_1',
       );
-      await tester.tap(find.text(l10n.submit));
+      await tester.tap(find.byTooltip(l10n.submit));
       await tester.pumpAndSettle();
 
       expect(
@@ -417,6 +419,94 @@ void main() {
         isTrue,
       );
       expect(storage.saved?.accessToken, 'ymx_captcha_ok');
+    },
+  );
+
+  testWidgets(
+    'places CAPTCHA image above input field, respects keyboard viewInsets, and shows WebAuth waiting card',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      tester.view.viewInsets = const FakeViewPadding(bottom: 320);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetViewInsets);
+
+      final ch = YoukoMixCaptchaChallenge.fromJson(const {
+        'captcha_id': 'cch_mobile_1',
+        'image_base64': tinyValidPngBase64,
+        'expires_in': 180,
+      });
+      when(
+        () => api.fetchCaptcha('https://panel.example.com'),
+      ).thenAnswer((_) async => ch);
+
+      final container = ProviderContainer(
+        overrides: [
+          youkomixGateEnabledProvider.overrideWithValue(true),
+          youkomixInitialSessionProvider.overrideWithValue(null),
+          youkomixCurrentAppVersionProvider.overrideWithValue('1.0.0'),
+          youkomixApiProvider.overrideWithValue(api),
+          youkomixStorageProvider.overrideWithValue(storage),
+          youkomixUrlLauncherProvider.overrideWithValue((url) async {
+            launchedUrls.add(url);
+            return true;
+          }),
+          profilesProvider.overrideWith(TestProfiles.new),
+          profilesActionProvider.overrideWith(_MemoryProfilesAction.new),
+          setupActionProvider.overrideWith(_IdleSetupAction.new),
+        ],
+      );
+      addTearDown(container.dispose);
+      globalState.container = container;
+      container.read(viewSizeProvider.notifier).value = const Size(390, 844);
+
+      when(() => api.fetchMeta('https://panel.example.com')).thenAnswer(
+        (_) async => const YoukoMixMeta(
+          appName: '人间之里',
+          baseUrl: 'https://panel.example.com',
+          captchaEnabled: true,
+          minClientVersion: '1.2.0',
+          webAuthUrl: 'https://panel.example.com/user/client-auth',
+        ),
+      );
+      container
+          .read(youkomixControllerProvider.notifier)
+          .setServerUrl('https://panel.example.com');
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const TestApp(child: HostScaffold(body: YoukoMixLoginView())),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final l10n = AppLocalizations.current;
+
+      expect(
+        find.byKey(const ValueKey('youkomix-min-version-banner')),
+        findsOneWidget,
+      );
+      final captchaCardRect = tester.getRect(
+        find.byKey(const ValueKey('youkomix-captcha-card')),
+      );
+      final captchaInputRect = tester.getRect(
+        fieldFor(l10n.youkomixCaptchaCode),
+      );
+      expect(captchaCardRect.top, lessThan(captchaInputRect.top));
+      expect(tester.takeException(), isNull);
+
+      await tester.scrollUntilVisible(
+        find.text(l10n.youkomixWebAuth),
+        160,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text(l10n.youkomixWebAuth));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('youkomix-webauth-waiting-card')),
+        findsOneWidget,
+      );
     },
   );
 }

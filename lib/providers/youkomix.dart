@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
@@ -10,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'action.dart';
 import 'app.dart';
+import 'database.dart';
 
 const youkomixSyncUpdatingKey = 'youkomix_sync';
 
@@ -18,6 +21,14 @@ final youkomixGateEnabledProvider = Provider<bool>((ref) => false);
 final youkomixInitialSessionProvider = Provider<YoukoMixSession?>(
   (ref) => null,
 );
+
+final youkomixCurrentAppVersionProvider = Provider<String>((ref) {
+  try {
+    return globalState.packageInfo.version;
+  } catch (_) {
+    return '';
+  }
+});
 
 final youkomixApiProvider = Provider<YoukoMixApiClient>((ref) => youkomixApi);
 
@@ -50,6 +61,8 @@ class YoukoMixState {
   final bool isSyncing;
   final String? errorMessage;
   final DateTime? lastSyncedAt;
+  final DateTime? lastBootstrapAt;
+  final String currentAppVersion;
 
   const YoukoMixState({
     this.gateEnabled = false,
@@ -65,6 +78,8 @@ class YoukoMixState {
     this.isSyncing = false,
     this.errorMessage,
     this.lastSyncedAt,
+    this.lastBootstrapAt,
+    this.currentAppVersion = '',
   });
 
   bool get isAuthenticated =>
@@ -104,12 +119,81 @@ class YoukoMixState {
   List<YoukoMixAnnouncement> get announcements =>
       bootstrap?.announcements ?? const [];
 
+  int get maxAnnouncementId => announcements.fold<int>(
+    0,
+    (maxId, item) => item.id > maxId ? item.id : maxId,
+  );
+
+  bool get hasUnreadAnnouncements =>
+      isAuthenticated &&
+      maxAnnouncementId > (session?.lastReadAnnouncementId ?? 0);
+
+  YoukoMixAnnouncement? get pendingPinnedAnnouncement {
+    if (!isAuthenticated) {
+      return null;
+    }
+    final readThreshold = math.max(
+      session?.lastReadAnnouncementId ?? 0,
+      session?.lastPromptedPinnedId ?? 0,
+    );
+    for (final item in announcements) {
+      if (item.isPinned && item.id > readThreshold) {
+        return item;
+      }
+    }
+    return null;
+  }
+
   YoukoMixUpgradeNotice? get upgradeNotice => bootstrap?.upgradeNotice;
+
+  bool get isClientOutdated =>
+      isYoukoMixVersionBelow(currentAppVersion, meta?.minClientVersion ?? '');
+
+  bool get isPlanExpiredOrInactive =>
+      user != null && (user!.isExpired || user!.userClass <= 0);
+
+  bool get isQuotaExhausted =>
+      traffic != null && traffic!.total > 0 && traffic!.remaining <= 0;
+
+  bool get isQuotaOrExpiryWarning {
+    if (isPlanExpiredOrInactive || isQuotaExhausted) {
+      return false;
+    }
+    final soon =
+        user != null &&
+        user!.classExpire.isNotEmpty &&
+        user!.classExpireDays <= 3;
+    final highUsage =
+        traffic != null && traffic!.total > 0 && traffic!.usageRatio >= 0.9;
+    return soon || highUsage;
+  }
 
   String get effectiveServerUrl =>
       (session != null && session!.serverUrl.isNotEmpty)
       ? session!.serverUrl
       : serverUrl;
+
+  String get panelBaseUrl {
+    final explicitPanel = (bootstrap?.links.panelUrl ?? '').trim().replaceAll(
+      RegExp(r'/+$'),
+      '',
+    );
+    if (explicitPanel.isNotEmpty) {
+      return explicitPanel.endsWith('/user')
+          ? explicitPanel.substring(0, explicitPanel.length - 5)
+          : explicitPanel;
+    }
+    return effectiveServerUrl.trim().replaceAll(RegExp(r'/+$'), '');
+  }
+
+  String resolvePanelSubpath(String subpath) {
+    final base = panelBaseUrl;
+    if (base.isEmpty) {
+      return '';
+    }
+    final cleanSub = subpath.startsWith('/') ? subpath : '/$subpath';
+    return '$base$cleanSub';
+  }
 
   YoukoMixState copyWith({
     bool? gateEnabled,
@@ -125,6 +209,8 @@ class YoukoMixState {
     bool? isSyncing,
     String? errorMessage,
     DateTime? lastSyncedAt,
+    DateTime? lastBootstrapAt,
+    String? currentAppVersion,
     bool clearSession = false,
     bool clearCaptcha = false,
     bool clearMfa = false,
@@ -150,6 +236,10 @@ class YoukoMixState {
       isSyncing: isSyncing ?? this.isSyncing,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      lastBootstrapAt: clearSession
+          ? null
+          : (lastBootstrapAt ?? this.lastBootstrapAt),
+      currentAppVersion: currentAppVersion ?? this.currentAppVersion,
     );
   }
 }
@@ -160,6 +250,7 @@ final youkomixControllerProvider =
 class YoukoMixController extends Notifier<YoukoMixState> {
   int _authEpoch = 0;
   int _captchaEpoch = 0;
+  bool _isRefreshingBootstrap = false;
 
   YoukoMixApiClient get _api => ref.read(youkomixApiProvider);
   YoukoMixSessionStorage get _storage => ref.read(youkomixStorageProvider);
@@ -180,6 +271,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
   YoukoMixState build() {
     final gateEnabled = ref.watch(youkomixGateEnabledProvider);
     final initialSession = ref.watch(youkomixInitialSessionProvider);
+    final currentVersion = ref.watch(youkomixCurrentAppVersionProvider);
     final initialServerUrl =
         initialSession?.serverUrl ??
         _storage.activeServerUrl ??
@@ -188,6 +280,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
       gateEnabled: gateEnabled,
       serverUrl: initialServerUrl,
       session: initialSession,
+      currentAppVersion: currentVersion,
     );
   }
 
@@ -490,6 +583,75 @@ class YoukoMixController extends Notifier<YoukoMixState> {
     return ref.read(youkomixUrlLauncherProvider)(url);
   }
 
+  Future<bool> openPanelSubpath(String subpath) {
+    final target = state.resolvePanelSubpath(subpath);
+    if (target.isEmpty) {
+      return Future.value(false);
+    }
+    return openExternalUrl(target);
+  }
+
+  String buildDiagnosticSummary({
+    bool isTunEnabled = false,
+    bool isSystemProxyEnabled = false,
+  }) {
+    final version = state.currentAppVersion.isNotEmpty
+        ? 'v${state.currentAppVersion}'
+        : 'unknown';
+    final platform =
+        '${Platform.operatingSystem} (${Platform.operatingSystemVersion.split(' ').first})';
+    final takeover = [
+      if (isTunEnabled) 'TUN',
+      if (isSystemProxyEnabled) 'System',
+    ];
+    final modeText = takeover.isEmpty ? 'Idle' : takeover.join('+');
+    final channelText = state.isExclusiveActive ? 'Dedicated' : 'Standard';
+    final user = state.user;
+    final devicesText = user == null
+        ? '-'
+        : (user.nodeIpLimit > 0
+              ? '${user.onlineIpCount}/${user.nodeIpLimit}'
+              : '${user.onlineIpCount}/unlimited');
+    final syncedText =
+        state.lastSyncedAt?.toIso8601String().split('.').first ?? '-';
+    return [
+      '$appCodeName $version',
+      'OS: $platform',
+      'Mode: $modeText',
+      'Channel: $channelText',
+      'Devices: $devicesText',
+      'Synced: $syncedText',
+    ].join(' | ');
+  }
+
+  Future<void> markAnnouncementsRead({int? upToId}) async {
+    final currentSession = state.session;
+    if (currentSession == null) {
+      return;
+    }
+    final targetId = upToId ?? state.maxAnnouncementId;
+    if (targetId <= currentSession.lastReadAnnouncementId &&
+        targetId <= currentSession.lastPromptedPinnedId) {
+      return;
+    }
+    final updated = currentSession.copyWith(
+      lastReadAnnouncementId: math.max(
+        currentSession.lastReadAnnouncementId,
+        targetId,
+      ),
+      lastPromptedPinnedId: math.max(
+        currentSession.lastPromptedPinnedId,
+        targetId,
+      ),
+    );
+    state = state.copyWith(session: updated);
+    await _storage.saveSession(updated);
+  }
+
+  Future<void> acknowledgePinnedAnnouncement(int announcementId) async {
+    await markAnnouncementsRead(upToId: announcementId);
+  }
+
   Future<bool> switchSubscriptionMode(YoukoMixSubPreference targetMode) async {
     final currentSession = state.session;
     if (currentSession == null || state.isSyncing || state.isBusy) {
@@ -612,10 +774,12 @@ class YoukoMixController extends Notifier<YoukoMixState> {
       ref
           .read(setupActionProvider.notifier)
           .applyProfileDebounce(silence: !showFeedback, force: true);
+      final now = DateTime.now();
       state = state.copyWith(
         session: updatedSession,
         isSyncing: false,
-        lastSyncedAt: DateTime.now(),
+        lastSyncedAt: now,
+        lastBootstrapAt: now,
         clearError: true,
       );
       if (showFeedback) {
@@ -661,6 +825,107 @@ class YoukoMixController extends Notifier<YoukoMixState> {
             .read(updatingKeysProvider.notifier)
             .stop(youkomixSyncUpdatingKey, operation);
       }
+    }
+  }
+
+  Future<bool> refreshBootstrapIfNeeded({
+    Duration minInterval = const Duration(minutes: 15),
+    bool force = false,
+  }) async {
+    final currentSession = state.session;
+    if (currentSession == null ||
+        !state.isAuthenticated ||
+        state.isSyncing ||
+        state.isBusy ||
+        _isRefreshingBootstrap) {
+      return false;
+    }
+    final lastAt = state.lastBootstrapAt;
+    if (!force &&
+        lastAt != null &&
+        DateTime.now().difference(lastAt) < minInterval) {
+      return false;
+    }
+    final reqEpoch = _authEpoch;
+    _isRefreshingBootstrap = true;
+    try {
+      if (state.meta == null) {
+        unawaited(loadMeta(currentSession.serverUrl));
+      }
+      final rawBootstrap = await _api.fetchBootstrap(
+        serverUrl: currentSession.serverUrl,
+        accessToken: currentSession.accessToken,
+      );
+      if (!ref.mounted || reqEpoch != _authEpoch) {
+        return false;
+      }
+      if (rawBootstrap.apiEndpoints.isNotEmpty) {
+        _storage.setApiEndpoints(
+          rawBootstrap.apiEndpoints,
+          origin: currentSession.serverUrl,
+        );
+      }
+      final prevActiveMode =
+          currentSession.bootstrap?.subscription.activeMode ??
+          rawBootstrap.subscription.activeMode;
+      if (prevActiveMode == 'exclusive' &&
+          !rawBootstrap.subscription.exclusiveEnabled) {
+        _isRefreshingBootstrap = false;
+        return await syncSubscription(reuseBootstrap: rawBootstrap);
+      }
+      final mergedBootstrap = rawBootstrap.copyWith(
+        subscription: rawBootstrap.subscription.copyWith(
+          activeMode: prevActiveMode,
+        ),
+      );
+      final existingProfile = ref
+          .read(profilesProvider)
+          .getProfile(youkomixManagedProfileId);
+      if (existingProfile != null) {
+        final expireEpoch =
+            (mergedBootstrap.user.classExpireDate?.millisecondsSinceEpoch ??
+                0) ~/
+            1000;
+        if (mergedBootstrap.traffic.total > 0 || expireEpoch > 0) {
+          ref
+              .read(profilesProvider.notifier)
+              .put(
+                existingProfile.copyWith(
+                  subscriptionInfo: SubscriptionInfo(
+                    upload: mergedBootstrap.traffic.upload,
+                    download: mergedBootstrap.traffic.download,
+                    total: mergedBootstrap.traffic.total,
+                    expire: expireEpoch,
+                  ),
+                ),
+              );
+        }
+      }
+      final latestSession = state.session ?? currentSession;
+      final updatedSession = latestSession.copyWith(
+        apiEndpoints: mergedBootstrap.apiEndpoints.isNotEmpty
+            ? mergedBootstrap.apiEndpoints
+            : latestSession.apiEndpoints,
+        bootstrap: mergedBootstrap,
+      );
+      await _storage.saveSession(updatedSession);
+      if (!ref.mounted || reqEpoch != _authEpoch) {
+        return false;
+      }
+      state = state.copyWith(
+        session: updatedSession,
+        lastBootstrapAt: DateTime.now(),
+      );
+      return true;
+    } on YoukoMixApiException catch (error) {
+      if (ref.mounted && reqEpoch == _authEpoch && error.isSessionInvalid) {
+        await _forceSignOut(currentAppLocalizations.youkomixSessionExpired);
+      }
+      return false;
+    } catch (_) {
+      return false;
+    } finally {
+      _isRefreshingBootstrap = false;
     }
   }
 
@@ -713,6 +978,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
       gateEnabled: state.gateEnabled,
       serverUrl: state.serverUrl,
       meta: state.meta,
+      currentAppVersion: state.currentAppVersion,
     );
   }
 
@@ -748,6 +1014,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
       serverUrl: state.serverUrl,
       meta: state.meta,
       errorMessage: message,
+      currentAppVersion: state.currentAppVersion,
     );
     dialogs.showBanner(message, level: BannerLevel.error);
   }

@@ -156,6 +156,34 @@ class ProfilesCard extends ConsumerWidget {
             onPressed: () => _openAccount(context, hasProfile: profile != null),
           )
         : null;
+    final unreadAnnButton = auth.hasUnreadAnnouncements
+        ? Stack(
+            clipBehavior: Clip.none,
+            children: [
+              DashboardIconButton(
+                glyph: AppGlyphs.info,
+                tooltip: appLocalizations.youkomixAnnouncements,
+                color: context.colorScheme.primary,
+                onPressed: () => showYoukoMixAnnouncementsSheet(context),
+              ),
+              PositionedDirectional(
+                top: 4,
+                end: 4,
+                child: IgnorePointer(
+                  child: Container(
+                    key: const ValueKey('youkomix-unread-ann-dot'),
+                    width: 8,
+                    height: 8,
+                    decoration: ShapeDecoration(
+                      color: context.colorScheme.error,
+                      shape: AppShape.full,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          )
+        : null;
     final channelSwitch =
         !compact && auth.isAuthenticated && (sub?.exclusiveEnabled ?? false)
         ? const _SubChannelButton()
@@ -214,6 +242,7 @@ class ProfilesCard extends ConsumerWidget {
             trailing: [
               if (mobile) ...[
                 ?upgradeNoticeButton,
+                ?unreadAnnButton,
                 ?channelSwitch,
                 ?sync,
               ] else
@@ -223,6 +252,7 @@ class ProfilesCard extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       ?upgradeNoticeButton,
+                      ?unreadAnnButton,
                       ?channelSwitch,
                       ?sync,
                       DashboardIconButton(

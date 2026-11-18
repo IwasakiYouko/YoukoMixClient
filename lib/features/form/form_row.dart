@@ -155,6 +155,8 @@ class FormRowTextField extends StatelessWidget {
   final bool autofocus;
   final bool autocorrect;
   final bool enableSuggestions;
+  final Iterable<String>? autofillHints;
+  final EdgeInsets scrollPadding;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onFieldSubmitted;
 
@@ -171,6 +173,8 @@ class FormRowTextField extends StatelessWidget {
     this.autofocus = false,
     this.autocorrect = true,
     this.enableSuggestions = true,
+    this.autofillHints,
+    this.scrollPadding = const EdgeInsets.all(20.0),
     this.onChanged,
     this.onFieldSubmitted,
   });
@@ -200,6 +204,8 @@ class FormRowTextField extends StatelessWidget {
       autofocus: autofocus,
       autocorrect: autocorrect,
       enableSuggestions: enableSuggestions,
+      autofillHints: autofillHints,
+      scrollPadding: scrollPadding,
       onChanged: onChanged,
       onFieldSubmitted: onFieldSubmitted,
       textAlign: TextAlign.end,
@@ -233,6 +239,8 @@ class FormRowSecretTextField extends StatefulWidget {
   final String? hintText;
   final TextInputAction? textInputAction;
   final List<TextInputFormatter>? inputFormatters;
+  final Iterable<String>? autofillHints;
+  final EdgeInsets scrollPadding;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onFieldSubmitted;
 
@@ -243,6 +251,8 @@ class FormRowSecretTextField extends StatefulWidget {
     this.hintText,
     this.textInputAction,
     this.inputFormatters,
+    this.autofillHints,
+    this.scrollPadding = const EdgeInsets.all(20.0),
     this.onChanged,
     this.onFieldSubmitted,
   });
@@ -269,6 +279,8 @@ class _FormRowSecretTextFieldState extends State<FormRowSecretTextField> {
             textInputAction: widget.textInputAction,
             autocorrect: false,
             enableSuggestions: false,
+            autofillHints: widget.autofillHints,
+            scrollPadding: widget.scrollPadding,
             inputFormatters: widget.inputFormatters,
             onChanged: widget.onChanged,
             onFieldSubmitted: widget.onFieldSubmitted,

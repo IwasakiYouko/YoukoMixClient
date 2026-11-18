@@ -620,4 +620,134 @@ void main() {
       expect(afterRevoke.preferredSubMode, YoukoMixSubPreference.auto);
     },
   );
+
+  test(
+    'refreshBootstrapIfNeeded updates account state without re-downloading config and tracks unread announcements',
+    () async {
+      const initial = YoukoMixSession(
+        serverUrl: 'https://panel.example.com',
+        accessToken: 'ymx_boot_tok',
+        expiresAt: 1999999999,
+        bootstrap: YoukoMixBootstrap(
+          user: YoukoMixUser(
+            id: 1,
+            userName: '博丽灵梦',
+            userClass: 1,
+            money: '10.00',
+            onlineIpCount: 1,
+            nodeIpLimit: 3,
+          ),
+          subscription: YoukoMixSubscriptionState(
+            exclusiveEnabled: false,
+            activeMode: 'standard',
+          ),
+        ),
+      );
+      when(() => api.fetchMeta('https://panel.example.com')).thenAnswer(
+        (_) async => const YoukoMixMeta(
+          baseUrl: 'https://panel.example.com',
+          minClientVersion: '2.0.0',
+        ),
+      );
+      when(
+        () => api.fetchBootstrap(
+          serverUrl: 'https://panel.example.com',
+          accessToken: 'ymx_boot_tok',
+        ),
+      ).thenAnswer(
+        (_) async => const YoukoMixBootstrap(
+          user: YoukoMixUser(
+            id: 1,
+            userName: '博丽灵梦',
+            userClass: 2,
+            money: '88.00',
+            onlineIpCount: 2,
+            nodeIpLimit: 3,
+            nodeSpeedLimit: 500,
+          ),
+          subscription: YoukoMixSubscriptionState(
+            exclusiveEnabled: false,
+            activeMode: 'standard',
+          ),
+          announcements: [
+            YoukoMixAnnouncement(
+              id: 12,
+              title: '重要更新',
+              markdown: '## 升级提示\n请及时同步配置',
+              isPinned: true,
+            ),
+          ],
+          links: YoukoMixLinks(panelUrl: 'https://panel.example.com/user'),
+        ),
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          youkomixGateEnabledProvider.overrideWithValue(true),
+          youkomixInitialSessionProvider.overrideWithValue(initial),
+          youkomixCurrentAppVersionProvider.overrideWithValue('1.2.0'),
+          youkomixApiProvider.overrideWithValue(api),
+          youkomixStorageProvider.overrideWithValue(storage),
+          profilesProvider.overrideWith(
+            () => TestProfiles(const [
+              Profile(
+                id: youkomixManagedProfileId,
+                label: '人间之里',
+                autoUpdateDuration: Duration(hours: 6),
+              ),
+            ]),
+          ),
+          coreHandlerProvider.overrideWithValue(CoreController.scoped(core)),
+          setupActionProvider.overrideWith(_IdleSetupAction.new),
+        ],
+      );
+      addTearDown(container.dispose);
+      globalState.container = container;
+      container.listen(youkomixControllerProvider, (_, _) {});
+
+      final notifier = container.read(youkomixControllerProvider.notifier);
+      expect(await notifier.refreshBootstrapIfNeeded(), isTrue);
+      // Throttled within minInterval unless forced.
+      expect(await notifier.refreshBootstrapIfNeeded(), isFalse);
+      verifyNever(
+        () => api.downloadSubscription(
+          serverUrl: any(named: 'serverUrl'),
+          accessToken: any(named: 'accessToken'),
+          mode: any(named: 'mode'),
+          userAgent: any(named: 'userAgent'),
+        ),
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      final updated = container.read(youkomixControllerProvider);
+      expect(updated.user?.money, '88.00');
+      expect(updated.user?.nodeSpeedLimit, 500);
+      expect(updated.hasUnreadAnnouncements, isTrue);
+      expect(updated.pendingPinnedAnnouncement?.id, 12);
+      expect(updated.isClientOutdated, isTrue);
+      expect(
+        updated.resolvePanelSubpath('/user/shop'),
+        'https://panel.example.com/user/shop',
+      );
+      expect(
+        updated.resolvePanelSubpath('/user/ticket'),
+        'https://panel.example.com/user/ticket',
+      );
+
+      final diag = notifier.buildDiagnosticSummary(
+        isTunEnabled: true,
+        isSystemProxyEnabled: false,
+      );
+      expect(diag, contains('YoukoMix v1.2.0'));
+      expect(diag, contains('Mode: TUN'));
+      expect(diag, contains('Devices: 2/3'));
+      expect(diag, isNot(contains('ymx_boot_tok')));
+      expect(diag, isNot(contains('panel.example.com')));
+
+      await notifier.acknowledgePinnedAnnouncement(12);
+      final afterAck = container.read(youkomixControllerProvider);
+      expect(afterAck.hasUnreadAnnouncements, isFalse);
+      expect(afterAck.pendingPinnedAnnouncement, isNull);
+    },
+  );
 }

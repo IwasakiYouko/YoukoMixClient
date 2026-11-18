@@ -282,7 +282,12 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m101(count) =>
       "${Intl.plural(count, other: 'hace ${count} a')}";
 
-  static String m102(level) => "Lv.${level}";
+  static String m102(minVersion) =>
+      "Esta versión es inferior a la mínima requerida (v${minVersion}). Actualiza ahora.";
+
+  static String m103(online, limit) => "${online} / ${limit}";
+
+  static String m104(level) => "Lv.${level}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -2353,6 +2358,20 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
       "La verificación de seguridad está activa. Introduce el código de la imagen",
     ),
+    "youkomixClientUpdateRequiredDesc": m102,
+    "youkomixClientUpdateRequiredTitle": MessageLookupByLibrary.simpleMessage(
+      "Actualización obligatoria",
+    ),
+    "youkomixClipboardAuthDetected": MessageLookupByLibrary.simpleMessage(
+      "Código detectado en el portapapeles — toca para entrar",
+    ),
+    "youkomixCopyDiagnostics": MessageLookupByLibrary.simpleMessage(
+      "Copiar resumen de diagnóstico",
+    ),
+    "youkomixDeviceCount": m103,
+    "youkomixDiagnosticsCopied": MessageLookupByLibrary.simpleMessage(
+      "Resumen de diagnóstico copiado al portapapeles",
+    ),
     "youkomixEmail": MessageLookupByLibrary.simpleMessage("Correo electrónico"),
     "youkomixEmailHint": MessageLookupByLibrary.simpleMessage(
       "Introduce tu correo de cuenta",
@@ -2364,7 +2383,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage(
       "¿Olvidaste tu contraseña?",
     ),
-    "youkomixLevelBadge": m102,
+    "youkomixGotIt": MessageLookupByLibrary.simpleMessage("Entendido"),
+    "youkomixLevelBadge": m104,
     "youkomixLoggingIn": MessageLookupByLibrary.simpleMessage(
       "Iniciando sesión…",
     ),
@@ -2388,8 +2408,24 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixNoAnnouncements": MessageLookupByLibrary.simpleMessage(
       "Sin anuncios recientes",
     ),
+    "youkomixOnlineDevices": MessageLookupByLibrary.simpleMessage(
+      "Dispositivos activos",
+    ),
     "youkomixOpenPanel": MessageLookupByLibrary.simpleMessage("Abrir panel"),
+    "youkomixQuotaAlertTitle": MessageLookupByLibrary.simpleMessage(
+      "Aviso del plan",
+    ),
+    "youkomixQuotaExhaustedDesc": MessageLookupByLibrary.simpleMessage(
+      "Se ha agotado tu cuota de datos. Abre el panel para ampliarla.",
+    ),
+    "youkomixQuotaExpiredDesc": MessageLookupByLibrary.simpleMessage(
+      "Tu plan ha caducado o no está activo. Abre la tienda del panel para renovarlo.",
+    ),
+    "youkomixQuotaWarningDesc": MessageLookupByLibrary.simpleMessage(
+      "Tu plan vence pronto o queda poco tráfico disponible. Te recomendamos renovarlo.",
+    ),
     "youkomixRegister": MessageLookupByLibrary.simpleMessage("Crear cuenta"),
+    "youkomixRenewPlan": MessageLookupByLibrary.simpleMessage("Renovar plan"),
     "youkomixScanAuthQr": MessageLookupByLibrary.simpleMessage(
       "Escanear QR para iniciar sesión",
     ),
@@ -2399,6 +2435,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "youkomixSessionExpired": MessageLookupByLibrary.simpleMessage(
       "La sesión ha caducado. Inicia sesión de nuevo",
+    ),
+    "youkomixSpeedLimit": MessageLookupByLibrary.simpleMessage(
+      "Límite de velocidad",
     ),
     "youkomixSubChannel": MessageLookupByLibrary.simpleMessage(
       "Tipo de suscripción",
@@ -2421,6 +2460,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixSubModeStandard": MessageLookupByLibrary.simpleMessage(
       "Suscripción estándar",
     ),
+    "youkomixSubmitTicket": MessageLookupByLibrary.simpleMessage(
+      "Enviar ticket",
+    ),
     "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage(
       "Sincronizar nodos",
     ),
@@ -2433,11 +2475,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixTagline": MessageLookupByLibrary.simpleMessage(
       "Cliente exclusivo de red de alta velocidad",
     ),
+    "youkomixTodayTraffic": MessageLookupByLibrary.simpleMessage("Usado hoy"),
+    "youkomixUnlimited": MessageLookupByLibrary.simpleMessage("Sin límite"),
     "youkomixVerify": MessageLookupByLibrary.simpleMessage(
       "Verificar e iniciar sesión",
     ),
     "youkomixWebAuth": MessageLookupByLibrary.simpleMessage(
       "Autorizar en el navegador",
+    ),
+    "youkomixWebAuthWaitingDesc": MessageLookupByLibrary.simpleMessage(
+      "Aprueba en el navegador para volver automáticamente o pega el código único abajo.",
+    ),
+    "youkomixWebAuthWaitingTitle": MessageLookupByLibrary.simpleMessage(
+      "Esperando autorización del navegador",
     ),
     "zhCN": MessageLookupByLibrary.simpleMessage("Chino simplificado"),
   };

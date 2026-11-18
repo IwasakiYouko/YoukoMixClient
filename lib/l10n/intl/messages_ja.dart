@@ -246,7 +246,12 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m101(count) => "${count} 年前";
 
-  static String m102(level) => "Lv.${level}";
+  static String m102(minVersion) =>
+      "現在のバージョンは最小要件（v${minVersion}）を下回っています。今すぐ更新してください。";
+
+  static String m103(online, limit) => "${online} / ${limit} 台";
+
+  static String m104(level) => "Lv.${level}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -1866,6 +1871,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
       "セキュリティ保護が有効です。下の画像認証コードを入力してください",
     ),
+    "youkomixClientUpdateRequiredDesc": m102,
+    "youkomixClientUpdateRequiredTitle": MessageLookupByLibrary.simpleMessage(
+      "クライアントの更新が必要です",
+    ),
+    "youkomixClipboardAuthDetected": MessageLookupByLibrary.simpleMessage(
+      "クリップボードの認証コードでサインイン",
+    ),
+    "youkomixCopyDiagnostics": MessageLookupByLibrary.simpleMessage("診断情報をコピー"),
+    "youkomixDeviceCount": m103,
+    "youkomixDiagnosticsCopied": MessageLookupByLibrary.simpleMessage(
+      "診断情報をコピーしました。チケットに貼り付けられます",
+    ),
     "youkomixEmail": MessageLookupByLibrary.simpleMessage("メールアドレス"),
     "youkomixEmailHint": MessageLookupByLibrary.simpleMessage("登録メールアドレスを入力"),
     "youkomixEnterAuthCode": MessageLookupByLibrary.simpleMessage(
@@ -1875,7 +1892,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage(
       "パスワードを忘れた場合",
     ),
-    "youkomixLevelBadge": m102,
+    "youkomixGotIt": MessageLookupByLibrary.simpleMessage("確認しました"),
+    "youkomixLevelBadge": m104,
     "youkomixLoggingIn": MessageLookupByLibrary.simpleMessage("ログイン中…"),
     "youkomixLogin": MessageLookupByLibrary.simpleMessage("ログイン"),
     "youkomixLogout": MessageLookupByLibrary.simpleMessage("ログアウト"),
@@ -1891,8 +1909,20 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixNoAnnouncements": MessageLookupByLibrary.simpleMessage(
       "お知らせはありません",
     ),
+    "youkomixOnlineDevices": MessageLookupByLibrary.simpleMessage("オンライン端末"),
     "youkomixOpenPanel": MessageLookupByLibrary.simpleMessage("パネルを開く"),
+    "youkomixQuotaAlertTitle": MessageLookupByLibrary.simpleMessage("プランのお知らせ"),
+    "youkomixQuotaExhaustedDesc": MessageLookupByLibrary.simpleMessage(
+      "今期の通信量の上限に達しました。パネルで追加または更新してください。",
+    ),
+    "youkomixQuotaExpiredDesc": MessageLookupByLibrary.simpleMessage(
+      "現在のプランは期限切れまたは未契約です。パネルのストアで更新してください。",
+    ),
+    "youkomixQuotaWarningDesc": MessageLookupByLibrary.simpleMessage(
+      "プランの有効期限が近いか残り通信量が少なくなっています。早めの更新をおすすめします。",
+    ),
     "youkomixRegister": MessageLookupByLibrary.simpleMessage("新規登録"),
+    "youkomixRenewPlan": MessageLookupByLibrary.simpleMessage("プランを更新"),
     "youkomixScanAuthQr": MessageLookupByLibrary.simpleMessage("QRコードでログイン"),
     "youkomixServerUrl": MessageLookupByLibrary.simpleMessage("パネル URL"),
     "youkomixServerUrlHint": MessageLookupByLibrary.simpleMessage(
@@ -1901,6 +1931,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixSessionExpired": MessageLookupByLibrary.simpleMessage(
       "セッションの有効期限が切れました。再度ログインしてください",
     ),
+    "youkomixSpeedLimit": MessageLookupByLibrary.simpleMessage("速度上限"),
     "youkomixSubChannel": MessageLookupByLibrary.simpleMessage("サブスクリプション種別"),
     "youkomixSubChannelExclusive": MessageLookupByLibrary.simpleMessage(
       "専用サブスクリプション",
@@ -1920,12 +1951,21 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixSubModeStandard": MessageLookupByLibrary.simpleMessage(
       "標準サブスクリプション",
     ),
+    "youkomixSubmitTicket": MessageLookupByLibrary.simpleMessage("チケットを送信"),
     "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage("ノード同期"),
     "youkomixSyncSuccess": MessageLookupByLibrary.simpleMessage("ノード構成を同期しました"),
     "youkomixSyncing": MessageLookupByLibrary.simpleMessage("ノード同期中…"),
     "youkomixTagline": MessageLookupByLibrary.simpleMessage("専用高速ネットワーククライアント"),
+    "youkomixTodayTraffic": MessageLookupByLibrary.simpleMessage("本日の使用量"),
+    "youkomixUnlimited": MessageLookupByLibrary.simpleMessage("無制限"),
     "youkomixVerify": MessageLookupByLibrary.simpleMessage("確認してログイン"),
     "youkomixWebAuth": MessageLookupByLibrary.simpleMessage("ブラウザで安全に認証"),
+    "youkomixWebAuthWaitingDesc": MessageLookupByLibrary.simpleMessage(
+      "ブラウザで承認すると自動的に戻ります。戻らない場合は下にワンタイムコードを貼り付けてください。",
+    ),
+    "youkomixWebAuthWaitingTitle": MessageLookupByLibrary.simpleMessage(
+      "ブラウザでの認証完了を待機中",
+    ),
     "zhCN": MessageLookupByLibrary.simpleMessage("簡体字中国語"),
   };
 }
