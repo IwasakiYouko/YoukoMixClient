@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.1.1 (2026-11-18)
+
+**Features**
+
+- **youkomix** Surface X25519MLKEM768 upgrade notice banner and quick config sync (c42317e)
+
 ## v1.1.0 (2026-11-17)
 
 **Features**
