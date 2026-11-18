@@ -336,6 +336,25 @@ void main() {
                   },
                 }),
               );
+            case '/api/v1/client/checkin':
+              expect(opened.token, 'ykc_tok');
+              return _jsonBody(
+                await opened.seal({
+                  'ret': 1,
+                  'http_status': 200,
+                  'data': {
+                    'traffic_mb': 256,
+                    'message': '签到成功，获得 256 MB 流量',
+                    'bootstrap': {
+                      'user': {'id': 2, 'email': 'marisa@example.com'},
+                      'features': {
+                        'checkin_enabled': true,
+                        'able_to_checkin': false,
+                      },
+                    },
+                  },
+                }),
+              );
             case '/api/v1/client/auth/logout':
               return _jsonBody(
                 await opened.seal({
@@ -386,11 +405,18 @@ void main() {
         expect(release.version, 'v1.1.0');
         expect(release.assets['YoukoMix.apk']?.sha256, 'abcdef');
 
+        final checkinRes = await client.checkin(
+          serverUrl: 'https://panel.example.com',
+          accessToken: 'ykc_tok',
+        );
+        expect(checkinRes.trafficMb, 256);
+        expect(checkinRes.bootstrap.features.ableToCheckin, isFalse);
+
         await client.logout(
           serverUrl: 'https://panel.example.com',
           accessToken: 'ykc_tok',
         );
-        expect(seenPaths, hasLength(6));
+        expect(seenPaths, hasLength(7));
       },
     );
 

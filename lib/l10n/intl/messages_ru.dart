@@ -280,7 +280,10 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m103(online, limit) => "${online} / ${limit}";
 
-  static String m104(level) => "Lv.${level}";
+  static String m104(day) =>
+      "Доступный трафик за этот период исчерпан и автоматически обновляется ${day}-го числа каждого месяца.";
+
+  static String m105(level) => "Lv.${level}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -1103,9 +1106,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "installCertificateSuccess": MessageLookupByLibrary.simpleMessage(
       "Сертификат установлен",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "Разрешение на список приложений отклонено, поэтому установленные приложения недоступны. Предоставьте его вручную в системных настройках.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "Разрешение на список приложений отклонено, поэтому установленные приложения недоступны. Предоставьте его вручную в системных настройках.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "Эта система не выдаёт список установленных приложений без разрешения. Предоставьте его, чтобы настроить прокси для отдельных приложений.",
     ),
@@ -2301,6 +2305,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
       "Защита входа включена. Введите код с картинки ниже",
     ),
+    "youkomixCheckedIn": MessageLookupByLibrary.simpleMessage(
+      "Отмечено сегодня",
+    ),
+    "youkomixCheckin": MessageLookupByLibrary.simpleMessage(
+      "Ежедневная отметка",
+    ),
+    "youkomixCheckingIn": MessageLookupByLibrary.simpleMessage("Отметка…"),
     "youkomixClientUpdateRequiredDesc": m102,
     "youkomixClientUpdateRequiredTitle": MessageLookupByLibrary.simpleMessage(
       "Требуется обновление клиента",
@@ -2326,13 +2337,17 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage(
       "Забыли пароль?",
     ),
+    "youkomixFreeQuotaExhaustedDesc": MessageLookupByLibrary.simpleMessage(
+      "Доступный трафик за этот период исчерпан и автоматически обновится в следующем периоде.",
+    ),
+    "youkomixFreeQuotaExhaustedResetDesc": m104,
     "youkomixGotIt": MessageLookupByLibrary.simpleMessage("Понятно"),
-    "youkomixLevelBadge": m104,
+    "youkomixLevelBadge": m105,
     "youkomixLoggingIn": MessageLookupByLibrary.simpleMessage("Вход…"),
     "youkomixLogin": MessageLookupByLibrary.simpleMessage("Войти"),
     "youkomixLogout": MessageLookupByLibrary.simpleMessage("Выйти"),
     "youkomixLogoutConfirm": MessageLookupByLibrary.simpleMessage(
-      "При выходе прокси будет остановлен, а локальный кеш узлов удалён. Продолжить?",
+      "При выходе соединение будет отключено, а кэшированная конфигурация удалена. Продолжить?",
     ),
     "youkomixMfaCode": MessageLookupByLibrary.simpleMessage(
       "Код подтверждения",
@@ -2360,6 +2375,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixQuotaExpiredDesc": MessageLookupByLibrary.simpleMessage(
       "Ваш тариф истёк или не активен. Перейдите в магазин панели для продления.",
     ),
+    "youkomixQuotaNoticeTitle": MessageLookupByLibrary.simpleMessage(
+      "Уведомление о трафике",
+    ),
     "youkomixQuotaWarningDesc": MessageLookupByLibrary.simpleMessage(
       "Срок действия тарифа или остаток трафика подходит к концу. Рекомендуем продлить заранее.",
     ),
@@ -2383,13 +2401,13 @@ class MessageLookup extends MessageLookupByLibrary {
       "Выделенная подписка",
     ),
     "youkomixSubChannelExclusiveDesc": MessageLookupByLibrary.simpleMessage(
-      "Использовать персональную конфигурацию узлов панели",
+      "Использовать выделенную конфигурацию от панели",
     ),
     "youkomixSubChannelStandard": MessageLookupByLibrary.simpleMessage(
       "Обычная подписка",
     ),
     "youkomixSubChannelStandardDesc": MessageLookupByLibrary.simpleMessage(
-      "Использовать стандартные узлы вашего тарифа",
+      "Использовать стандартную конфигурацию вашего аккаунта",
     ),
     "youkomixSubModeExclusive": MessageLookupByLibrary.simpleMessage(
       "Выделенная подписка привязана",
@@ -2400,20 +2418,26 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixSubmitTicket": MessageLookupByLibrary.simpleMessage(
       "Создать тикет",
     ),
+    "youkomixSupportAndPanel": MessageLookupByLibrary.simpleMessage(
+      "Поддержка и панель",
+    ),
     "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage(
-      "Синхронизировать узлы",
+      "Синхронизировать конфигурацию",
     ),
     "youkomixSyncSuccess": MessageLookupByLibrary.simpleMessage(
-      "Узлы синхронизированы",
+      "Конфигурация синхронизирована",
     ),
     "youkomixSyncing": MessageLookupByLibrary.simpleMessage(
-      "Синхронизация узлов…",
+      "Синхронизация конфигурации…",
     ),
     "youkomixTagline": MessageLookupByLibrary.simpleMessage(
       "Выделенный высокоскоростной клиент",
     ),
     "youkomixTodayTraffic": MessageLookupByLibrary.simpleMessage("За сегодня"),
     "youkomixUnlimited": MessageLookupByLibrary.simpleMessage("Без лимита"),
+    "youkomixUsageAndSpecs": MessageLookupByLibrary.simpleMessage(
+      "Трафик и параметры",
+    ),
     "youkomixVerify": MessageLookupByLibrary.simpleMessage(
       "Подтвердить и войти",
     ),

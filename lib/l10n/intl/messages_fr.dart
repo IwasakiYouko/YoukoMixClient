@@ -293,7 +293,10 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m103(online, limit) => "${online} / ${limit}";
 
-  static String m104(level) => "Lv.${level}";
+  static String m104(day) =>
+      "Votre quota de données pour ce cycle est épuisé et sera réinitialisé automatiquement le ${day} de chaque mois.";
+
+  static String m105(level) => "Lv.${level}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -1134,9 +1137,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "installCertificateSuccess": MessageLookupByLibrary.simpleMessage(
       "Certificat installé",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "L’autorisation de la liste des apps a été refusée ; les apps installées ne peuvent donc pas être listées. Veuillez l’accorder manuellement dans les réglages du système.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "L’autorisation de la liste des apps a été refusée ; les apps installées ne peuvent donc pas être listées. Veuillez l’accorder manuellement dans les réglages du système.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "Ce système masque la liste des apps installées tant que l’autorisation n’est pas accordée. Accordez-la pour configurer le proxy par app.",
     ),
@@ -2360,6 +2364,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
       "La vérification de sécurité est activée. Saisissez le code de l\'image ci-dessous",
     ),
+    "youkomixCheckedIn": MessageLookupByLibrary.simpleMessage(
+      "Pointé aujourd’hui",
+    ),
+    "youkomixCheckin": MessageLookupByLibrary.simpleMessage(
+      "Pointage quotidien",
+    ),
+    "youkomixCheckingIn": MessageLookupByLibrary.simpleMessage("Pointage…"),
     "youkomixClientUpdateRequiredDesc": m102,
     "youkomixClientUpdateRequiredTitle": MessageLookupByLibrary.simpleMessage(
       "Mise à jour requise",
@@ -2385,13 +2396,17 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage(
       "Mot de passe oublié",
     ),
+    "youkomixFreeQuotaExhaustedDesc": MessageLookupByLibrary.simpleMessage(
+      "Votre quota de données pour ce cycle est épuisé et sera réinitialisé automatiquement au prochain cycle.",
+    ),
+    "youkomixFreeQuotaExhaustedResetDesc": m104,
     "youkomixGotIt": MessageLookupByLibrary.simpleMessage("Compris"),
-    "youkomixLevelBadge": m104,
+    "youkomixLevelBadge": m105,
     "youkomixLoggingIn": MessageLookupByLibrary.simpleMessage("Connexion…"),
     "youkomixLogin": MessageLookupByLibrary.simpleMessage("Se connecter"),
     "youkomixLogout": MessageLookupByLibrary.simpleMessage("Se déconnecter"),
     "youkomixLogoutConfirm": MessageLookupByLibrary.simpleMessage(
-      "La déconnexion arrête le proxy et efface les nœuds mis en cache. Continuer ?",
+      "La déconnexion coupera la connexion et effacera la configuration en cache. Continuer ?",
     ),
     "youkomixMfaCode": MessageLookupByLibrary.simpleMessage(
       "Code de vérification",
@@ -2423,6 +2438,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixQuotaExpiredDesc": MessageLookupByLibrary.simpleMessage(
       "Votre offre a expiré ou est inactive. Ouvrez la boutique du panneau pour la renouveler.",
     ),
+    "youkomixQuotaNoticeTitle": MessageLookupByLibrary.simpleMessage(
+      "Avis de trafic",
+    ),
     "youkomixQuotaWarningDesc": MessageLookupByLibrary.simpleMessage(
       "Votre offre expire bientôt ou votre quota est presque atteint. Pensez à renouveler.",
     ),
@@ -2450,13 +2468,13 @@ class MessageLookup extends MessageLookupByLibrary {
       "Abonnement dédié",
     ),
     "youkomixSubChannelExclusiveDesc": MessageLookupByLibrary.simpleMessage(
-      "Utiliser les nœuds dédiés fournis par le panneau",
+      "Utiliser la configuration dédiée fournie par le panneau",
     ),
     "youkomixSubChannelStandard": MessageLookupByLibrary.simpleMessage(
       "Abonnement standard",
     ),
     "youkomixSubChannelStandardDesc": MessageLookupByLibrary.simpleMessage(
-      "Utiliser les nœuds standards de votre forfait",
+      "Utiliser la configuration standard associée à votre compte",
     ),
     "youkomixSubModeExclusive": MessageLookupByLibrary.simpleMessage(
       "Abonnement dédié lié",
@@ -2467,13 +2485,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixSubmitTicket": MessageLookupByLibrary.simpleMessage(
       "Ouvrir un ticket",
     ),
+    "youkomixSupportAndPanel": MessageLookupByLibrary.simpleMessage(
+      "Assistance et panneau",
+    ),
     "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage(
-      "Synchroniser les nœuds",
+      "Synchroniser la configuration",
     ),
     "youkomixSyncSuccess": MessageLookupByLibrary.simpleMessage(
-      "Nœuds synchronisés",
+      "Configuration synchronisée",
     ),
-    "youkomixSyncing": MessageLookupByLibrary.simpleMessage("Synchronisation…"),
+    "youkomixSyncing": MessageLookupByLibrary.simpleMessage(
+      "Synchronisation de la configuration…",
+    ),
     "youkomixTagline": MessageLookupByLibrary.simpleMessage(
       "Client réseau haut débit dédié",
     ),
@@ -2481,6 +2504,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Utilisé aujourd\'hui",
     ),
     "youkomixUnlimited": MessageLookupByLibrary.simpleMessage("Illimité"),
+    "youkomixUsageAndSpecs": MessageLookupByLibrary.simpleMessage(
+      "Utilisation et spécifications",
+    ),
     "youkomixVerify": MessageLookupByLibrary.simpleMessage(
       "Vérifier et se connecter",
     ),

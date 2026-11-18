@@ -256,6 +256,53 @@ void main() {
         lastPromptedPinnedId: 8,
       );
       expect(YoukoMixSession.fromJson(readSession.toJson()), readSession);
+
+      final metaNonCommerce = YoukoMixMeta.fromJson(const {
+        'app_name': '人间之里',
+        'base_url': 'https://panel.example.com',
+        'commerce_enabled': false,
+        'reg_mode': 'close',
+        'ticket_enabled': false,
+        'checkin_enabled': true,
+      });
+      expect(metaNonCommerce.commerceEnabled, isFalse);
+      expect(metaNonCommerce.regMode, 'close');
+      expect(metaNonCommerce.ticketEnabled, isFalse);
+      expect(metaNonCommerce.checkinEnabled, isTrue);
+      expect(YoukoMixMeta.fromJson(metaNonCommerce.toJson()), metaNonCommerce);
+
+      final checkinRes = YoukoMixCheckinResult.fromJson(const {
+        'traffic_mb': 256,
+        'message': '签到成功，获得 256 MB 流量',
+        'bootstrap': {
+          'panel': {'base_url': 'https://panel.example.com'},
+          'commerce': {
+            'enabled': false,
+            'products': true,
+            'balance': true,
+            'free_reset_day': 15,
+          },
+          'features': {
+            'reg_mode': 'invite',
+            'ticket_enabled': false,
+            'checkin_enabled': true,
+            'able_to_checkin': false,
+          },
+        },
+      });
+      expect(checkinRes.trafficMb, 256);
+      expect(checkinRes.bootstrap.commerce.enabled, isFalse);
+      expect(checkinRes.bootstrap.commerce.products, isFalse);
+      expect(checkinRes.bootstrap.commerce.balance, isFalse);
+      expect(checkinRes.bootstrap.commerce.freeResetDay, 15);
+      expect(
+        checkinRes.bootstrap.commerce.shopUrl,
+        'https://panel.example.com/user/product',
+      );
+      expect(checkinRes.bootstrap.features.canRegister, isTrue);
+      expect(checkinRes.bootstrap.features.ticketEnabled, isFalse);
+      expect(checkinRes.bootstrap.features.checkinEnabled, isTrue);
+      expect(checkinRes.bootstrap.features.ableToCheckin, isFalse);
     });
   });
 }

@@ -52,6 +52,9 @@ YoukoMixSession _session({
   int userClass = 2,
   int expireDays = 30,
   bool isExpired = false,
+  bool commerceEnabled = true,
+  int onlineIpCount = 0,
+  int nodeIpLimit = 0,
   String mode = 'exclusive',
   int total = 100 * _gib,
   int used = 42 * _gib,
@@ -74,6 +77,8 @@ YoukoMixSession _session({
         classExpireDays: expireDays,
         isExpired: isExpired,
         money: '12.50',
+        onlineIpCount: onlineIpCount,
+        nodeIpLimit: nodeIpLimit,
       ),
       traffic: YoukoMixTraffic(
         upload: _gib,
@@ -88,6 +93,12 @@ YoukoMixSession _session({
         exclusiveTitle: '人间之里 · 专属订阅',
         activeMode: mode,
         updateIntervalHours: 6,
+      ),
+      commerce: YoukoMixCommerce(
+        enabled: commerceEnabled,
+        products: commerceEnabled,
+        balance: commerceEnabled,
+        shopUrl: 'https://panel.example.com/user/product',
       ),
     ),
   );
@@ -215,21 +226,54 @@ void main() {
     },
   );
 
-  testWidgets('shows expired warning and tip when user has no active plan', (
+  testWidgets('shows expired warning on commercial sites and hides Lv.0', (
     tester,
   ) async {
     setUpProfiles(
       [],
-      session: _session(userClass: 0, isExpired: true, total: 0, used: 0),
+      session: _session(
+        userClass: 0,
+        isExpired: true,
+        commerceEnabled: true,
+        total: 0,
+        used: 0,
+      ),
     );
     await pumpCard(tester);
     final l10n = AppLocalizations.current;
 
     expect(label('博丽灵梦'), findsOneWidget);
-    expect(find.text('Lv.0'), findsOneWidget);
+    expect(find.text('Lv.0'), findsNothing);
     expect(find.text(l10n.youkomixExpired), findsOneWidget);
     expect(find.text(l10n.youkomixOpenPanel), findsOneWidget);
   });
+
+  testWidgets(
+    'non-commercial desktop card suppresses expiry, displays active devices, and opens account sheet on card tap',
+    (tester) async {
+      setUpProfiles(
+        [_profile(1)],
+        session: _session(
+          userClass: 0,
+          isExpired: true,
+          commerceEnabled: false,
+          onlineIpCount: 1,
+          nodeIpLimit: 2,
+        ),
+      );
+      await pumpDesktopCard(tester);
+      final l10n = AppLocalizations.current;
+
+      expect(label('博丽灵梦'), findsOneWidget);
+      expect(find.text('Lv.0'), findsNothing);
+      expect(find.text(l10n.youkomixExpired), findsNothing);
+      expect(find.text('1 / 2'), findsOneWidget);
+
+      await tester.tap(label('博丽灵梦'));
+      await tester.pumpAndSettle();
+      expect(find.byType(YoukoMixAccountSheet), findsOneWidget);
+    },
+  );
 
   Future<File> writeAppliedConfig(WidgetTester tester) async {
     final file = await tester.runAsync(() async {

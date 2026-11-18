@@ -255,7 +255,10 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m103(online, limit) => "${online} / ${limit}대";
 
-  static String m104(level) => "Lv.${level}";
+  static String m104(day) =>
+      "이번 주기 사용 가능한 데이터를 모두 소진했으며 매월 ${day}일에 자동으로 초기화됩니다.";
+
+  static String m105(level) => "Lv.${level}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -1845,6 +1848,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
       "보안 로그인이 활성화되어 있습니다. 아래 이미지 보안문자를 입력하세요",
     ),
+    "youkomixCheckedIn": MessageLookupByLibrary.simpleMessage("출석 완료"),
+    "youkomixCheckin": MessageLookupByLibrary.simpleMessage("출석 체크"),
+    "youkomixCheckingIn": MessageLookupByLibrary.simpleMessage("출석 중…"),
     "youkomixClientUpdateRequiredDesc": m102,
     "youkomixClientUpdateRequiredTitle": MessageLookupByLibrary.simpleMessage(
       "클라이언트 업데이트 필요",
@@ -1862,13 +1868,17 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixEnterAuthCode": MessageLookupByLibrary.simpleMessage("일회용 코드 입력"),
     "youkomixExpired": MessageLookupByLibrary.simpleMessage("플랜 만료됨"),
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage("비밀번호 찾기"),
+    "youkomixFreeQuotaExhaustedDesc": MessageLookupByLibrary.simpleMessage(
+      "이번 주기 사용 가능한 데이터를 모두 소진했으며 다음 주기에 자동으로 초기화됩니다.",
+    ),
+    "youkomixFreeQuotaExhaustedResetDesc": m104,
     "youkomixGotIt": MessageLookupByLibrary.simpleMessage("확인"),
-    "youkomixLevelBadge": m104,
+    "youkomixLevelBadge": m105,
     "youkomixLoggingIn": MessageLookupByLibrary.simpleMessage("로그인 중…"),
     "youkomixLogin": MessageLookupByLibrary.simpleMessage("로그인"),
     "youkomixLogout": MessageLookupByLibrary.simpleMessage("로그아웃"),
     "youkomixLogoutConfirm": MessageLookupByLibrary.simpleMessage(
-      "로그아웃하면 프록시가 중지되고 기기에 저장된 노드 구성이 삭제됩니다. 계속하시겠습니까?",
+      "로그아웃하면 연결을 해제하고 기기에 캐시된 설정을 삭제합니다. 계속할까요?",
     ),
     "youkomixMfaCode": MessageLookupByLibrary.simpleMessage("인증 코드"),
     "youkomixMfaDesc": MessageLookupByLibrary.simpleMessage(
@@ -1887,6 +1897,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "youkomixQuotaExpiredDesc": MessageLookupByLibrary.simpleMessage(
       "현재 플랜이 만료되었거나 비활성 상태입니다. 패널 스토어에서 갱신해 주세요.",
+    ),
+    "youkomixQuotaNoticeTitle": MessageLookupByLibrary.simpleMessage(
+      "데이터 상태 안내",
     ),
     "youkomixQuotaWarningDesc": MessageLookupByLibrary.simpleMessage(
       "플랜 만료가 임박했거나 남은 데이터가 부족합니다. 미리 갱신하는 것을 권장합니다.",
@@ -1907,25 +1920,25 @@ class MessageLookup extends MessageLookupByLibrary {
       "전용 구독",
     ),
     "youkomixSubChannelExclusiveDesc": MessageLookupByLibrary.simpleMessage(
-      "패널에서 제공하는 전용 맞춤 노드 구성을 사용합니다",
+      "패널에서 제공하는 전용 맞춤 설정 사용",
     ),
     "youkomixSubChannelStandard": MessageLookupByLibrary.simpleMessage("일반 구독"),
     "youkomixSubChannelStandardDesc": MessageLookupByLibrary.simpleMessage(
-      "계정 등급에 해당하는 기본 노드 구성을 사용합니다",
+      "계정에 해당하는 표준 연결 설정 사용",
     ),
     "youkomixSubModeExclusive": MessageLookupByLibrary.simpleMessage(
       "전용 구독 연결됨",
     ),
     "youkomixSubModeStandard": MessageLookupByLibrary.simpleMessage("표준 구독 모드"),
     "youkomixSubmitTicket": MessageLookupByLibrary.simpleMessage("문의 티켓 제출"),
-    "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage("노드 동기화"),
-    "youkomixSyncSuccess": MessageLookupByLibrary.simpleMessage(
-      "노드 구성을 동기화했습니다",
-    ),
-    "youkomixSyncing": MessageLookupByLibrary.simpleMessage("노드 동기화 중…"),
+    "youkomixSupportAndPanel": MessageLookupByLibrary.simpleMessage("지원 및 패널"),
+    "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage("설정 동기화"),
+    "youkomixSyncSuccess": MessageLookupByLibrary.simpleMessage("설정이 동기화되었습니다"),
+    "youkomixSyncing": MessageLookupByLibrary.simpleMessage("설정 동기화 중…"),
     "youkomixTagline": MessageLookupByLibrary.simpleMessage("전용 고속 네트워크 클라이언트"),
     "youkomixTodayTraffic": MessageLookupByLibrary.simpleMessage("오늘 사용량"),
     "youkomixUnlimited": MessageLookupByLibrary.simpleMessage("무제한"),
+    "youkomixUsageAndSpecs": MessageLookupByLibrary.simpleMessage("사용량 및 사양"),
     "youkomixVerify": MessageLookupByLibrary.simpleMessage("확인 및 로그인"),
     "youkomixWebAuth": MessageLookupByLibrary.simpleMessage("브라우저 보안 인증 로그인"),
     "youkomixWebAuthWaitingDesc": MessageLookupByLibrary.simpleMessage(

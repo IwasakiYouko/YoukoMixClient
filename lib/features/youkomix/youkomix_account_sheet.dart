@@ -131,6 +131,9 @@ class YoukoMixAccountSheet extends ConsumerWidget {
     final traffic = bootstrap?.traffic ?? const YoukoMixTraffic();
     final subscription =
         bootstrap?.subscription ?? const YoukoMixSubscriptionState();
+    final commerce = authState.commerce;
+    final features = authState.features;
+    final isCommerce = authState.isCommerceEnabled;
     final isExclusive = authState.isExclusiveActive;
     final channelLocked = authState.isSyncing || authState.isBusy;
     final exclusiveChannelTitle = subscription.exclusiveTitle.trim().isNotEmpty
@@ -138,7 +141,18 @@ class YoukoMixAccountSheet extends ConsumerWidget {
         : appLocalizations.youkomixSubChannelExclusive;
     final upgradeNotice = bootstrap?.upgradeNotice;
     final announcements = bootstrap?.announcements ?? const [];
-    final subscriptionInfo = profile?.subscriptionInfo;
+    final rawSubInfo = profile?.subscriptionInfo;
+    final subscriptionInfo =
+        rawSubInfo != null &&
+            (!isCommerce || user.userClass <= 0) &&
+            rawSubInfo.expire != 0
+        ? SubscriptionInfo(
+            upload: rawSubInfo.upload,
+            download: rawSubInfo.download,
+            total: rawSubInfo.total,
+            expire: 0,
+          )
+        : rawSubInfo;
     final expireDate = user.classExpireDate;
     final expireLabel = user.isExpired
         ? appLocalizations.youkomixExpired
@@ -158,17 +172,143 @@ class YoukoMixAccountSheet extends ConsumerWidget {
         ? '${_formatSpeedLimitMbps(user.nodeSpeedLimit)} Mbps'
         : appLocalizations.youkomixUnlimited;
 
-    final showQuotaAlert =
-        authState.isPlanExpiredOrInactive ||
-        authState.isQuotaExhausted ||
-        authState.isQuotaOrExpiryWarning;
+    final showQuotaAlert = isCommerce
+        ? (authState.isPlanExpiredOrInactive ||
+              authState.isQuotaExhausted ||
+              authState.isQuotaOrExpiryWarning)
+        : authState.isQuotaExhausted;
     final quotaIsError =
-        authState.isPlanExpiredOrInactive || authState.isQuotaExhausted;
-    final quotaDescription = authState.isPlanExpiredOrInactive
-        ? appLocalizations.youkomixQuotaExpiredDesc
-        : (authState.isQuotaExhausted
-              ? appLocalizations.youkomixQuotaExhaustedDesc
-              : appLocalizations.youkomixQuotaWarningDesc);
+        isCommerce &&
+        (authState.isPlanExpiredOrInactive || authState.isQuotaExhausted);
+    final quotaTitle = isCommerce
+        ? appLocalizations.youkomixQuotaAlertTitle
+        : appLocalizations.youkomixQuotaNoticeTitle;
+    final quotaDescription = isCommerce
+        ? (authState.isPlanExpiredOrInactive
+              ? appLocalizations.youkomixQuotaExpiredDesc
+              : (authState.isQuotaExhausted
+                    ? appLocalizations.youkomixQuotaExhaustedDesc
+                    : appLocalizations.youkomixQuotaWarningDesc))
+        : (commerce.freeResetDay > 0
+              ? appLocalizations.youkomixFreeQuotaExhaustedResetDesc(
+                  commerce.freeResetDay,
+                )
+              : appLocalizations.youkomixFreeQuotaExhaustedDesc);
+    final shopUrl = commerce.shopUrl.isNotEmpty
+        ? commerce.shopUrl
+        : authState.resolvePanelSubpath('/user/product');
+    final canRenewInShop =
+        isCommerce && commerce.products && shopUrl.isNotEmpty;
+
+    final Widget? checkinAction = !features.checkinEnabled
+        ? null
+        : (features.ableToCheckin
+              ? FilledButton.icon(
+                  key: const ValueKey('youkomix-checkin-button'),
+                  onPressed: authState.isCheckingIn || authState.isBusy
+                      ? null
+                      : () => unawaited(
+                          ref
+                              .read(youkomixControllerProvider.notifier)
+                              .checkin(),
+                        ),
+                  icon: authState.isCheckingIn
+                      ? const ActivityIndicator(size: 14)
+                      : const GlyphIcon(AppGlyphs.sparkle, fill: 1, size: 15),
+                  label: Text(
+                    authState.isCheckingIn
+                        ? appLocalizations.youkomixCheckingIn
+                        : appLocalizations.youkomixCheckin,
+                  ),
+                )
+              : TonalButton(
+                  key: const ValueKey('youkomix-checked-in-pill'),
+                  glyph: AppGlyphs.check,
+                  label: appLocalizations.youkomixCheckedIn,
+                  onPressed: null,
+                ));
+
+    final Widget? priorityNotice = authState.isClientOutdated
+        ? _ActionNoticeCard(
+            title: appLocalizations.youkomixClientUpdateRequiredTitle,
+            message: appLocalizations.youkomixClientUpdateRequiredDesc(
+              authState.meta?.minClientVersion ?? '',
+            ),
+            enforced: true,
+            actionGlyph: AppGlyphs.cloudDownload,
+            actionLabel: appLocalizations.checkUpdate,
+            onAction: () => unawaited(_triggerCheckUpdate(context, ref)),
+          )
+        : (upgradeNotice != null && upgradeNotice.shouldDisplay
+              ? _UpgradeNoticeCard(
+                  notice: upgradeNotice,
+                  isSyncing: authState.isSyncing,
+                  onSync: authState.isSyncing || authState.isBusy
+                      ? null
+                      : () {
+                          unawaited(
+                            ref
+                                .read(youkomixControllerProvider.notifier)
+                                .syncSubscription(showFeedback: true),
+                          );
+                        },
+                )
+              : (showQuotaAlert
+                    ? _ActionNoticeCard(
+                        title: quotaTitle,
+                        message: quotaDescription,
+                        enforced: quotaIsError,
+                        actionGlyph: canRenewInShop
+                            ? AppGlyphs.openExternal
+                            : null,
+                        actionLabel: canRenewInShop
+                            ? appLocalizations.youkomixRenewPlan
+                            : null,
+                        onAction: canRenewInShop
+                            ? () {
+                                unawaited(
+                                  ref
+                                      .read(youkomixControllerProvider.notifier)
+                                      .openExternalUrl(shopUrl),
+                                );
+                              }
+                            : null,
+                      )
+                    : null));
+
+    final supportItems = <Widget>[
+      if (authState.serverUrl.isNotEmpty)
+        ListItem(
+          leading: const GlyphIcon(AppGlyphs.openExternal),
+          title: Text(appLocalizations.youkomixOpenPanel),
+          onTap: () => _openPanel(authState, ref),
+        ),
+      if (profile != null && onShowRuntimeDetail != null)
+        ListItem(
+          leading: const GlyphIcon(AppGlyphs.profiles),
+          title: Text(appLocalizations.runtimeConfig),
+          trailing: const GlyphIcon(AppGlyphs.chevronForward),
+          onTap: onShowRuntimeDetail,
+        ),
+      if (authState.panelBaseUrl.isNotEmpty && authState.isTicketEnabled)
+        ListItem(
+          leading: const GlyphIcon(AppGlyphs.send),
+          title: Text(appLocalizations.youkomixSubmitTicket),
+          trailing: const GlyphIcon(AppGlyphs.openExternal),
+          onTap: () {
+            unawaited(
+              ref
+                  .read(youkomixControllerProvider.notifier)
+                  .openPanelSubpath('/user/ticket'),
+            );
+          },
+        ),
+      ListItem(
+        leading: const GlyphIcon(AppGlyphs.copy),
+        title: Text(appLocalizations.youkomixCopyDiagnostics),
+        onTap: () => unawaited(_copyDiagnostics(context, ref)),
+      ),
+    ];
 
     return Scaffold(
       title: appLocalizations.youkomixAccount,
@@ -184,11 +324,6 @@ class YoukoMixAccountSheet extends ConsumerWidget {
                   .syncSubscription(showFeedback: true),
             );
           },
-        ),
-        IconButtonData(
-          glyph: AppGlyphs.info,
-          tooltip: appLocalizations.youkomixAnnouncements,
-          onPressed: () => showYoukoMixAnnouncementsSheet(context),
         ),
         if (authState.serverUrl.isNotEmpty)
           IconButtonData(
@@ -212,55 +347,16 @@ class YoukoMixAccountSheet extends ConsumerWidget {
                       ? user.userName
                       : (user.email.isNotEmpty ? user.email : appName),
                   email: user.email,
-                  levelLabel: appLocalizations.youkomixLevelBadge(
-                    user.userClass,
-                  ),
+                  levelLabel: user.userClass > 0
+                      ? appLocalizations.youkomixLevelBadge(user.userClass)
+                      : null,
                   modeLabel: isExclusive
                       ? appLocalizations.youkomixSubModeExclusive
                       : appLocalizations.youkomixSubModeStandard,
                   isExclusive: isExclusive,
+                  trailingAction: checkinAction,
                 ),
-                if (authState.isClientOutdated)
-                  _ActionNoticeCard(
-                    title: appLocalizations.youkomixClientUpdateRequiredTitle,
-                    message: appLocalizations.youkomixClientUpdateRequiredDesc(
-                      authState.meta?.minClientVersion ?? '',
-                    ),
-                    enforced: true,
-                    actionGlyph: AppGlyphs.cloudDownload,
-                    actionLabel: appLocalizations.checkUpdate,
-                    onAction: () =>
-                        unawaited(_triggerCheckUpdate(context, ref)),
-                  ),
-                if (upgradeNotice != null && upgradeNotice.shouldDisplay)
-                  _UpgradeNoticeCard(
-                    notice: upgradeNotice,
-                    isSyncing: authState.isSyncing,
-                    onSync: authState.isSyncing || authState.isBusy
-                        ? null
-                        : () {
-                            unawaited(
-                              ref
-                                  .read(youkomixControllerProvider.notifier)
-                                  .syncSubscription(showFeedback: true),
-                            );
-                          },
-                  ),
-                if (showQuotaAlert && authState.panelBaseUrl.isNotEmpty)
-                  _ActionNoticeCard(
-                    title: appLocalizations.youkomixQuotaAlertTitle,
-                    message: quotaDescription,
-                    enforced: quotaIsError,
-                    actionGlyph: AppGlyphs.openExternal,
-                    actionLabel: appLocalizations.youkomixRenewPlan,
-                    onAction: () {
-                      unawaited(
-                        ref
-                            .read(youkomixControllerProvider.notifier)
-                            .openPanelSubpath('/user/shop'),
-                      );
-                    },
-                  ),
+                ?priorityNotice,
                 if (subscription.exclusiveEnabled)
                   generateSection(
                     title: appLocalizations.youkomixSubChannel,
@@ -329,34 +425,20 @@ class YoukoMixAccountSheet extends ConsumerWidget {
                       ),
                     ],
                   ),
-                if (subscriptionInfo != null && subscriptionInfo.total > 0)
-                  generateSection(
-                    title: appLocalizations.subscriptionInfo,
-                    items: [
+                generateSection(
+                  title: appLocalizations.youkomixUsageAndSpecs,
+                  items: [
+                    if (subscriptionInfo != null && subscriptionInfo.total > 0)
                       ListItem(
                         title: SubscriptionInfoView(
                           subscriptionInfo: subscriptionInfo,
                         ),
                       ),
-                      if (traffic.today > 0)
-                        _SheetValueRow(
-                          label: appLocalizations.youkomixTodayTraffic,
-                          value: traffic.today.traffic.show,
-                        ),
-                    ],
-                  ),
-                generateSection(
-                  title: appLocalizations.youkomixAccount,
-                  items: [
-                    _SheetValueRow(
-                      label: appLocalizations.expireTime,
-                      value: expireLabel,
-                      highlightError: user.isExpired,
-                    ),
-                    _SheetValueRow(
-                      label: appLocalizations.youkomixBalance,
-                      value: '¥${user.money}',
-                    ),
+                    if (traffic.today > 0)
+                      _SheetValueRow(
+                        label: appLocalizations.youkomixTodayTraffic,
+                        value: traffic.today.traffic.show,
+                      ),
                     _SheetValueRow(
                       label: appLocalizations.youkomixOnlineDevices,
                       value: deviceLabel,
@@ -366,6 +448,17 @@ class YoukoMixAccountSheet extends ConsumerWidget {
                       label: appLocalizations.youkomixSpeedLimit,
                       value: speedLimitLabel,
                     ),
+                    if (isCommerce && (user.userClass > 0 || user.isExpired))
+                      _SheetValueRow(
+                        label: appLocalizations.expireTime,
+                        value: expireLabel,
+                        highlightError: user.isExpired,
+                      ),
+                    if (isCommerce && commerce.balance)
+                      _SheetValueRow(
+                        label: appLocalizations.youkomixBalance,
+                        value: '¥${user.money}',
+                      ),
                     if (profile?.lastUpdateDate != null)
                       ListItem(
                         title: Text(appLocalizations.lastUpdated),
@@ -420,38 +513,11 @@ class YoukoMixAccountSheet extends ConsumerWidget {
                       trailing: const GlyphIcon(AppGlyphs.chevronForward),
                       onTap: () => showYoukoMixAnnouncementsSheet(context),
                     ),
-                    if (profile != null && onShowRuntimeDetail != null)
-                      ListItem(
-                        leading: const GlyphIcon(AppGlyphs.profiles),
-                        title: Text(appLocalizations.runtimeConfig),
-                        trailing: const GlyphIcon(AppGlyphs.chevronForward),
-                        onTap: onShowRuntimeDetail,
-                      ),
-                    if (authState.panelBaseUrl.isNotEmpty)
-                      ListItem(
-                        leading: const GlyphIcon(AppGlyphs.send),
-                        title: Text(appLocalizations.youkomixSubmitTicket),
-                        trailing: const GlyphIcon(AppGlyphs.openExternal),
-                        onTap: () {
-                          unawaited(
-                            ref
-                                .read(youkomixControllerProvider.notifier)
-                                .openPanelSubpath('/user/ticket'),
-                          );
-                        },
-                      ),
-                    ListItem(
-                      leading: const GlyphIcon(AppGlyphs.copy),
-                      title: Text(appLocalizations.youkomixCopyDiagnostics),
-                      onTap: () => unawaited(_copyDiagnostics(context, ref)),
-                    ),
-                    if (authState.serverUrl.isNotEmpty)
-                      ListItem(
-                        leading: const GlyphIcon(AppGlyphs.openExternal),
-                        title: Text(appLocalizations.youkomixOpenPanel),
-                        onTap: () => _openPanel(authState, ref),
-                      ),
                   ],
+                ),
+                generateSection(
+                  title: appLocalizations.youkomixSupportAndPanel,
+                  items: supportItems,
                 ),
                 if (authState.isAuthenticated)
                   Padding(
@@ -680,16 +746,18 @@ class YoukoMixPinnedAnnouncementSheet extends ConsumerWidget {
 class _AccountHeaderCard extends StatelessWidget {
   final String userName;
   final String email;
-  final String levelLabel;
+  final String? levelLabel;
   final String modeLabel;
   final bool isExclusive;
+  final Widget? trailingAction;
 
   const _AccountHeaderCard({
     required this.userName,
     required this.email,
-    required this.levelLabel,
+    this.levelLabel,
     required this.modeLabel,
     required this.isExclusive,
+    this.trailingAction,
   });
 
   @override
@@ -736,22 +804,25 @@ class _AccountHeaderCard extends StatelessWidget {
                               .copyWith(color: colorScheme.onSurface),
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
+                      if (levelLabel != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: ShapeDecoration(
+                            color: colorScheme.primaryContainer,
+                            shape: AppShape.full,
+                          ),
+                          child: Text(
+                            levelLabel!,
+                            style: AppTextStyle.caption1
+                                .of(context, emphasized: true)
+                                .copyWith(
+                                  color: colorScheme.onPrimaryContainer,
+                                ),
+                          ),
                         ),
-                        decoration: ShapeDecoration(
-                          color: colorScheme.primaryContainer,
-                          shape: AppShape.full,
-                        ),
-                        child: Text(
-                          levelLabel,
-                          style: AppTextStyle.caption1
-                              .of(context, emphasized: true)
-                              .copyWith(color: colorScheme.onPrimaryContainer),
-                        ),
-                      ),
                     ],
                   ),
                   if (email.isNotEmpty)
@@ -787,6 +858,7 @@ class _AccountHeaderCard extends StatelessWidget {
                 ],
               ),
             ),
+            ?trailingAction,
           ],
         ),
       ),
@@ -823,17 +895,17 @@ class _ActionNoticeCard extends StatelessWidget {
   final String title;
   final String message;
   final bool enforced;
-  final Glyph actionGlyph;
-  final String actionLabel;
+  final Glyph? actionGlyph;
+  final String? actionLabel;
   final VoidCallback? onAction;
 
   const _ActionNoticeCard({
     required this.title,
     required this.message,
     required this.enforced,
-    required this.actionGlyph,
-    required this.actionLabel,
-    required this.onAction,
+    this.actionGlyph,
+    this.actionLabel,
+    this.onAction,
   });
 
   @override
@@ -885,20 +957,21 @@ class _ActionNoticeCard extends StatelessWidget {
                     .of(context)
                     .copyWith(color: contentColor),
               ),
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: FilledButton.icon(
-                onPressed: onAction,
-                style: enforced
-                    ? ButtonStyle.from(
-                        backgroundColor: colorScheme.error,
-                        foregroundColor: colorScheme.onError,
-                      )
-                    : null,
-                icon: GlyphIcon(actionGlyph, fill: 1, size: 16),
-                label: Text(actionLabel),
+            if (actionLabel != null && actionGlyph != null)
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: FilledButton.icon(
+                  onPressed: onAction,
+                  style: enforced
+                      ? ButtonStyle.from(
+                          backgroundColor: colorScheme.error,
+                          foregroundColor: colorScheme.onError,
+                        )
+                      : null,
+                  icon: GlyphIcon(actionGlyph!, fill: 1, size: 16),
+                  label: Text(actionLabel!),
+                ),
               ),
-            ),
           ],
         ),
       ),

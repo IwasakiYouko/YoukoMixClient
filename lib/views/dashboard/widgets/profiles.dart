@@ -102,15 +102,27 @@ class ProfilesCard extends ConsumerWidget {
     String? endTooltip;
     var endWarn = false;
     if (user != null) {
-      if (user.isExpired || user.userClass <= 0) {
-        endText = appLocalizations.youkomixExpired;
-        endWarn = true;
-      } else if (user.classExpire.isEmpty) {
-        endText = appLocalizations.youkomixNeverExpire;
-      } else {
-        endText = appLocalizations.profileDaysLeft(user.classExpireDays);
-        endTooltip = user.classExpire;
-        endWarn = user.classExpireDays <= _soonDays;
+      if (auth.isCommerceEnabled) {
+        if (user.isExpired || user.userClass <= 0) {
+          endText = appLocalizations.youkomixExpired;
+          endWarn = true;
+        } else if (user.classExpire.isEmpty) {
+          endText = appLocalizations.youkomixNeverExpire;
+        } else {
+          endText = appLocalizations.profileDaysLeft(user.classExpireDays);
+          endTooltip = user.classExpire;
+          endWarn = user.classExpireDays <= _soonDays;
+        }
+      } else if (user.nodeIpLimit > 0) {
+        endText = appLocalizations.youkomixDeviceCount(
+          user.onlineIpCount,
+          user.nodeIpLimit,
+        );
+        endTooltip = appLocalizations.youkomixOnlineDevices;
+        endWarn = user.onlineIpCount >= user.nodeIpLimit;
+      } else if (user.onlineIpCount > 0) {
+        endText = '${user.onlineIpCount}';
+        endTooltip = appLocalizations.youkomixOnlineDevices;
       }
     } else if (profileExpiry != null) {
       final days = _daysLeft(profileExpiry);
@@ -184,10 +196,16 @@ class ProfilesCard extends ConsumerWidget {
             ],
           )
         : null;
+    final notificationButton = upgradeNoticeButton ?? unreadAnnButton;
     final channelSwitch =
         !compact && auth.isAuthenticated && (sub?.exclusiveEnabled ?? false)
         ? const _SubChannelButton()
         : null;
+    final trailingControls = <Widget>[
+      ?notificationButton,
+      ?channelSwitch,
+      ?sync,
+    ];
 
     final nameRow = Row(
       spacing: 8,
@@ -200,7 +218,7 @@ class ProfilesCard extends ConsumerWidget {
             style: name.of(context, emphasized: true),
           ),
         ),
-        if (user != null)
+        if (user != null && user.userClass > 0)
           DecoratedBox(
             decoration: ShapeDecoration(
               color: context.colorScheme.primary.opacity15,
@@ -228,9 +246,7 @@ class ProfilesCard extends ConsumerWidget {
 
     return DashboardCard(
       semanticLabel: appLocalizations.youkomixAccount,
-      onTap: mobile || !auth.isAuthenticated
-          ? () => _openAccount(context, hasProfile: profile != null)
-          : null,
+      onTap: () => _openAccount(context, hasProfile: profile != null),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: mobile ? MainAxisSize.min : MainAxisSize.max,
@@ -240,30 +256,14 @@ class ProfilesCard extends ConsumerWidget {
             title: appLocalizations.youkomixAccount,
             chevron: mobile,
             trailing: [
-              if (mobile) ...[
-                ?upgradeNoticeButton,
-                ?unreadAnnButton,
-                ?channelSwitch,
-                ?sync,
-              ] else
+              if (mobile)
+                ...trailingControls
+              else if (trailingControls.isNotEmpty)
                 Transform.translate(
-                  offset: const Offset(8, 0),
+                  offset: const Offset(6, 0),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ?upgradeNoticeButton,
-                      ?unreadAnnButton,
-                      ?channelSwitch,
-                      ?sync,
-                      DashboardIconButton(
-                        glyph: AppGlyphs.chevronForward,
-                        tooltip: appLocalizations.details(
-                          appLocalizations.youkomixAccount,
-                        ),
-                        onPressed: () =>
-                            _openAccount(context, hasProfile: profile != null),
-                      ),
-                    ],
+                    children: trailingControls,
                   ),
                 ),
             ],

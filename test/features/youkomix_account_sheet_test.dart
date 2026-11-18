@@ -202,6 +202,12 @@ void main() {
             exclusiveEnabled: true,
             activeMode: 'exclusive',
           ),
+          commerce: YoukoMixCommerce(
+            enabled: true,
+            products: true,
+            balance: true,
+            shopUrl: 'https://panel.example.com/user/product',
+          ),
           announcements: [
             YoukoMixAnnouncement(
               id: 10,
@@ -490,6 +496,12 @@ void main() {
             exclusiveEnabled: false,
             activeMode: 'standard',
           ),
+          commerce: YoukoMixCommerce(
+            enabled: true,
+            products: true,
+            balance: true,
+            shopUrl: 'https://panel.example.com/user/product',
+          ),
           announcements: [
             YoukoMixAnnouncement(
               id: 25,
@@ -566,7 +578,7 @@ void main() {
 
       await tester.tap(find.text(l10n.youkomixRenewPlan));
       await tester.pumpAndSettle();
-      expect(launchedUrls.last, 'https://panel.example.com/user/shop');
+      expect(launchedUrls.last, 'https://panel.example.com/user/product');
 
       await tester.scrollUntilVisible(
         find.text(l10n.youkomixSubmitTicket),
@@ -586,6 +598,153 @@ void main() {
       expect(
         container.read(youkomixControllerProvider).hasUnreadAnnouncements,
         isFalse,
+      );
+    },
+  );
+
+  testWidgets(
+    'non-commercial mode hides plan expiry/balance/Lv.0, hides disabled ticket row, and supports native daily check-in',
+    (tester) async {
+      tester.view.physicalSize = const Size(1200, 1100);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      const session = YoukoMixSession(
+        serverUrl: 'https://panel.example.com',
+        accessToken: 'ymx_free_token',
+        expiresAt: 1999999999,
+        bootstrap: YoukoMixBootstrap(
+          user: YoukoMixUser(
+            id: 1,
+            email: 'marisa@example.com',
+            userName: '雾雨魔理沙',
+            userClass: 0,
+            classExpire: '1983-08-25 00:05:00',
+            isExpired: true,
+            money: '0.00',
+            onlineIpCount: 1,
+            nodeIpLimit: 2,
+          ),
+          traffic: YoukoMixTraffic(
+            upload: 5 * 1024 * 1024 * 1024,
+            download: 5 * 1024 * 1024 * 1024,
+            total: 10 * 1024 * 1024 * 1024,
+            remaining: 0,
+          ),
+          commerce: YoukoMixCommerce(enabled: false, freeResetDay: 15),
+          features: YoukoMixFeatures(
+            ticketEnabled: false,
+            checkinEnabled: true,
+            ableToCheckin: true,
+          ),
+          links: YoukoMixLinks(panelUrl: 'https://panel.example.com/user'),
+        ),
+      );
+
+      when(
+        () => api.checkin(
+          serverUrl: 'https://panel.example.com',
+          accessToken: 'ymx_free_token',
+        ),
+      ).thenAnswer(
+        (_) async => YoukoMixCheckinResult(
+          trafficMb: 512,
+          message: '签到成功，获得 512 MB 流量',
+          bootstrap: session.bootstrap!.copyWith(
+            traffic: const YoukoMixTraffic(
+              upload: 5 * 1024 * 1024 * 1024,
+              download: 5 * 1024 * 1024 * 1024,
+              total: 10752 * 1024 * 1024,
+              remaining: 512 * 1024 * 1024,
+            ),
+            features: session.bootstrap!.features.copyWith(
+              ableToCheckin: false,
+            ),
+          ),
+        ),
+      );
+
+      final container = ProviderContainer(
+        overrides: [
+          youkomixGateEnabledProvider.overrideWithValue(true),
+          youkomixInitialSessionProvider.overrideWithValue(session),
+          youkomixApiProvider.overrideWithValue(api),
+          youkomixStorageProvider.overrideWithValue(storage),
+          profilesProvider.overrideWith(
+            () => TestProfiles(const [
+              Profile(
+                id: youkomixManagedProfileId,
+                label: '人间之里',
+                autoUpdateDuration: Duration(hours: 6),
+                subscriptionInfo: SubscriptionInfo(
+                  upload: 5 * 1024 * 1024 * 1024,
+                  download: 5 * 1024 * 1024 * 1024,
+                  total: 10 * 1024 * 1024 * 1024,
+                  expire: 430589100,
+                ),
+              ),
+            ]),
+          ),
+          currentProfileIdProvider.overrideWithBuild(
+            (_, _) => youkomixManagedProfileId,
+          ),
+          profilesActionProvider.overrideWith(_MemoryProfilesAction.new),
+          coreHandlerProvider.overrideWithValue(CoreController.scoped(core)),
+          setupActionProvider.overrideWith(_IdleSetupAction.new),
+        ],
+      );
+      addTearDown(container.dispose);
+      globalState.container = container;
+      container.read(viewSizeProvider.notifier).value = const Size(1200, 1100);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: TestApp(
+            child: Builder(
+              builder: (context) => HostScaffold(
+                body: TextButton(
+                  onPressed: () => showYoukoMixAccountSheet(context),
+                  child: const Text('open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      final l10n = AppLocalizations.current;
+      expect(find.text('Lv.0'), findsNothing);
+      expect(find.text('¥0.00'), findsNothing);
+      expect(find.text(l10n.youkomixBalance), findsNothing);
+      expect(find.text(l10n.expireTime), findsNothing);
+      expect(find.text(l10n.youkomixExpired), findsNothing);
+      expect(find.text(l10n.youkomixRenewPlan), findsNothing);
+      expect(find.textContaining('1983'), findsNothing);
+      expect(find.text(l10n.youkomixSubmitTicket), findsNothing);
+      expect(
+        find.text(l10n.youkomixFreeQuotaExhaustedResetDesc(15)),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('youkomix-checkin-button')),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const ValueKey('youkomix-checkin-button')));
+      await tester.pumpAndSettle(const Duration(seconds: 4));
+
+      expect(
+        find.byKey(const ValueKey('youkomix-checked-in-pill')),
+        findsOneWidget,
+      );
+      expect(
+        find.text(l10n.youkomixFreeQuotaExhaustedResetDesc(15)),
+        findsNothing,
       );
     },
   );

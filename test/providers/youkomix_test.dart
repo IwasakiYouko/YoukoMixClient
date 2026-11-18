@@ -750,4 +750,100 @@ void main() {
       expect(afterAck.pendingPinnedAnnouncement, isNull);
     },
   );
+
+  test(
+    'suppresses plan expiry in non-commercial mode and executes native daily check-in',
+    () async {
+      const nonCommercialSession = YoukoMixSession(
+        serverUrl: 'https://panel.example.com',
+        accessToken: 'ymx_free_tok',
+        expiresAt: 1999999999,
+        bootstrap: YoukoMixBootstrap(
+          user: YoukoMixUser(
+            id: 1,
+            userName: '雾雨魔理沙',
+            userClass: 0,
+            classExpire: '1983-08-25 00:05:00',
+            classExpireDays: 0,
+            isExpired: true,
+          ),
+          traffic: YoukoMixTraffic(
+            upload: 512 * 1024 * 1024,
+            download: 512 * 1024 * 1024,
+            total: 2 * 1024 * 1024 * 1024,
+            remaining: 1024 * 1024 * 1024,
+          ),
+          commerce: YoukoMixCommerce(enabled: false, freeResetDay: 1),
+          features: YoukoMixFeatures(
+            regMode: 'close',
+            ticketEnabled: false,
+            checkinEnabled: true,
+            checkinCaptchaEnabled: false,
+            ableToCheckin: true,
+          ),
+          links: YoukoMixLinks(panelUrl: 'https://panel.example.com/user'),
+        ),
+      );
+
+      when(
+        () => api.checkin(
+          serverUrl: 'https://panel.example.com',
+          accessToken: 'ymx_free_tok',
+        ),
+      ).thenAnswer(
+        (_) async => YoukoMixCheckinResult(
+          trafficMb: 256,
+          message: '签到成功，获得 256 MB 流量',
+          bootstrap: nonCommercialSession.bootstrap!.copyWith(
+            traffic: const YoukoMixTraffic(
+              upload: 512 * 1024 * 1024,
+              download: 512 * 1024 * 1024,
+              total: 2304 * 1024 * 1024,
+              remaining: 1280 * 1024 * 1024,
+            ),
+            features: nonCommercialSession.bootstrap!.features.copyWith(
+              ableToCheckin: false,
+            ),
+          ),
+        ),
+      );
+
+      final container = buildContainer(
+        initialSession: nonCommercialSession,
+        profiles: const [
+          Profile(
+            id: youkomixManagedProfileId,
+            label: '人间之里',
+            autoUpdateDuration: Duration(hours: 6),
+            subscriptionInfo: SubscriptionInfo(
+              upload: 512 * 1024 * 1024,
+              download: 512 * 1024 * 1024,
+              total: 2 * 1024 * 1024 * 1024,
+              expire: 430589100,
+            ),
+          ),
+        ],
+      );
+      final initialState = container.read(youkomixControllerProvider);
+      expect(initialState.isCommerceEnabled, isFalse);
+      expect(initialState.isPlanExpiredOrInactive, isFalse);
+      expect(initialState.isQuotaOrExpiryWarning, isFalse);
+      expect(initialState.canRegister, isFalse);
+      expect(initialState.isTicketEnabled, isFalse);
+
+      final ok = await container
+          .read(youkomixControllerProvider.notifier)
+          .checkin();
+      expect(ok, isTrue);
+
+      final afterCheckin = container.read(youkomixControllerProvider);
+      expect(afterCheckin.features.ableToCheckin, isFalse);
+      expect(afterCheckin.traffic?.total, 2304 * 1024 * 1024);
+      final updatedProfile = container
+          .read(profilesProvider)
+          .getProfile(youkomixManagedProfileId);
+      expect(updatedProfile?.subscriptionInfo?.expire, 0);
+      expect(updatedProfile?.subscriptionInfo?.total, 2304 * 1024 * 1024);
+    },
+  );
 }

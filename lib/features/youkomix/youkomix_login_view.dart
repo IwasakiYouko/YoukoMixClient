@@ -329,8 +329,6 @@ class _YoukoMixLoginViewState extends ConsumerState<YoukoMixLoginView>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 16,
         children: [
-          if (showCaptcha)
-            _InfoBanner(message: appLocalizations.youkomixCaptchaRequiredTip),
           generateGroup([
             if (!_hasFixedServer)
               FormRow(
@@ -388,13 +386,13 @@ class _YoukoMixLoginViewState extends ConsumerState<YoukoMixLoginView>
               ),
             ),
           ]),
-          if (showCaptcha) ...[
-            _CaptchaChallengeCard(
-              challenge: authState.captchaChallenge,
-              isLoading: authState.isLoadingCaptcha,
-              onRefresh: _refreshCaptcha,
-            ),
+          if (showCaptcha)
             generateGroup([
+              _CaptchaChallengeCard(
+                challenge: authState.captchaChallenge,
+                isLoading: authState.isLoadingCaptcha,
+                onRefresh: _refreshCaptcha,
+              ),
               FormRow(
                 title: appLocalizations.youkomixCaptchaCode,
                 trailing: FormRowTextField(
@@ -414,7 +412,6 @@ class _YoukoMixLoginViewState extends ConsumerState<YoukoMixLoginView>
                 ),
               ),
             ]),
-          ],
           SizedBox(
             height: 46,
             child: IgnorePointer(
@@ -489,11 +486,12 @@ class _YoukoMixLoginViewState extends ConsumerState<YoukoMixLoginView>
               spacing: 12,
               runSpacing: 4,
               children: [
-                TextButton(
-                  onPressed: () =>
-                      _openPanelPath('/auth/register', meta?.registerUrl),
-                  child: Text(appLocalizations.youkomixRegister),
-                ),
+                if (authState.canRegister)
+                  TextButton(
+                    onPressed: () =>
+                        _openPanelPath('/auth/register', meta?.registerUrl),
+                    child: Text(appLocalizations.youkomixRegister),
+                  ),
                 TextButton(
                   onPressed: () =>
                       _openPanelPath('/password/reset', meta?.passwordResetUrl),
@@ -771,75 +769,53 @@ class _CaptchaChallengeCard extends StatelessWidget {
     final appLocalizations = context.appLocalizations;
     final hasImage = challenge != null && challenge!.imageBytes.isNotEmpty;
 
-    return GestureDetector(
+    return ListItem(
       key: const ValueKey('youkomix-captcha-card'),
-      behavior: HitTestBehavior.opaque,
       onTap: isLoading ? null : onRefresh,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: ShapeDecoration(
-          color: colorScheme.surfaceContainerLow,
-          shape: AppShape.all(AppCorner.lg).copyWith(
-            side: BorderSide(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-            ),
+      title: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: ClipRSuperellipse(
+          borderRadius: BorderRadius.circular(AppCorner.md),
+          child: Container(
+            width: 140,
+            height: 44,
+            color: const Color(0xFFFDF4F7),
+            alignment: Alignment.center,
+            child: hasImage
+                ? Image.memory(
+                    challenge!.imageBytes,
+                    width: 140,
+                    height: 44,
+                    fit: BoxFit.contain,
+                    gaplessPlayback: true,
+                  )
+                : (isLoading
+                      ? const ActivityIndicator(size: 16)
+                      : GlyphIcon(
+                          AppGlyphs.refresh,
+                          size: 18,
+                          color: colorScheme.primary,
+                        )),
           ),
         ),
-        child: Row(
-          spacing: 12,
-          children: [
-            ClipRSuperellipse(
-              borderRadius: BorderRadius.circular(AppCorner.md),
-              child: Container(
-                width: 148,
-                height: 50,
-                color: const Color(0xFFFDF4F7),
-                alignment: Alignment.center,
-                child: hasImage
-                    ? Image.memory(
-                        challenge!.imageBytes,
-                        width: 148,
-                        height: 50,
-                        fit: BoxFit.contain,
-                        gaplessPlayback: true,
-                      )
-                    : (isLoading
-                          ? const ActivityIndicator(size: 18)
-                          : GlyphIcon(
-                              AppGlyphs.refresh,
-                              size: 20,
-                              color: colorScheme.primary,
-                            )),
-              ),
-            ),
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                spacing: 6,
-                children: [
-                  if (isLoading && hasImage)
-                    const ActivityIndicator(size: 14)
-                  else
-                    GlyphIcon(
-                      AppGlyphs.refresh,
-                      size: 16,
-                      color: colorScheme.primary,
-                    ),
-                  Flexible(
-                    child: Text(
-                      appLocalizations.youkomixCaptchaRefresh,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyle.footnote
-                          .of(context)
-                          .copyWith(color: colorScheme.primary),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 6,
+        children: [
+          if (isLoading && hasImage)
+            const ActivityIndicator(size: 14)
+          else
+            GlyphIcon(AppGlyphs.refresh, size: 16, color: colorScheme.primary),
+          Text(
+            appLocalizations.youkomixCaptchaRefresh,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyle.footnote
+                .of(context)
+                .copyWith(color: colorScheme.primary),
+          ),
+        ],
       ),
     );
   }
@@ -935,43 +911,6 @@ class _StatusBanner extends StatelessWidget {
               style: AppTextStyle.footnote
                   .of(context)
                   .copyWith(color: colorScheme.onErrorContainer),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoBanner extends StatelessWidget {
-  final String message;
-
-  const _InfoBanner({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = context.colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: ShapeDecoration(
-        color: colorScheme.primaryContainer,
-        shape: AppShape.all(AppCorner.lg),
-      ),
-      child: Row(
-        spacing: 10,
-        children: [
-          GlyphIcon(
-            AppGlyphs.verified,
-            fill: 1,
-            size: 18,
-            color: colorScheme.onPrimaryContainer,
-          ),
-          Expanded(
-            child: Text(
-              message,
-              style: AppTextStyle.footnote
-                  .of(context)
-                  .copyWith(color: colorScheme.onPrimaryContainer),
             ),
           ),
         ],

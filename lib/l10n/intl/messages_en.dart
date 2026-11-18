@@ -280,7 +280,10 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m103(online, limit) => "${online} / ${limit}";
 
-  static String m104(level) => "Lv.${level}";
+  static String m104(day) =>
+      "Your data allowance for this cycle is used up and resets automatically on day ${day} of each month.";
+
+  static String m105(level) => "Lv.${level}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -1055,9 +1058,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "installCertificateSuccess": MessageLookupByLibrary.simpleMessage(
       "Certificate installed",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "This system hides the installed app list until the permission is granted. Authorize it to configure the per-app proxy.",
     ),
@@ -2183,6 +2187,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
       "Security verification is enabled. Enter the graphical code below",
     ),
+    "youkomixCheckedIn": MessageLookupByLibrary.simpleMessage("Checked in"),
+    "youkomixCheckin": MessageLookupByLibrary.simpleMessage("Daily check-in"),
+    "youkomixCheckingIn": MessageLookupByLibrary.simpleMessage("Checking in…"),
     "youkomixClientUpdateRequiredDesc": m102,
     "youkomixClientUpdateRequiredTitle": MessageLookupByLibrary.simpleMessage(
       "Client update required",
@@ -2208,13 +2215,17 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage(
       "Forgot password",
     ),
+    "youkomixFreeQuotaExhaustedDesc": MessageLookupByLibrary.simpleMessage(
+      "Your data allowance for this cycle is used up and will reset automatically next cycle.",
+    ),
+    "youkomixFreeQuotaExhaustedResetDesc": m104,
     "youkomixGotIt": MessageLookupByLibrary.simpleMessage("Got it"),
-    "youkomixLevelBadge": m104,
+    "youkomixLevelBadge": m105,
     "youkomixLoggingIn": MessageLookupByLibrary.simpleMessage("Signing in…"),
     "youkomixLogin": MessageLookupByLibrary.simpleMessage("Sign in"),
     "youkomixLogout": MessageLookupByLibrary.simpleMessage("Sign out"),
     "youkomixLogoutConfirm": MessageLookupByLibrary.simpleMessage(
-      "Signing out stops the proxy and clears cached node configs on this device. Continue?",
+      "Signing out disconnects the tunnel and clears cached configuration on this device. Continue?",
     ),
     "youkomixMfaCode": MessageLookupByLibrary.simpleMessage(
       "Verification code",
@@ -2244,6 +2255,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixQuotaExpiredDesc": MessageLookupByLibrary.simpleMessage(
       "Your plan has expired or is inactive. Open the panel store to renew your plan.",
     ),
+    "youkomixQuotaNoticeTitle": MessageLookupByLibrary.simpleMessage(
+      "Traffic notice",
+    ),
     "youkomixQuotaWarningDesc": MessageLookupByLibrary.simpleMessage(
       "Your plan is expiring soon or running low on data. Consider renewing early.",
     ),
@@ -2267,13 +2281,13 @@ class MessageLookup extends MessageLookupByLibrary {
       "Dedicated subscription",
     ),
     "youkomixSubChannelExclusiveDesc": MessageLookupByLibrary.simpleMessage(
-      "Use dedicated nodes provisioned by the panel",
+      "Use dedicated configuration provisioned by the panel",
     ),
     "youkomixSubChannelStandard": MessageLookupByLibrary.simpleMessage(
       "Standard subscription",
     ),
     "youkomixSubChannelStandardDesc": MessageLookupByLibrary.simpleMessage(
-      "Use standard nodes included in your account plan",
+      "Use standard configuration included with your account",
     ),
     "youkomixSubModeExclusive": MessageLookupByLibrary.simpleMessage(
       "Dedicated subscription bound",
@@ -2284,16 +2298,24 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixSubmitTicket": MessageLookupByLibrary.simpleMessage(
       "Submit ticket",
     ),
-    "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage("Sync nodes"),
-    "youkomixSyncSuccess": MessageLookupByLibrary.simpleMessage(
-      "Subscription nodes synced",
+    "youkomixSupportAndPanel": MessageLookupByLibrary.simpleMessage(
+      "Support & panel",
     ),
-    "youkomixSyncing": MessageLookupByLibrary.simpleMessage("Syncing nodes…"),
+    "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage("Sync config"),
+    "youkomixSyncSuccess": MessageLookupByLibrary.simpleMessage(
+      "Configuration synced",
+    ),
+    "youkomixSyncing": MessageLookupByLibrary.simpleMessage(
+      "Syncing configuration…",
+    ),
     "youkomixTagline": MessageLookupByLibrary.simpleMessage(
       "Dedicated high-speed network client",
     ),
     "youkomixTodayTraffic": MessageLookupByLibrary.simpleMessage("Used today"),
     "youkomixUnlimited": MessageLookupByLibrary.simpleMessage("Unlimited"),
+    "youkomixUsageAndSpecs": MessageLookupByLibrary.simpleMessage(
+      "Usage & specs",
+    ),
     "youkomixVerify": MessageLookupByLibrary.simpleMessage(
       "Verify and sign in",
     ),

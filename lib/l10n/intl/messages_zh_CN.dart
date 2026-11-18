@@ -247,7 +247,9 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m103(online, limit) => "${online} / ${limit} 台";
 
-  static String m104(level) => "Lv.${level}";
+  static String m104(day) => "当前周期可用流量已用完，将于每月 ${day} 日自动重置。";
+
+  static String m105(level) => "Lv.${level}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -1691,6 +1693,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
       "当前站点已开启安全登录保护，请输入下方图形验证码",
     ),
+    "youkomixCheckedIn": MessageLookupByLibrary.simpleMessage("今日已签"),
+    "youkomixCheckin": MessageLookupByLibrary.simpleMessage("每日签到"),
+    "youkomixCheckingIn": MessageLookupByLibrary.simpleMessage("签到中…"),
     "youkomixClientUpdateRequiredDesc": m102,
     "youkomixClientUpdateRequiredTitle": MessageLookupByLibrary.simpleMessage(
       "需要升级客户端版本",
@@ -1708,13 +1713,17 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixEnterAuthCode": MessageLookupByLibrary.simpleMessage("输入一次性授权码"),
     "youkomixExpired": MessageLookupByLibrary.simpleMessage("套餐已到期"),
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage("找回密码"),
+    "youkomixFreeQuotaExhaustedDesc": MessageLookupByLibrary.simpleMessage(
+      "当前周期可用流量已用完，将于下个周期自动重置。",
+    ),
+    "youkomixFreeQuotaExhaustedResetDesc": m104,
     "youkomixGotIt": MessageLookupByLibrary.simpleMessage("我知道了"),
-    "youkomixLevelBadge": m104,
+    "youkomixLevelBadge": m105,
     "youkomixLoggingIn": MessageLookupByLibrary.simpleMessage("正在登录…"),
     "youkomixLogin": MessageLookupByLibrary.simpleMessage("登录"),
     "youkomixLogout": MessageLookupByLibrary.simpleMessage("退出登录"),
     "youkomixLogoutConfirm": MessageLookupByLibrary.simpleMessage(
-      "退出登录后将停止代理并清除本地缓存的节点配置，确定退出吗？",
+      "退出登录后将断开连接并清除本机缓存配置，确定退出吗？",
     ),
     "youkomixMfaCode": MessageLookupByLibrary.simpleMessage("验证码"),
     "youkomixMfaDesc": MessageLookupByLibrary.simpleMessage(
@@ -1732,6 +1741,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixQuotaExpiredDesc": MessageLookupByLibrary.simpleMessage(
       "当前套餐已到期或未开通，请前往控制面板购买或续费套餐以恢复连接。",
     ),
+    "youkomixQuotaNoticeTitle": MessageLookupByLibrary.simpleMessage("流量状态提醒"),
     "youkomixQuotaWarningDesc": MessageLookupByLibrary.simpleMessage(
       "当前套餐即将到期或剩余流量不足，建议提前续费以免影响连接。",
     ),
@@ -1749,21 +1759,23 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixSubChannel": MessageLookupByLibrary.simpleMessage("订阅类型"),
     "youkomixSubChannelExclusive": MessageLookupByLibrary.simpleMessage("专属订阅"),
     "youkomixSubChannelExclusiveDesc": MessageLookupByLibrary.simpleMessage(
-      "使用面板下发的专属定制节点配置",
+      "使用面板下发的专属定制配置",
     ),
     "youkomixSubChannelStandard": MessageLookupByLibrary.simpleMessage("普通订阅"),
     "youkomixSubChannelStandardDesc": MessageLookupByLibrary.simpleMessage(
-      "使用账户等级对应的常规节点配置",
+      "使用账户对应的标准连接配置",
     ),
     "youkomixSubModeExclusive": MessageLookupByLibrary.simpleMessage("专属订阅已绑定"),
     "youkomixSubModeStandard": MessageLookupByLibrary.simpleMessage("标准订阅模式"),
     "youkomixSubmitTicket": MessageLookupByLibrary.simpleMessage("提交工单"),
-    "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage("同步节点"),
-    "youkomixSyncSuccess": MessageLookupByLibrary.simpleMessage("节点配置已同步"),
-    "youkomixSyncing": MessageLookupByLibrary.simpleMessage("正在同步节点…"),
+    "youkomixSupportAndPanel": MessageLookupByLibrary.simpleMessage("支持与面板"),
+    "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage("同步配置"),
+    "youkomixSyncSuccess": MessageLookupByLibrary.simpleMessage("配置已同步"),
+    "youkomixSyncing": MessageLookupByLibrary.simpleMessage("正在同步配置…"),
     "youkomixTagline": MessageLookupByLibrary.simpleMessage("专属高速网络接入客户端"),
     "youkomixTodayTraffic": MessageLookupByLibrary.simpleMessage("今日已用"),
     "youkomixUnlimited": MessageLookupByLibrary.simpleMessage("不限"),
+    "youkomixUsageAndSpecs": MessageLookupByLibrary.simpleMessage("用量与规格"),
     "youkomixVerify": MessageLookupByLibrary.simpleMessage("验证并登录"),
     "youkomixWebAuth": MessageLookupByLibrary.simpleMessage("网页安全授权登录"),
     "youkomixWebAuthWaitingDesc": MessageLookupByLibrary.simpleMessage(

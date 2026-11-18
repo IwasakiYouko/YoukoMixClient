@@ -467,6 +467,7 @@ void main() {
           baseUrl: 'https://panel.example.com',
           captchaEnabled: true,
           minClientVersion: '1.2.0',
+          regMode: 'close',
           webAuthUrl: 'https://panel.example.com/user/client-auth',
         ),
       );
@@ -487,6 +488,9 @@ void main() {
         find.byKey(const ValueKey('youkomix-min-version-banner')),
         findsOneWidget,
       );
+      expect(find.text(l10n.youkomixCaptchaRequiredTip), findsNothing);
+      expect(find.text(l10n.youkomixRegister), findsNothing);
+      expect(find.text(l10n.youkomixForgotPassword), findsOneWidget);
       final captchaCardRect = tester.getRect(
         find.byKey(const ValueKey('youkomix-captcha-card')),
       );

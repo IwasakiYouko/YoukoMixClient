@@ -59,6 +59,7 @@ class YoukoMixState {
   final String? webAuthUrl;
   final bool isBusy;
   final bool isSyncing;
+  final bool isCheckingIn;
   final String? errorMessage;
   final DateTime? lastSyncedAt;
   final DateTime? lastBootstrapAt;
@@ -76,6 +77,7 @@ class YoukoMixState {
     this.webAuthUrl,
     this.isBusy = false,
     this.isSyncing = false,
+    this.isCheckingIn = false,
     this.errorMessage,
     this.lastSyncedAt,
     this.lastBootstrapAt,
@@ -100,6 +102,24 @@ class YoukoMixState {
   YoukoMixTraffic? get traffic => bootstrap?.traffic;
 
   YoukoMixSubscriptionState? get subscription => bootstrap?.subscription;
+
+  YoukoMixCommerce get commerce =>
+      bootstrap?.commerce ??
+      YoukoMixCommerce(enabled: meta?.commerceEnabled ?? false);
+
+  YoukoMixFeatures get features =>
+      bootstrap?.features ??
+      YoukoMixFeatures(
+        regMode: meta?.regMode ?? 'open',
+        ticketEnabled: meta?.ticketEnabled ?? true,
+        checkinEnabled: meta?.checkinEnabled ?? false,
+      );
+
+  bool get isCommerceEnabled => commerce.enabled;
+
+  bool get canRegister => features.canRegister;
+
+  bool get isTicketEnabled => features.ticketEnabled;
 
   YoukoMixSubPreference get preferredSubMode =>
       session?.preferredSubMode ?? YoukoMixSubPreference.auto;
@@ -150,17 +170,20 @@ class YoukoMixState {
       isYoukoMixVersionBelow(currentAppVersion, meta?.minClientVersion ?? '');
 
   bool get isPlanExpiredOrInactive =>
-      user != null && (user!.isExpired || user!.userClass <= 0);
+      isCommerceEnabled &&
+      user != null &&
+      (user!.isExpired || user!.userClass <= 0);
 
   bool get isQuotaExhausted =>
       traffic != null && traffic!.total > 0 && traffic!.remaining <= 0;
 
   bool get isQuotaOrExpiryWarning {
-    if (isPlanExpiredOrInactive || isQuotaExhausted) {
+    if (!isCommerceEnabled || isPlanExpiredOrInactive || isQuotaExhausted) {
       return false;
     }
     final soon =
         user != null &&
+        user!.userClass > 0 &&
         user!.classExpire.isNotEmpty &&
         user!.classExpireDays <= 3;
     final highUsage =
@@ -207,6 +230,7 @@ class YoukoMixState {
     String? webAuthUrl,
     bool? isBusy,
     bool? isSyncing,
+    bool? isCheckingIn,
     String? errorMessage,
     DateTime? lastSyncedAt,
     DateTime? lastBootstrapAt,
@@ -234,6 +258,7 @@ class YoukoMixState {
       webAuthUrl: webAuthUrl ?? this.webAuthUrl,
       isBusy: isBusy ?? this.isBusy,
       isSyncing: isSyncing ?? this.isSyncing,
+      isCheckingIn: isCheckingIn ?? this.isCheckingIn,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
       lastBootstrapAt: clearSession
@@ -624,6 +649,126 @@ class YoukoMixController extends Notifier<YoukoMixState> {
     ].join(' | ');
   }
 
+  static int _effectiveExpireEpoch(YoukoMixBootstrap bootstrap) {
+    if (!bootstrap.commerce.enabled || bootstrap.user.userClass <= 0) {
+      return 0;
+    }
+    return (bootstrap.user.classExpireDate?.millisecondsSinceEpoch ?? 0) ~/
+        1000;
+  }
+
+  Future<bool> checkin() async {
+    final currentSession = state.session;
+    if (currentSession == null ||
+        !state.isAuthenticated ||
+        state.isCheckingIn ||
+        state.isBusy) {
+      return false;
+    }
+    final features = state.features;
+    if (!features.checkinEnabled) {
+      return false;
+    }
+    if (features.checkinCaptchaEnabled) {
+      await openPanelSubpath('/user');
+      return false;
+    }
+    final reqEpoch = _authEpoch;
+    state = state.copyWith(isCheckingIn: true, clearError: true);
+    try {
+      final result = await _api.checkin(
+        serverUrl: currentSession.serverUrl,
+        accessToken: currentSession.accessToken,
+      );
+      if (!ref.mounted || reqEpoch != _authEpoch) {
+        return false;
+      }
+      final prevMode =
+          currentSession.bootstrap?.subscription.activeMode ??
+          result.bootstrap.subscription.activeMode;
+      final mergedBootstrap = result.bootstrap.copyWith(
+        subscription: result.bootstrap.subscription.copyWith(
+          activeMode: prevMode,
+        ),
+      );
+      final existingProfile = ref
+          .read(profilesProvider)
+          .getProfile(youkomixManagedProfileId);
+      if (existingProfile != null && mergedBootstrap.traffic.total > 0) {
+        ref
+            .read(profilesProvider.notifier)
+            .put(
+              existingProfile.copyWith(
+                subscriptionInfo: SubscriptionInfo(
+                  upload: mergedBootstrap.traffic.upload,
+                  download: mergedBootstrap.traffic.download,
+                  total: mergedBootstrap.traffic.total,
+                  expire: _effectiveExpireEpoch(mergedBootstrap),
+                ),
+              ),
+            );
+      }
+      final latestSession = state.session ?? currentSession;
+      final updatedSession = latestSession.copyWith(
+        apiEndpoints: mergedBootstrap.apiEndpoints.isNotEmpty
+            ? mergedBootstrap.apiEndpoints
+            : latestSession.apiEndpoints,
+        bootstrap: mergedBootstrap,
+      );
+      await _storage.saveSession(updatedSession);
+      if (!ref.mounted || reqEpoch != _authEpoch) {
+        return false;
+      }
+      state = state.copyWith(
+        session: updatedSession,
+        isCheckingIn: false,
+        lastBootstrapAt: DateTime.now(),
+      );
+      final bannerText = result.message.isNotEmpty
+          ? result.message
+          : '+${result.trafficMb} MB';
+      dialogs.showBanner(bannerText, level: BannerLevel.success);
+      return true;
+    } on YoukoMixApiException catch (error) {
+      if (!ref.mounted || reqEpoch != _authEpoch) {
+        return false;
+      }
+      if (error.isSessionInvalid) {
+        await _forceSignOut(currentAppLocalizations.youkomixSessionExpired);
+        return false;
+      }
+      state = state.copyWith(isCheckingIn: false);
+      if (error.errorCode == 'checkin_captcha_required') {
+        final webUrl = error.data['web_url']?.toString() ?? '';
+        if (webUrl.isNotEmpty) {
+          unawaited(openExternalUrl(webUrl));
+        } else {
+          unawaited(openPanelSubpath('/user'));
+        }
+      } else if (error.errorCode == 'already_checked_in') {
+        final curBoot = state.session?.bootstrap;
+        if (curBoot != null) {
+          final patchedSession = state.session!.copyWith(
+            bootstrap: curBoot.copyWith(
+              features: curBoot.features.copyWith(ableToCheckin: false),
+            ),
+          );
+          state = state.copyWith(session: patchedSession);
+          unawaited(_storage.saveSession(patchedSession));
+        }
+      }
+      dialogs.showBanner(error.message, level: BannerLevel.error);
+      return false;
+    } catch (error) {
+      if (ref.mounted && reqEpoch == _authEpoch) {
+        final msg = compactError(error);
+        state = state.copyWith(isCheckingIn: false);
+        dialogs.showBanner(msg, level: BannerLevel.error);
+      }
+      return false;
+    }
+  }
+
   Future<void> markAnnouncementsRead({int? upToId}) async {
     final currentSession = state.session;
     if (currentSession == null) {
@@ -726,8 +871,10 @@ class YoukoMixController extends Notifier<YoukoMixState> {
           activeMode: resolvedMode,
         ),
       );
-      final expireEpoch =
-          (bootstrap.user.classExpireDate?.millisecondsSinceEpoch ?? 0) ~/ 1000;
+      final expireEpoch = _effectiveExpireEpoch(bootstrap);
+      final parsedHeaderInfo = SubscriptionInfo.formHString(
+        payload.userInfoHeader,
+      );
       final subInfo = bootstrap.traffic.total > 0 || expireEpoch > 0
           ? SubscriptionInfo(
               upload: bootstrap.traffic.upload,
@@ -735,7 +882,15 @@ class YoukoMixController extends Notifier<YoukoMixState> {
               total: bootstrap.traffic.total,
               expire: expireEpoch,
             )
-          : SubscriptionInfo.formHString(payload.userInfoHeader);
+          : SubscriptionInfo(
+              upload: parsedHeaderInfo.upload,
+              download: parsedHeaderInfo.download,
+              total: parsedHeaderInfo.total,
+              expire:
+                  (!bootstrap.commerce.enabled || bootstrap.user.userClass <= 0)
+                  ? 0
+                  : parsedHeaderInfo.expire,
+            );
       final label =
           resolvedMode == 'exclusive' &&
               bootstrap.subscription.exclusiveTitle.trim().isNotEmpty
@@ -882,10 +1037,7 @@ class YoukoMixController extends Notifier<YoukoMixState> {
           .read(profilesProvider)
           .getProfile(youkomixManagedProfileId);
       if (existingProfile != null) {
-        final expireEpoch =
-            (mergedBootstrap.user.classExpireDate?.millisecondsSinceEpoch ??
-                0) ~/
-            1000;
+        final expireEpoch = _effectiveExpireEpoch(mergedBootstrap);
         if (mergedBootstrap.traffic.total > 0 || expireEpoch > 0) {
           ref
               .read(profilesProvider.notifier)

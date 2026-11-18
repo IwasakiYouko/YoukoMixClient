@@ -371,6 +371,23 @@ class YoukoMixApiClient {
     return bootstrap;
   }
 
+  Future<YoukoMixCheckinResult> checkin({
+    required String serverUrl,
+    required String accessToken,
+  }) async {
+    final base = normalizeYoukoMixServerUrl(serverUrl);
+    final data = await _requestEncryptedWithFailover(
+      base: base,
+      routeKey: '/api/v1/client/checkin',
+      accessToken: accessToken,
+    );
+    final result = YoukoMixCheckinResult.fromJson(data);
+    if (result.bootstrap.apiEndpoints.isNotEmpty) {
+      _storage.setApiEndpoints(result.bootstrap.apiEndpoints, origin: base);
+    }
+    return result;
+  }
+
   Future<YoukoMixSubscriptionPayload> downloadSubscription({
     required String serverUrl,
     required String accessToken,

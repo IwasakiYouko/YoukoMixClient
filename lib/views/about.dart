@@ -136,7 +136,7 @@ class AboutView extends ConsumerWidget {
                       ? Uri.parse(panelUrl).host
                       : panelUrl,
                 ),
-              if (ticketUrl.isNotEmpty)
+              if (ticketUrl.isNotEmpty && authState.isTicketEnabled)
                 _buildLinkItem(
                   glyph: AppGlyphs.send,
                   title: appLocalizations.youkomixSubmitTicket,

@@ -7663,8 +7663,7 @@ class AppLocalizations {
   String customImportDroppedSubRules(num count, Object label) {
     return Intl.plural(
       count,
-      one:
-          '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
+      one: '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
       other:
           '$label SUB-RULE rules were dropped, since custom profiles do not support sub-rules',
       name: 'customImportDroppedSubRules',
@@ -9303,30 +9302,30 @@ class AppLocalizations {
     );
   }
 
-  /// `Sync nodes`
+  /// `Sync config`
   String get youkomixSyncNodes {
     return Intl.message(
-      'Sync nodes',
+      'Sync config',
       name: 'youkomixSyncNodes',
       desc: '',
       args: [],
     );
   }
 
-  /// `Subscription nodes synced`
+  /// `Configuration synced`
   String get youkomixSyncSuccess {
     return Intl.message(
-      'Subscription nodes synced',
+      'Configuration synced',
       name: 'youkomixSyncSuccess',
       desc: '',
       args: [],
     );
   }
 
-  /// `Syncing nodes…`
+  /// `Syncing configuration…`
   String get youkomixSyncing {
     return Intl.message(
-      'Syncing nodes…',
+      'Syncing configuration…',
       name: 'youkomixSyncing',
       desc: '',
       args: [],
@@ -9408,10 +9407,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Use dedicated nodes provisioned by the panel`
+  /// `Use dedicated configuration provisioned by the panel`
   String get youkomixSubChannelExclusiveDesc {
     return Intl.message(
-      'Use dedicated nodes provisioned by the panel',
+      'Use dedicated configuration provisioned by the panel',
       name: 'youkomixSubChannelExclusiveDesc',
       desc: '',
       args: [],
@@ -9428,10 +9427,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Use standard nodes included in your account plan`
+  /// `Use standard configuration included with your account`
   String get youkomixSubChannelStandardDesc {
     return Intl.message(
-      'Use standard nodes included in your account plan',
+      'Use standard configuration included with your account',
       name: 'youkomixSubChannelStandardDesc',
       desc: '',
       args: [],
@@ -9473,10 +9472,10 @@ class AppLocalizations {
     return Intl.message('Sign out', name: 'youkomixLogout', desc: '', args: []);
   }
 
-  /// `Signing out stops the proxy and clears cached node configs on this device. Continue?`
+  /// `Signing out disconnects the tunnel and clears cached configuration on this device. Continue?`
   String get youkomixLogoutConfirm {
     return Intl.message(
-      'Signing out stops the proxy and clears cached node configs on this device. Continue?',
+      'Signing out disconnects the tunnel and clears cached configuration on this device. Continue?',
       name: 'youkomixLogoutConfirm',
       desc: '',
       args: [],
@@ -9675,6 +9674,86 @@ class AppLocalizations {
       name: 'youkomixClipboardAuthDetected',
       desc: '',
       args: [],
+    );
+  }
+
+  /// `Daily check-in`
+  String get youkomixCheckin {
+    return Intl.message(
+      'Daily check-in',
+      name: 'youkomixCheckin',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Checked in`
+  String get youkomixCheckedIn {
+    return Intl.message(
+      'Checked in',
+      name: 'youkomixCheckedIn',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Checking in…`
+  String get youkomixCheckingIn {
+    return Intl.message(
+      'Checking in…',
+      name: 'youkomixCheckingIn',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Usage & specs`
+  String get youkomixUsageAndSpecs {
+    return Intl.message(
+      'Usage & specs',
+      name: 'youkomixUsageAndSpecs',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Support & panel`
+  String get youkomixSupportAndPanel {
+    return Intl.message(
+      'Support & panel',
+      name: 'youkomixSupportAndPanel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Traffic notice`
+  String get youkomixQuotaNoticeTitle {
+    return Intl.message(
+      'Traffic notice',
+      name: 'youkomixQuotaNoticeTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your data allowance for this cycle is used up and will reset automatically next cycle.`
+  String get youkomixFreeQuotaExhaustedDesc {
+    return Intl.message(
+      'Your data allowance for this cycle is used up and will reset automatically next cycle.',
+      name: 'youkomixFreeQuotaExhaustedDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your data allowance for this cycle is used up and resets automatically on day {day} of each month.`
+  String youkomixFreeQuotaExhaustedResetDesc(Object day) {
+    return Intl.message(
+      'Your data allowance for this cycle is used up and resets automatically on day $day of each month.',
+      name: 'youkomixFreeQuotaExhaustedResetDesc',
+      desc: '',
+      args: [day],
     );
   }
 }

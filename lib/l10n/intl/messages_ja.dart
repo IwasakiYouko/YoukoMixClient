@@ -251,7 +251,9 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m103(online, limit) => "${online} / ${limit} 台";
 
-  static String m104(level) => "Lv.${level}";
+  static String m104(day) => "今期の利用可能な通信量を使い切りました。毎月 ${day} 日に自動リセットされます。";
+
+  static String m105(level) => "Lv.${level}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -1871,6 +1873,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixCaptchaRequiredTip": MessageLookupByLibrary.simpleMessage(
       "セキュリティ保護が有効です。下の画像認証コードを入力してください",
     ),
+    "youkomixCheckedIn": MessageLookupByLibrary.simpleMessage("チェックイン済"),
+    "youkomixCheckin": MessageLookupByLibrary.simpleMessage("毎日チェックイン"),
+    "youkomixCheckingIn": MessageLookupByLibrary.simpleMessage("チェックイン中…"),
     "youkomixClientUpdateRequiredDesc": m102,
     "youkomixClientUpdateRequiredTitle": MessageLookupByLibrary.simpleMessage(
       "クライアントの更新が必要です",
@@ -1892,13 +1897,17 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage(
       "パスワードを忘れた場合",
     ),
+    "youkomixFreeQuotaExhaustedDesc": MessageLookupByLibrary.simpleMessage(
+      "今期の利用可能な通信量を使い切りました。次期に自動リセットされます。",
+    ),
+    "youkomixFreeQuotaExhaustedResetDesc": m104,
     "youkomixGotIt": MessageLookupByLibrary.simpleMessage("確認しました"),
-    "youkomixLevelBadge": m104,
+    "youkomixLevelBadge": m105,
     "youkomixLoggingIn": MessageLookupByLibrary.simpleMessage("ログイン中…"),
     "youkomixLogin": MessageLookupByLibrary.simpleMessage("ログイン"),
     "youkomixLogout": MessageLookupByLibrary.simpleMessage("ログアウト"),
     "youkomixLogoutConfirm": MessageLookupByLibrary.simpleMessage(
-      "ログアウトするとプロキシを停止し、ローカルのノード構成を消去します。よろしいですか？",
+      "サインアウトすると接続を切断し、この端末のキャッシュ設定を消去します。続行しますか？",
     ),
     "youkomixMfaCode": MessageLookupByLibrary.simpleMessage("認証コード"),
     "youkomixMfaDesc": MessageLookupByLibrary.simpleMessage(
@@ -1917,6 +1926,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "youkomixQuotaExpiredDesc": MessageLookupByLibrary.simpleMessage(
       "現在のプランは期限切れまたは未契約です。パネルのストアで更新してください。",
+    ),
+    "youkomixQuotaNoticeTitle": MessageLookupByLibrary.simpleMessage(
+      "通信量のお知らせ",
     ),
     "youkomixQuotaWarningDesc": MessageLookupByLibrary.simpleMessage(
       "プランの有効期限が近いか残り通信量が少なくなっています。早めの更新をおすすめします。",
@@ -1937,13 +1949,13 @@ class MessageLookup extends MessageLookupByLibrary {
       "専用サブスクリプション",
     ),
     "youkomixSubChannelExclusiveDesc": MessageLookupByLibrary.simpleMessage(
-      "パネルから配布された専用ノード構成を使用します",
+      "パネルから配信される専用カスタム設定を使用",
     ),
     "youkomixSubChannelStandard": MessageLookupByLibrary.simpleMessage(
       "通常サブスクリプション",
     ),
     "youkomixSubChannelStandardDesc": MessageLookupByLibrary.simpleMessage(
-      "アカウントプランに対応する標準ノード構成を使用します",
+      "アカウントに対応する標準接続設定を使用",
     ),
     "youkomixSubModeExclusive": MessageLookupByLibrary.simpleMessage(
       "専用サブスクリプション連携済み",
@@ -1952,12 +1964,14 @@ class MessageLookup extends MessageLookupByLibrary {
       "標準サブスクリプション",
     ),
     "youkomixSubmitTicket": MessageLookupByLibrary.simpleMessage("チケットを送信"),
-    "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage("ノード同期"),
-    "youkomixSyncSuccess": MessageLookupByLibrary.simpleMessage("ノード構成を同期しました"),
-    "youkomixSyncing": MessageLookupByLibrary.simpleMessage("ノード同期中…"),
+    "youkomixSupportAndPanel": MessageLookupByLibrary.simpleMessage("サポートとパネル"),
+    "youkomixSyncNodes": MessageLookupByLibrary.simpleMessage("設定を同期"),
+    "youkomixSyncSuccess": MessageLookupByLibrary.simpleMessage("設定を同期しました"),
+    "youkomixSyncing": MessageLookupByLibrary.simpleMessage("設定を同期中…"),
     "youkomixTagline": MessageLookupByLibrary.simpleMessage("専用高速ネットワーククライアント"),
     "youkomixTodayTraffic": MessageLookupByLibrary.simpleMessage("本日の使用量"),
     "youkomixUnlimited": MessageLookupByLibrary.simpleMessage("無制限"),
+    "youkomixUsageAndSpecs": MessageLookupByLibrary.simpleMessage("使用量と仕様"),
     "youkomixVerify": MessageLookupByLibrary.simpleMessage("確認してログイン"),
     "youkomixWebAuth": MessageLookupByLibrary.simpleMessage("ブラウザで安全に認証"),
     "youkomixWebAuthWaitingDesc": MessageLookupByLibrary.simpleMessage(

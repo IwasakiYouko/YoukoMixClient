@@ -269,6 +269,10 @@ class YoukoMixMeta {
   final String captchaMode;
   final String minClientVersion;
   final bool e2eeRequired;
+  final bool commerceEnabled;
+  final String regMode;
+  final bool ticketEnabled;
+  final bool checkinEnabled;
   final String registerUrl;
   final String passwordResetUrl;
   final String webAuthUrl;
@@ -282,6 +286,10 @@ class YoukoMixMeta {
     this.captchaMode = 'none',
     this.minClientVersion = '',
     this.e2eeRequired = false,
+    this.commerceEnabled = false,
+    this.regMode = 'open',
+    this.ticketEnabled = true,
+    this.checkinEnabled = false,
     this.registerUrl = '',
     this.passwordResetUrl = '',
     this.webAuthUrl = '',
@@ -298,6 +306,11 @@ class YoukoMixMeta {
         ? _toBool(json['login_captcha_enabled'])
         : _toBool(json['captcha_enabled']);
     final rawMode = _toString(json['captcha_mode']).trim();
+    final rawRegMode = _toString(json['reg_mode']).trim().toLowerCase();
+    final resolvedRegMode = switch (rawRegMode) {
+      'open' || 'invite' || 'close' => rawRegMode,
+      _ => 'open',
+    };
     final rawDownloadBase = _toString(
       json['download_base_url'],
     ).trim().replaceAll(RegExp(r'/+$'), '');
@@ -318,6 +331,10 @@ class YoukoMixMeta {
           : (captcha ? 'native_image' : 'none'),
       minClientVersion: _toString(json['min_client_version']).trim(),
       e2eeRequired: _toBool(json['e2ee_required']),
+      commerceEnabled: _toBool(json['commerce_enabled']),
+      regMode: resolvedRegMode,
+      ticketEnabled: _toBool(json['ticket_enabled'], fallback: true),
+      checkinEnabled: _toBool(json['checkin_enabled']),
       webAuthUrl: webAuth.isNotEmpty
           ? webAuth
           : (resolvedBase.isNotEmpty ? '$resolvedBase/user/client-auth' : ''),
@@ -339,6 +356,10 @@ class YoukoMixMeta {
     'captcha_mode': captchaMode,
     'min_client_version': minClientVersion,
     'e2ee_required': e2eeRequired,
+    'commerce_enabled': commerceEnabled,
+    'reg_mode': regMode,
+    'ticket_enabled': ticketEnabled,
+    'checkin_enabled': checkinEnabled,
     'register_url': registerUrl,
     'password_reset_url': passwordResetUrl,
     'web_auth_url': webAuthUrl,
@@ -359,6 +380,10 @@ class YoukoMixMeta {
           other.captchaMode == captchaMode &&
           other.minClientVersion == minClientVersion &&
           other.e2eeRequired == e2eeRequired &&
+          other.commerceEnabled == commerceEnabled &&
+          other.regMode == regMode &&
+          other.ticketEnabled == ticketEnabled &&
+          other.checkinEnabled == checkinEnabled &&
           other.registerUrl == registerUrl &&
           other.passwordResetUrl == passwordResetUrl &&
           other.webAuthUrl == webAuthUrl;
@@ -373,6 +398,10 @@ class YoukoMixMeta {
     captchaMode,
     minClientVersion,
     e2eeRequired,
+    commerceEnabled,
+    regMode,
+    ticketEnabled,
+    checkinEnabled,
     registerUrl,
     passwordResetUrl,
     webAuthUrl,
@@ -796,10 +825,152 @@ class YoukoMixUpgradeNotice {
 }
 
 @immutable
+class YoukoMixCommerce {
+  final bool enabled;
+  final bool products;
+  final bool recharge;
+  final bool balance;
+  final String shopUrl;
+  final int freeResetDay;
+
+  const YoukoMixCommerce({
+    this.enabled = false,
+    this.products = false,
+    this.recharge = false,
+    this.balance = false,
+    this.shopUrl = '',
+    this.freeResetDay = 0,
+  });
+
+  factory YoukoMixCommerce.fromJson(
+    Map<String, Object?> json, {
+    String fallbackBaseUrl = '',
+  }) {
+    final enabled = _toBool(json['enabled']);
+    final rawShop = _toString(json['shop_url']).trim();
+    return YoukoMixCommerce(
+      enabled: enabled,
+      products: enabled && _toBool(json['products']),
+      recharge: enabled && _toBool(json['recharge']),
+      balance: enabled && _toBool(json['balance']),
+      shopUrl: rawShop.isNotEmpty
+          ? rawShop
+          : (fallbackBaseUrl.isNotEmpty ? '$fallbackBaseUrl/user/product' : ''),
+      freeResetDay: _toInt(json['free_reset_day']),
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'enabled': enabled,
+    'products': products,
+    'recharge': recharge,
+    'balance': balance,
+    'shop_url': shopUrl,
+    'free_reset_day': freeResetDay,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is YoukoMixCommerce &&
+          other.enabled == enabled &&
+          other.products == products &&
+          other.recharge == recharge &&
+          other.balance == balance &&
+          other.shopUrl == shopUrl &&
+          other.freeResetDay == freeResetDay;
+
+  @override
+  int get hashCode =>
+      Object.hash(enabled, products, recharge, balance, shopUrl, freeResetDay);
+}
+
+@immutable
+class YoukoMixFeatures {
+  final String regMode;
+  final bool ticketEnabled;
+  final bool checkinEnabled;
+  final bool checkinCaptchaEnabled;
+  final bool ableToCheckin;
+
+  const YoukoMixFeatures({
+    this.regMode = 'open',
+    this.ticketEnabled = true,
+    this.checkinEnabled = false,
+    this.checkinCaptchaEnabled = false,
+    this.ableToCheckin = false,
+  });
+
+  bool get canRegister => regMode != 'close';
+
+  YoukoMixFeatures copyWith({
+    String? regMode,
+    bool? ticketEnabled,
+    bool? checkinEnabled,
+    bool? checkinCaptchaEnabled,
+    bool? ableToCheckin,
+  }) {
+    return YoukoMixFeatures(
+      regMode: regMode ?? this.regMode,
+      ticketEnabled: ticketEnabled ?? this.ticketEnabled,
+      checkinEnabled: checkinEnabled ?? this.checkinEnabled,
+      checkinCaptchaEnabled:
+          checkinCaptchaEnabled ?? this.checkinCaptchaEnabled,
+      ableToCheckin: ableToCheckin ?? this.ableToCheckin,
+    );
+  }
+
+  factory YoukoMixFeatures.fromJson(Map<String, Object?> json) {
+    final rawReg = _toString(json['reg_mode']).trim().toLowerCase();
+    final resolvedReg = switch (rawReg) {
+      'open' || 'invite' || 'close' => rawReg,
+      _ => 'open',
+    };
+    final checkinEnabled = _toBool(json['checkin_enabled']);
+    return YoukoMixFeatures(
+      regMode: resolvedReg,
+      ticketEnabled: _toBool(json['ticket_enabled'], fallback: true),
+      checkinEnabled: checkinEnabled,
+      checkinCaptchaEnabled: _toBool(json['checkin_captcha_enabled']),
+      ableToCheckin: checkinEnabled && _toBool(json['able_to_checkin']),
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'reg_mode': regMode,
+    'ticket_enabled': ticketEnabled,
+    'checkin_enabled': checkinEnabled,
+    'checkin_captcha_enabled': checkinCaptchaEnabled,
+    'able_to_checkin': ableToCheckin,
+  };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is YoukoMixFeatures &&
+          other.regMode == regMode &&
+          other.ticketEnabled == ticketEnabled &&
+          other.checkinEnabled == checkinEnabled &&
+          other.checkinCaptchaEnabled == checkinCaptchaEnabled &&
+          other.ableToCheckin == ableToCheckin;
+
+  @override
+  int get hashCode => Object.hash(
+    regMode,
+    ticketEnabled,
+    checkinEnabled,
+    checkinCaptchaEnabled,
+    ableToCheckin,
+  );
+}
+
+@immutable
 class YoukoMixBootstrap {
   final YoukoMixUser user;
   final YoukoMixTraffic traffic;
   final YoukoMixSubscriptionState subscription;
+  final YoukoMixCommerce commerce;
+  final YoukoMixFeatures features;
   final List<YoukoMixAnnouncement> announcements;
   final YoukoMixLinks links;
   final List<String> apiEndpoints;
@@ -810,6 +981,8 @@ class YoukoMixBootstrap {
     this.user = const YoukoMixUser(),
     this.traffic = const YoukoMixTraffic(),
     this.subscription = const YoukoMixSubscriptionState(),
+    this.commerce = const YoukoMixCommerce(),
+    this.features = const YoukoMixFeatures(),
     this.announcements = const [],
     this.links = const YoukoMixLinks(),
     this.apiEndpoints = const [],
@@ -821,6 +994,8 @@ class YoukoMixBootstrap {
     YoukoMixUser? user,
     YoukoMixTraffic? traffic,
     YoukoMixSubscriptionState? subscription,
+    YoukoMixCommerce? commerce,
+    YoukoMixFeatures? features,
     List<YoukoMixAnnouncement>? announcements,
     YoukoMixLinks? links,
     List<String>? apiEndpoints,
@@ -832,6 +1007,8 @@ class YoukoMixBootstrap {
       user: user ?? this.user,
       traffic: traffic ?? this.traffic,
       subscription: subscription ?? this.subscription,
+      commerce: commerce ?? this.commerce,
+      features: features ?? this.features,
       announcements: announcements ?? this.announcements,
       links: links ?? this.links,
       apiEndpoints: apiEndpoints ?? this.apiEndpoints,
@@ -846,10 +1023,13 @@ class YoukoMixBootstrap {
     final userRaw = json['user'];
     final trafficRaw = json['traffic'];
     final subRaw = json['subscription'];
+    final commerceRaw = json['commerce'];
+    final featuresRaw = json['features'];
     final annRaw = json['announcements'];
     final linksRaw = json['links'];
     final panelRaw = json['panel'];
     final upgradeNoticeRaw = json['upgrade_notice'];
+    var panelBaseUrl = '';
     YoukoMixLinks resolvedLinks = const YoukoMixLinks();
     List<String> resolvedEndpoints = parseYoukoMixEndpointList(
       json['api_endpoints'],
@@ -869,15 +1049,17 @@ class YoukoMixBootstrap {
 
     if (panelRaw is Map) {
       final panelMap = Map<String, Object?>.from(panelRaw);
-      final baseUrl = _toString(
+      panelBaseUrl = _toString(
         panelMap['base_url'],
       ).replaceAll(RegExp(r'/+$'), '');
       final userCenter = _toString(panelMap['user_center_url']);
       resolvedLinks = YoukoMixLinks(
         panelUrl: userCenter.isNotEmpty
             ? userCenter
-            : (baseUrl.isNotEmpty ? '$baseUrl/user' : ''),
-        webAuthUrl: baseUrl.isNotEmpty ? '$baseUrl/user/client-auth' : '',
+            : (panelBaseUrl.isNotEmpty ? '$panelBaseUrl/user' : ''),
+        webAuthUrl: panelBaseUrl.isNotEmpty
+            ? '$panelBaseUrl/user/client-auth'
+            : '',
       );
       final panelEndpoints = parseYoukoMixEndpointList(
         panelMap['api_endpoints'],
@@ -910,6 +1092,19 @@ class YoukoMixBootstrap {
               Map<String, Object?>.from(subRaw),
             )
           : const YoukoMixSubscriptionState(),
+      commerce: commerceRaw is Map
+          ? YoukoMixCommerce.fromJson(
+              Map<String, Object?>.from(commerceRaw),
+              fallbackBaseUrl: panelBaseUrl,
+            )
+          : YoukoMixCommerce(
+              shopUrl: panelBaseUrl.isNotEmpty
+                  ? '$panelBaseUrl/user/product'
+                  : '',
+            ),
+      features: featuresRaw is Map
+          ? YoukoMixFeatures.fromJson(Map<String, Object?>.from(featuresRaw))
+          : const YoukoMixFeatures(),
       announcements: [
         if (annRaw is List)
           for (final item in annRaw)
@@ -927,6 +1122,8 @@ class YoukoMixBootstrap {
     'user': user.toJson(),
     'traffic': traffic.toJson(),
     'subscription': subscription.toJson(),
+    'commerce': commerce.toJson(),
+    'features': features.toJson(),
     'announcements': [for (final item in announcements) item.toJson()],
     'links': links.toJson(),
     if (apiEndpoints.isNotEmpty) 'api_endpoints': apiEndpoints,
@@ -941,6 +1138,8 @@ class YoukoMixBootstrap {
           other.user == user &&
           other.traffic == traffic &&
           other.subscription == subscription &&
+          other.commerce == commerce &&
+          other.features == features &&
           const ListEquality<YoukoMixAnnouncement>().equals(
             other.announcements,
             announcements,
@@ -958,12 +1157,38 @@ class YoukoMixBootstrap {
     user,
     traffic,
     subscription,
+    commerce,
+    features,
     const ListEquality<YoukoMixAnnouncement>().hash(announcements),
     links,
     const ListEquality<String>().hash(apiEndpoints),
     downloadBaseUrl,
     upgradeNotice,
   );
+}
+
+@immutable
+class YoukoMixCheckinResult {
+  final int trafficMb;
+  final String message;
+  final YoukoMixBootstrap bootstrap;
+
+  const YoukoMixCheckinResult({
+    required this.trafficMb,
+    required this.message,
+    required this.bootstrap,
+  });
+
+  factory YoukoMixCheckinResult.fromJson(Map<String, Object?> json) {
+    final bootstrapRaw = json['bootstrap'];
+    return YoukoMixCheckinResult(
+      trafficMb: _toInt(json['traffic_mb']),
+      message: _toString(json['message']).trim(),
+      bootstrap: bootstrapRaw is Map
+          ? YoukoMixBootstrap.fromJson(Map<String, Object?>.from(bootstrapRaw))
+          : const YoukoMixBootstrap(),
+    );
+  }
 }
 
 @immutable
