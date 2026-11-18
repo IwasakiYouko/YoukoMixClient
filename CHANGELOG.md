@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.0 (2026-11-18)
+
+**Features**
+
+- **youkomix** Refine login keyboard layout, rich markdown notices, and account UX (3e12480)
+
 ## v1.1.1 (2026-11-18)
 
 **Features**

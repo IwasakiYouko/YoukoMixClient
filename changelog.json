@@ -2,6 +2,24 @@
   "schemaVersion": 2,
   "versions": [
     {
+      "version": "1.2.0",
+      "tag": "v1.2.0",
+      "date": "2026-11-18",
+      "prerelease": false,
+      "groups": [
+        {
+          "type": "feat",
+          "entries": [
+            {
+              "id": "3e12480",
+              "scope": "youkomix",
+              "text": "Refine login keyboard layout, rich markdown notices, and account UX"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "1.1.1",
       "tag": "v1.1.1",
       "date": "2026-11-18",
