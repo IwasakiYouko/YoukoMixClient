@@ -24,16 +24,16 @@ A cross-platform dedicated proxy client for **人间之里 (YoukoMix)**, built o
 - **Powered by Clash.Meta (`mihomo`)**: Rule-based routing, latency testing, system proxy, TUN mode, per-app proxy on Android, and live connection/request/DNS diagnostics.
 - **Open source under GPL-3.0**: Customized from upstream [FlClash](https://github.com/chen08209/FlClash).
 
-## Download
+## Download & Architecture Guide
 
-Download the latest installer for your device from [GitHub Releases](https://github.com/IwasakiYouko/YoukoMixClient/releases/latest):
+Download the latest multi-architecture installer from [GitHub Releases](https://github.com/IwasakiYouko/YoukoMixClient/releases/latest) (or from the user dashboard mirror):
 
-| Platform | Packages | Notes |
+| Platform | Multi-Arch Packages | Architecture & Format Recommendation |
 | --- | --- | --- |
-| Android | APK for `arm64-v8a`, `armeabi-v7a`, and `x86_64` | Most modern Android devices use `arm64-v8a`. |
-| Windows 10+ | Setup installer (`.exe`) and portable `.zip` (`amd64`, `arm64`) | Installer supports automatic in-app updates. |
-| macOS 12+ | DMG for Apple Silicon (`arm64`) and Intel (`amd64`) | Drag `YoukoMix.app` into `/Applications`. |
-| Linux | `.deb`, `.rpm`, and `.AppImage` (`amd64`, `arm64`) | Install `libayatana-appindicator3-1` for tray icon support on AppImage/RPM. |
+| **Android** | `arm64-v8a` (Recommended)<br>`armeabi-v7a`<br>`x86_64` APK | • **`arm64-v8a` (Recommended)**: Almost all modern 64-bit phones & tablets (Snapdragon / Dimensity / Tensor / Kirin)<br>• **`armeabi-v7a`**: Legacy 32-bit Android phones, Android TV boxes, or head units<br>• **`x86_64`**: Desktop Android emulators or x86 tablets |
+| **Windows 10+** | `windows-amd64-setup.exe` (Recommended)<br>`windows-arm64-setup.exe`<br>`windows-amd64.zip` / `windows-arm64.zip` | • **`amd64-setup.exe` (Recommended)**: Standard Intel / AMD PCs, supports automatic in-app updates<br>• **`arm64-setup.exe`**: Snapdragon laptops, Surface Pro ARM, or Windows 11 on Mac Parallels VM<br>• **Portable `.zip`**: No-install archive (`Settings → System → About → System type` shows x64 vs ARM64) |
+| **macOS 12+** | `macos-arm64.dmg` (Apple Silicon)<br>`macos-amd64.dmg` (Intel) | • **`macos-arm64.dmg` (Recommended)**: Macs with Apple M1 / M2 / M3 / M4 chips (late 2020+)<br>• **`macos-amd64.dmg`**: Pre-2020 Intel Macs (check via ` → About This Mac`) |
+| **Linux** | `amd64` / `arm64` `.deb`<br>`amd64` / `arm64` `.rpm`<br>`amd64` / `arm64` `.AppImage` | • **Format**: `.deb` for Ubuntu / Debian / Mint; `.rpm` for Fedora / RHEL / Rocky; `.AppImage` for universal portable run (`libayatana-appindicator3-1` recommended for tray icon)<br>• **Architecture**: Run `uname -m` — choose `amd64` for `x86_64`, or `arm64` for `aarch64` (Raspberry Pi / ARM hosts) |
 
 ## Build from source
 
