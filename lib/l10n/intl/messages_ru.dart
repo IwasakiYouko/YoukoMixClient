@@ -2332,6 +2332,72 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixEnterAuthCode": MessageLookupByLibrary.simpleMessage(
       "Ввести одноразовый код",
     ),
+    "youkomixErrBadCertificate": MessageLookupByLibrary.simpleMessage(
+      "Ошибка проверки TLS-сертификата панели",
+    ),
+    "youkomixErrDecodeSubFailed": MessageLookupByLibrary.simpleMessage(
+      "Не удалось декодировать зашифрованную подписку",
+    ),
+    "youkomixErrDecryptFailed": MessageLookupByLibrary.simpleMessage(
+      "Ошибка расшифровки защищённого канала",
+    ),
+    "youkomixErrEmptyServerUrl": MessageLookupByLibrary.simpleMessage(
+      "Введите адрес сервера панели",
+    ),
+    "youkomixErrEmptySubscription": MessageLookupByLibrary.simpleMessage(
+      "Получена пустая конфигурация узлов",
+    ),
+    "youkomixErrEnvelopeSigInvalid": MessageLookupByLibrary.simpleMessage(
+      "Неверная подпись зашифрованного ответа; соединение заблокировано",
+    ),
+    "youkomixErrFetchCaptchaFailed": MessageLookupByLibrary.simpleMessage(
+      "Не удалось загрузить проверочное изображение, повторите попытку",
+    ),
+    "youkomixErrInvalidEnvelope": MessageLookupByLibrary.simpleMessage(
+      "Неверный формат зашифрованного конверта ответа",
+    ),
+    "youkomixErrInvalidEnvelopeBody": MessageLookupByLibrary.simpleMessage(
+      "Неверный формат содержимого зашифрованного ответа",
+    ),
+    "youkomixErrInvalidResponse": MessageLookupByLibrary.simpleMessage(
+      "Не удалось разобрать ответ панели",
+    ),
+    "youkomixErrInvalidServerPubkey": MessageLookupByLibrary.simpleMessage(
+      "Неверный формат открытого ключа сервера",
+    ),
+    "youkomixErrInvalidServerUrl": MessageLookupByLibrary.simpleMessage(
+      "Неверный формат адреса панели; используйте домен https://",
+    ),
+    "youkomixErrInvalidSignedBody": MessageLookupByLibrary.simpleMessage(
+      "Неверный формат подписанных данных",
+    ),
+    "youkomixErrMissingServerPubkey": MessageLookupByLibrary.simpleMessage(
+      "Не настроен публичный ключ безопасности; защищённый канал отклонён",
+    ),
+    "youkomixErrMissingSignature": MessageLookupByLibrary.simpleMessage(
+      "В публичном ответе панели отсутствует цифровая подпись",
+    ),
+    "youkomixErrNetworkTimeout": MessageLookupByLibrary.simpleMessage(
+      "Превышено время ожидания ответа панели; проверьте сеть",
+    ),
+    "youkomixErrNetworkUnreachable": MessageLookupByLibrary.simpleMessage(
+      "Не удаётся подключиться к серверу панели; проверьте сеть или адрес",
+    ),
+    "youkomixErrParseSignedFailed": MessageLookupByLibrary.simpleMessage(
+      "Не удалось разобрать подписанные данные",
+    ),
+    "youkomixErrRequestFailed": MessageLookupByLibrary.simpleMessage(
+      "Ошибка запроса",
+    ),
+    "youkomixErrServerPubkeyMismatch": MessageLookupByLibrary.simpleMessage(
+      "Открытый ключ сервера не совпадает; соединение заблокировано",
+    ),
+    "youkomixErrServerUnavailable": MessageLookupByLibrary.simpleMessage(
+      "Сервис панели временно недоступен",
+    ),
+    "youkomixErrSignatureInvalid": MessageLookupByLibrary.simpleMessage(
+      "Проверка цифровой подписи не пройдена; ответ мог быть изменён",
+    ),
     "youkomixExpired": MessageLookupByLibrary.simpleMessage("Тариф истёк"),
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage(
       "Забыли пароль?",
@@ -2450,5 +2516,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Ожидание авторизации в браузере",
     ),
     "zhCN": MessageLookupByLibrary.simpleMessage("Упрощённый китайский"),
+    "zhTW": MessageLookupByLibrary.simpleMessage("Традиционный китайский"),
   };
 }

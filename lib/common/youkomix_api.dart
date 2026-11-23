@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/youkomix.dart';
 import 'package:flutter/foundation.dart';
+import 'package:intl/intl.dart';
 
 import 'constant.dart';
 import 'request.dart';
@@ -13,8 +15,9 @@ import 'youkomix_storage.dart';
 String normalizeYoukoMixServerUrl(String raw) {
   final trimmed = raw.trim();
   if (trimmed.isEmpty) {
-    throw const YoukoMixApiException(
-      message: '请输入面板地址',
+    final l10n = AppLocalizations.maybeCurrent;
+    throw YoukoMixApiException(
+      message: l10n?.youkomixErrEmptyServerUrl ?? '请输入面板地址',
       errorCode: 'invalid_server_url',
     );
   }
@@ -24,8 +27,9 @@ String normalizeYoukoMixServerUrl(String raw) {
       (uri.scheme != 'https' && uri.scheme != 'http') ||
       uri.host.isEmpty ||
       uri.userInfo.isNotEmpty) {
-    throw const YoukoMixApiException(
-      message: '面板地址格式无效，请使用 https:// 域名',
+    final l10n = AppLocalizations.maybeCurrent;
+    throw YoukoMixApiException(
+      message: l10n?.youkomixErrInvalidServerUrl ?? '面板地址格式无效，请使用 https:// 域名',
       errorCode: 'invalid_server_url',
     );
   }
@@ -225,8 +229,9 @@ class YoukoMixApiClient {
     );
     final challenge = YoukoMixCaptchaChallenge.fromJson(data);
     if (!challenge.isValid) {
-      throw const YoukoMixApiException(
-        message: '获取图形验证码失败，请重试',
+      final l10n = AppLocalizations.maybeCurrent;
+      throw YoukoMixApiException(
+        message: l10n?.youkomixErrFetchCaptchaFailed ?? '获取图形验证码失败，请重试',
         errorCode: 'invalid_response',
       );
     }
@@ -412,16 +417,18 @@ class YoukoMixApiClient {
       try {
         decodedBytes = Uint8List.fromList(base64Decode(contentB64));
       } on FormatException {
-        throw const YoukoMixApiException(
-          message: '订阅密文内容解码失败',
+        final l10n = AppLocalizations.maybeCurrent;
+        throw YoukoMixApiException(
+          message: l10n?.youkomixErrDecodeSubFailed ?? '订阅密文内容解码失败',
           errorCode: 'invalid_response',
         );
       }
     }
     final decompressed = decompressUnlabeled(decodedBytes);
     if (decompressed.isEmpty) {
-      throw const YoukoMixApiException(
-        message: '返回的节点配置为空',
+      final l10n = AppLocalizations.maybeCurrent;
+      throw YoukoMixApiException(
+        message: l10n?.youkomixErrEmptySubscription ?? '返回的节点配置为空',
         errorCode: 'empty_subscription',
       );
     }
@@ -460,8 +467,9 @@ class YoukoMixApiClient {
   YoukoMixServerPublicKey _requirePinnedServerKey() {
     final pinned = _pinnedServerKey;
     if (pinned == null) {
-      throw const YoukoMixApiException(
-        message: '客户端未配置预置安全公钥，已拒绝建立安全信道',
+      final msg = AppLocalizations.maybeCurrent?.youkomixErrMissingServerPubkey;
+      throw YoukoMixApiException(
+        message: msg ?? '客户端未配置预置安全公钥，已拒绝建立安全信道',
         errorCode: 'missing_server_pubkey',
       );
     }
@@ -513,9 +521,10 @@ class YoukoMixApiClient {
       }
     }
 
+    final msg = AppLocalizations.maybeCurrent?.youkomixErrNetworkUnreachable;
     throw lastError ??
-        const YoukoMixApiException(
-          message: '无法连接面板服务器，请检查网络或面板地址',
+        YoukoMixApiException(
+          message: msg ?? '无法连接面板服务器，请检查网络或面板地址',
           errorCode: 'network_error',
         );
   }
@@ -584,8 +593,10 @@ class YoukoMixApiClient {
           ? statusRaw
           : (statusRaw is num ? statusRaw.toInt() : 400);
       final payload = inner['data'];
+      final l10n = AppLocalizations.maybeCurrent;
+      final reqFailed = l10n?.youkomixErrRequestFailed ?? '请求失败';
       throw YoukoMixApiException(
-        message: inner['msg']?.toString() ?? '请求失败 ($innerStatus)',
+        message: inner['msg']?.toString() ?? '$reqFailed ($innerStatus)',
         errorCode: inner['code']?.toString() ?? 'api_error',
         statusCode: innerStatus,
         data: payload is Map ? Map<String, Object?>.from(payload) : const {},
@@ -608,6 +619,10 @@ class YoukoMixApiClient {
     bool expectEncryptedEnvelope = false,
   }) async {
     try {
+      final mergedHeaders = <String, String>{
+        HttpHeaders.acceptLanguageHeader: _activeAcceptLanguageTag(),
+        if (extraHeaders != null) ...extraHeaders,
+      };
       final response = await _dio.request<Object?>(
         url,
         data: body,
@@ -616,14 +631,19 @@ class YoukoMixApiClient {
           responseType: ResponseType.plain,
           contentType: body != null ? Headers.jsonContentType : null,
           validateStatus: (_) => true,
-          headers: extraHeaders,
+          headers: mergedHeaders,
         ),
       );
       final status = response.statusCode ?? 0;
       final jsonMap = _decodeJsonMap(response.data);
+      final l10n = AppLocalizations.maybeCurrent;
+      final reqFailed = l10n?.youkomixErrRequestFailed ?? '请求失败';
       if (jsonMap == null) {
+        final unavailable = l10n?.youkomixErrServerUnavailable ?? '面板服务暂时不可用';
+        final unparseable = l10n?.youkomixErrInvalidResponse ?? '无法解析面板响应';
+        final errLabel = status >= 500 ? unavailable : unparseable;
         throw YoukoMixApiException(
-          message: status >= 500 ? '面板服务暂时不可用 ($status)' : '无法解析面板响应 ($status)',
+          message: '$errLabel ($status)',
           errorCode: 'invalid_response',
           statusCode: status,
         );
@@ -639,7 +659,7 @@ class YoukoMixApiClient {
         };
         final payload = jsonMap['data'];
         throw YoukoMixApiException(
-          message: jsonMap['msg']?.toString() ?? '请求失败 ($status)',
+          message: jsonMap['msg']?.toString() ?? '$reqFailed ($status)',
           errorCode: safeCode,
           statusCode: status,
           data: payload is Map ? Map<String, Object?>.from(payload) : const {},
@@ -652,7 +672,7 @@ class YoukoMixApiClient {
         if (!ok) {
           final payload = jsonMap['data'];
           throw YoukoMixApiException(
-            message: jsonMap['msg']?.toString() ?? '请求失败 ($status)',
+            message: jsonMap['msg']?.toString() ?? '$reqFailed ($status)',
             errorCode: jsonMap['code']?.toString() ?? 'api_error',
             statusCode: status,
             data: payload is Map
@@ -693,20 +713,35 @@ class YoukoMixApiClient {
     return null;
   }
 
+  static String _activeAcceptLanguageTag() {
+    final raw = (Intl.defaultLocale ?? '').trim();
+    return switch (raw) {
+      'zh_TW' => 'zh-TW',
+      'en' => 'en-US',
+      'ja' => 'ja-JP',
+      'ko' => 'ko-KR',
+      'ru' => 'ru-RU',
+      'es' => 'es-ES',
+      'fr' => 'fr-FR',
+      _ => 'zh-CN',
+    };
+  }
+
   YoukoMixApiException _fromDioException(DioException error) {
+    final l10n = AppLocalizations.maybeCurrent;
     return switch (error.type) {
       DioExceptionType.connectionTimeout ||
       DioExceptionType.sendTimeout ||
-      DioExceptionType.receiveTimeout => const YoukoMixApiException(
-        message: '连接面板超时，请检查网络后重试',
+      DioExceptionType.receiveTimeout => YoukoMixApiException(
+        message: l10n?.youkomixErrNetworkTimeout ?? '连接面板超时，请检查网络后重试',
         errorCode: 'network_timeout',
       ),
-      DioExceptionType.badCertificate => const YoukoMixApiException(
-        message: '面板安全证书校验失败',
+      DioExceptionType.badCertificate => YoukoMixApiException(
+        message: l10n?.youkomixErrBadCertificate ?? '面板安全证书校验失败',
         errorCode: 'bad_certificate',
       ),
-      _ => const YoukoMixApiException(
-        message: '无法连接面板服务器，请检查网络或面板地址',
+      _ => YoukoMixApiException(
+        message: l10n?.youkomixErrNetworkUnreachable ?? '无法连接面板服务器，请检查网络或面板地址',
         errorCode: 'network_error',
       ),
     };

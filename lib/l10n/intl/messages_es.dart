@@ -2385,6 +2385,72 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixEnterAuthCode": MessageLookupByLibrary.simpleMessage(
       "Introducir código único",
     ),
+    "youkomixErrBadCertificate": MessageLookupByLibrary.simpleMessage(
+      "Falló la verificación del certificado TLS del panel",
+    ),
+    "youkomixErrDecodeSubFailed": MessageLookupByLibrary.simpleMessage(
+      "Error al decodificar el contenido cifrado de la suscripción",
+    ),
+    "youkomixErrDecryptFailed": MessageLookupByLibrary.simpleMessage(
+      "Falló el descifrado autenticado del canal seguro",
+    ),
+    "youkomixErrEmptyServerUrl": MessageLookupByLibrary.simpleMessage(
+      "Introduce la dirección del panel",
+    ),
+    "youkomixErrEmptySubscription": MessageLookupByLibrary.simpleMessage(
+      "La configuración de nodos devuelta está vacía",
+    ),
+    "youkomixErrEnvelopeSigInvalid": MessageLookupByLibrary.simpleMessage(
+      "Firma de respuesta cifrada no válida; conexión bloqueada",
+    ),
+    "youkomixErrFetchCaptchaFailed": MessageLookupByLibrary.simpleMessage(
+      "No se pudo obtener el captcha de imagen, inténtalo de nuevo",
+    ),
+    "youkomixErrInvalidEnvelope": MessageLookupByLibrary.simpleMessage(
+      "Formato de sobre cifrado no válido",
+    ),
+    "youkomixErrInvalidEnvelopeBody": MessageLookupByLibrary.simpleMessage(
+      "Contenido de respuesta cifrada con formato no válido",
+    ),
+    "youkomixErrInvalidResponse": MessageLookupByLibrary.simpleMessage(
+      "No se pudo analizar la respuesta del panel",
+    ),
+    "youkomixErrInvalidServerPubkey": MessageLookupByLibrary.simpleMessage(
+      "Formato de clave pública del servidor no válido",
+    ),
+    "youkomixErrInvalidServerUrl": MessageLookupByLibrary.simpleMessage(
+      "Formato de URL no válido; usa un dominio con https://",
+    ),
+    "youkomixErrInvalidSignedBody": MessageLookupByLibrary.simpleMessage(
+      "Formato de carga firmada no válido",
+    ),
+    "youkomixErrMissingServerPubkey": MessageLookupByLibrary.simpleMessage(
+      "Falta la clave pública preconfigurada; canal seguro rechazado",
+    ),
+    "youkomixErrMissingSignature": MessageLookupByLibrary.simpleMessage(
+      "Falta una firma digital válida en los datos públicos del panel",
+    ),
+    "youkomixErrNetworkTimeout": MessageLookupByLibrary.simpleMessage(
+      "Tiempo de espera agotado al conectar con el panel",
+    ),
+    "youkomixErrNetworkUnreachable": MessageLookupByLibrary.simpleMessage(
+      "No se puede conectar con el servidor del panel; revisa tu red o URL",
+    ),
+    "youkomixErrParseSignedFailed": MessageLookupByLibrary.simpleMessage(
+      "Error al analizar la carga firmada",
+    ),
+    "youkomixErrRequestFailed": MessageLookupByLibrary.simpleMessage(
+      "Error en la solicitud",
+    ),
+    "youkomixErrServerPubkeyMismatch": MessageLookupByLibrary.simpleMessage(
+      "La clave pública del servidor no coincide; conexión bloqueada",
+    ),
+    "youkomixErrServerUnavailable": MessageLookupByLibrary.simpleMessage(
+      "El servicio del panel no está disponible temporalmente",
+    ),
+    "youkomixErrSignatureInvalid": MessageLookupByLibrary.simpleMessage(
+      "Falló la verificación de firma digital; la respuesta pudo ser alterada",
+    ),
     "youkomixExpired": MessageLookupByLibrary.simpleMessage("Plan vencido"),
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage(
       "¿Olvidaste tu contraseña?",
@@ -2509,5 +2575,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Esperando autorización del navegador",
     ),
     "zhCN": MessageLookupByLibrary.simpleMessage("Chino simplificado"),
+    "zhTW": MessageLookupByLibrary.simpleMessage("Chino tradicional"),
   };
 }

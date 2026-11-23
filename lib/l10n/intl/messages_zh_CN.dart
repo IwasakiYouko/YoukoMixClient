@@ -1711,6 +1711,70 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixEmail": MessageLookupByLibrary.simpleMessage("邮箱"),
     "youkomixEmailHint": MessageLookupByLibrary.simpleMessage("输入注册邮箱"),
     "youkomixEnterAuthCode": MessageLookupByLibrary.simpleMessage("输入一次性授权码"),
+    "youkomixErrBadCertificate": MessageLookupByLibrary.simpleMessage(
+      "面板安全证书校验失败",
+    ),
+    "youkomixErrDecodeSubFailed": MessageLookupByLibrary.simpleMessage(
+      "订阅密文内容解码失败",
+    ),
+    "youkomixErrDecryptFailed": MessageLookupByLibrary.simpleMessage(
+      "安全信道解密校验失败",
+    ),
+    "youkomixErrEmptyServerUrl": MessageLookupByLibrary.simpleMessage(
+      "请输入面板地址",
+    ),
+    "youkomixErrEmptySubscription": MessageLookupByLibrary.simpleMessage(
+      "返回的节点配置为空",
+    ),
+    "youkomixErrEnvelopeSigInvalid": MessageLookupByLibrary.simpleMessage(
+      "加密响应数字签名校验失败，连接已被拦截",
+    ),
+    "youkomixErrFetchCaptchaFailed": MessageLookupByLibrary.simpleMessage(
+      "获取图形验证码失败，请重试",
+    ),
+    "youkomixErrInvalidEnvelope": MessageLookupByLibrary.simpleMessage(
+      "加密响应信封格式无效",
+    ),
+    "youkomixErrInvalidEnvelopeBody": MessageLookupByLibrary.simpleMessage(
+      "加密响应内容格式无效",
+    ),
+    "youkomixErrInvalidResponse": MessageLookupByLibrary.simpleMessage(
+      "无法解析面板响应",
+    ),
+    "youkomixErrInvalidServerPubkey": MessageLookupByLibrary.simpleMessage(
+      "服务端安全公钥格式无效",
+    ),
+    "youkomixErrInvalidServerUrl": MessageLookupByLibrary.simpleMessage(
+      "面板地址格式无效，请使用 https:// 域名",
+    ),
+    "youkomixErrInvalidSignedBody": MessageLookupByLibrary.simpleMessage(
+      "签名载荷格式无效",
+    ),
+    "youkomixErrMissingServerPubkey": MessageLookupByLibrary.simpleMessage(
+      "客户端未配置预置安全公钥，已拒绝建立安全信道",
+    ),
+    "youkomixErrMissingSignature": MessageLookupByLibrary.simpleMessage(
+      "面板公开数据缺少有效的数字签名",
+    ),
+    "youkomixErrNetworkTimeout": MessageLookupByLibrary.simpleMessage(
+      "连接面板超时，请检查网络后重试",
+    ),
+    "youkomixErrNetworkUnreachable": MessageLookupByLibrary.simpleMessage(
+      "无法连接面板服务器，请检查网络或面板地址",
+    ),
+    "youkomixErrParseSignedFailed": MessageLookupByLibrary.simpleMessage(
+      "签名载荷解析失败",
+    ),
+    "youkomixErrRequestFailed": MessageLookupByLibrary.simpleMessage("请求失败"),
+    "youkomixErrServerPubkeyMismatch": MessageLookupByLibrary.simpleMessage(
+      "服务端安全公钥不匹配，连接已被拦截",
+    ),
+    "youkomixErrServerUnavailable": MessageLookupByLibrary.simpleMessage(
+      "面板服务暂时不可用",
+    ),
+    "youkomixErrSignatureInvalid": MessageLookupByLibrary.simpleMessage(
+      "面板数字签名校验未通过，响应可能被篡改",
+    ),
     "youkomixExpired": MessageLookupByLibrary.simpleMessage("套餐已到期"),
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage("找回密码"),
     "youkomixFreeQuotaExhaustedDesc": MessageLookupByLibrary.simpleMessage(
@@ -1785,5 +1849,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "等待浏览器完成安全授权",
     ),
     "zhCN": MessageLookupByLibrary.simpleMessage("中文简体"),
+    "zhTW": MessageLookupByLibrary.simpleMessage("中文繁体"),
   };
 }

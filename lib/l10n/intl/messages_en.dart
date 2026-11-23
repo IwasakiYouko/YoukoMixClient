@@ -2210,6 +2210,72 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixEnterAuthCode": MessageLookupByLibrary.simpleMessage(
       "Enter one-time code",
     ),
+    "youkomixErrBadCertificate": MessageLookupByLibrary.simpleMessage(
+      "Panel TLS certificate verification failed",
+    ),
+    "youkomixErrDecodeSubFailed": MessageLookupByLibrary.simpleMessage(
+      "Failed to decode encrypted subscription payload",
+    ),
+    "youkomixErrDecryptFailed": MessageLookupByLibrary.simpleMessage(
+      "Secure channel authenticated decryption failed",
+    ),
+    "youkomixErrEmptyServerUrl": MessageLookupByLibrary.simpleMessage(
+      "Please enter the panel server URL",
+    ),
+    "youkomixErrEmptySubscription": MessageLookupByLibrary.simpleMessage(
+      "Returned node configuration is empty",
+    ),
+    "youkomixErrEnvelopeSigInvalid": MessageLookupByLibrary.simpleMessage(
+      "Encrypted response signature check failed; connection blocked",
+    ),
+    "youkomixErrFetchCaptchaFailed": MessageLookupByLibrary.simpleMessage(
+      "Failed to load image CAPTCHA, please try again",
+    ),
+    "youkomixErrInvalidEnvelope": MessageLookupByLibrary.simpleMessage(
+      "Invalid encrypted response envelope format",
+    ),
+    "youkomixErrInvalidEnvelopeBody": MessageLookupByLibrary.simpleMessage(
+      "Invalid encrypted response payload format",
+    ),
+    "youkomixErrInvalidResponse": MessageLookupByLibrary.simpleMessage(
+      "Unable to parse panel response",
+    ),
+    "youkomixErrInvalidServerPubkey": MessageLookupByLibrary.simpleMessage(
+      "Invalid server security public key format",
+    ),
+    "youkomixErrInvalidServerUrl": MessageLookupByLibrary.simpleMessage(
+      "Invalid panel URL format; please use an https:// domain",
+    ),
+    "youkomixErrInvalidSignedBody": MessageLookupByLibrary.simpleMessage(
+      "Invalid signed payload format",
+    ),
+    "youkomixErrMissingServerPubkey": MessageLookupByLibrary.simpleMessage(
+      "Client security public key is not configured; secure channel refused",
+    ),
+    "youkomixErrMissingSignature": MessageLookupByLibrary.simpleMessage(
+      "Panel public response is missing a valid digital signature",
+    ),
+    "youkomixErrNetworkTimeout": MessageLookupByLibrary.simpleMessage(
+      "Connection to panel timed out; check your network and retry",
+    ),
+    "youkomixErrNetworkUnreachable": MessageLookupByLibrary.simpleMessage(
+      "Unable to reach panel server; check your network or server URL",
+    ),
+    "youkomixErrParseSignedFailed": MessageLookupByLibrary.simpleMessage(
+      "Failed to parse signed payload",
+    ),
+    "youkomixErrRequestFailed": MessageLookupByLibrary.simpleMessage(
+      "Request failed",
+    ),
+    "youkomixErrServerPubkeyMismatch": MessageLookupByLibrary.simpleMessage(
+      "Server public key mismatch; connection blocked",
+    ),
+    "youkomixErrServerUnavailable": MessageLookupByLibrary.simpleMessage(
+      "Panel service temporarily unavailable",
+    ),
+    "youkomixErrSignatureInvalid": MessageLookupByLibrary.simpleMessage(
+      "Digital signature verification failed; response may have been tampered with",
+    ),
     "youkomixExpired": MessageLookupByLibrary.simpleMessage("Plan expired"),
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage(
       "Forgot password",
@@ -2328,5 +2394,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Waiting for browser authorization",
     ),
     "zhCN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
+    "zhTW": MessageLookupByLibrary.simpleMessage("Traditional Chinese"),
   };
 }

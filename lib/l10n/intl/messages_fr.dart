@@ -2391,6 +2391,72 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixEnterAuthCode": MessageLookupByLibrary.simpleMessage(
       "Saisir un code unique",
     ),
+    "youkomixErrBadCertificate": MessageLookupByLibrary.simpleMessage(
+      "Échec de la vérification du certificat TLS du panneau",
+    ),
+    "youkomixErrDecodeSubFailed": MessageLookupByLibrary.simpleMessage(
+      "Échec du décodage de l’abonnement chiffré",
+    ),
+    "youkomixErrDecryptFailed": MessageLookupByLibrary.simpleMessage(
+      "Échec du déchiffrement authentifié du canal sécurisé",
+    ),
+    "youkomixErrEmptyServerUrl": MessageLookupByLibrary.simpleMessage(
+      "Veuillez saisir l’adresse du panneau",
+    ),
+    "youkomixErrEmptySubscription": MessageLookupByLibrary.simpleMessage(
+      "La configuration des nœuds reçue est vide",
+    ),
+    "youkomixErrEnvelopeSigInvalid": MessageLookupByLibrary.simpleMessage(
+      "Signature de réponse chiffrée invalide ; connexion bloquée",
+    ),
+    "youkomixErrFetchCaptchaFailed": MessageLookupByLibrary.simpleMessage(
+      "Échec du chargement du captcha, veuillez réessayer",
+    ),
+    "youkomixErrInvalidEnvelope": MessageLookupByLibrary.simpleMessage(
+      "Format d’enveloppe chiffrée invalide",
+    ),
+    "youkomixErrInvalidEnvelopeBody": MessageLookupByLibrary.simpleMessage(
+      "Contenu de réponse chiffrée au format invalide",
+    ),
+    "youkomixErrInvalidResponse": MessageLookupByLibrary.simpleMessage(
+      "Impossible d’analyser la réponse du panneau",
+    ),
+    "youkomixErrInvalidServerPubkey": MessageLookupByLibrary.simpleMessage(
+      "Format de clé publique du serveur invalide",
+    ),
+    "youkomixErrInvalidServerUrl": MessageLookupByLibrary.simpleMessage(
+      "Format d’URL invalide ; utilisez un domaine https://",
+    ),
+    "youkomixErrInvalidSignedBody": MessageLookupByLibrary.simpleMessage(
+      "Format de charge utile signée invalide",
+    ),
+    "youkomixErrMissingServerPubkey": MessageLookupByLibrary.simpleMessage(
+      "Clé publique serveur absente ; canal sécurisé refusé",
+    ),
+    "youkomixErrMissingSignature": MessageLookupByLibrary.simpleMessage(
+      "Signature numérique valide manquante dans les données publiques",
+    ),
+    "youkomixErrNetworkTimeout": MessageLookupByLibrary.simpleMessage(
+      "Délai d’attente dépassé lors de la connexion au panneau",
+    ),
+    "youkomixErrNetworkUnreachable": MessageLookupByLibrary.simpleMessage(
+      "Impossible de joindre le serveur du panneau ; vérifiez le réseau ou l’URL",
+    ),
+    "youkomixErrParseSignedFailed": MessageLookupByLibrary.simpleMessage(
+      "Échec de l’analyse de la charge utile signée",
+    ),
+    "youkomixErrRequestFailed": MessageLookupByLibrary.simpleMessage(
+      "Échec de la requête",
+    ),
+    "youkomixErrServerPubkeyMismatch": MessageLookupByLibrary.simpleMessage(
+      "Clé publique du serveur non concordante ; connexion bloquée",
+    ),
+    "youkomixErrServerUnavailable": MessageLookupByLibrary.simpleMessage(
+      "Service du panneau temporairement indisponible",
+    ),
+    "youkomixErrSignatureInvalid": MessageLookupByLibrary.simpleMessage(
+      "Échec de vérification de la signature numérique ; réponse potentiellement altérée",
+    ),
     "youkomixExpired": MessageLookupByLibrary.simpleMessage("Forfait expiré"),
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage(
       "Mot de passe oublié",
@@ -2519,5 +2585,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "En attente de l\'autorisation du navigateur",
     ),
     "zhCN": MessageLookupByLibrary.simpleMessage("Chinois simplifié"),
+    "zhTW": MessageLookupByLibrary.simpleMessage("Chinois traditionnel"),
   };
 }

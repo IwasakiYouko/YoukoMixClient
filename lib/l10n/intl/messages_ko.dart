@@ -1866,6 +1866,70 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixEmail": MessageLookupByLibrary.simpleMessage("이메일"),
     "youkomixEmailHint": MessageLookupByLibrary.simpleMessage("계정 이메일 입력"),
     "youkomixEnterAuthCode": MessageLookupByLibrary.simpleMessage("일회용 코드 입력"),
+    "youkomixErrBadCertificate": MessageLookupByLibrary.simpleMessage(
+      "패널 보안 인증서 검증에 실패했습니다",
+    ),
+    "youkomixErrDecodeSubFailed": MessageLookupByLibrary.simpleMessage(
+      "암호화된 구독 데이터 디코딩에 실패했습니다",
+    ),
+    "youkomixErrDecryptFailed": MessageLookupByLibrary.simpleMessage(
+      "보안 채널 복호화 검증에 실패했습니다",
+    ),
+    "youkomixErrEmptyServerUrl": MessageLookupByLibrary.simpleMessage(
+      "패널 주소를 입력해 주세요",
+    ),
+    "youkomixErrEmptySubscription": MessageLookupByLibrary.simpleMessage(
+      "반환된 노드 설정이 비어 있습니다",
+    ),
+    "youkomixErrEnvelopeSigInvalid": MessageLookupByLibrary.simpleMessage(
+      "암호화 응답 전자서명 검증에 실패하여 연결이 차단되었습니다",
+    ),
+    "youkomixErrFetchCaptchaFailed": MessageLookupByLibrary.simpleMessage(
+      "이미지 보안문자를 불러오지 못했습니다. 다시 시도해 주세요",
+    ),
+    "youkomixErrInvalidEnvelope": MessageLookupByLibrary.simpleMessage(
+      "암호화 응답 봉투 형식이 올바르지 않습니다",
+    ),
+    "youkomixErrInvalidEnvelopeBody": MessageLookupByLibrary.simpleMessage(
+      "암호화 응답 본문 형식이 올바르지 않습니다",
+    ),
+    "youkomixErrInvalidResponse": MessageLookupByLibrary.simpleMessage(
+      "패널 응답을 해석할 수 없습니다",
+    ),
+    "youkomixErrInvalidServerPubkey": MessageLookupByLibrary.simpleMessage(
+      "서버 보안 공개키 형식이 올바르지 않습니다",
+    ),
+    "youkomixErrInvalidServerUrl": MessageLookupByLibrary.simpleMessage(
+      "패널 주소 형식이 올바르지 않습니다. https:// 도메인을 사용하세요",
+    ),
+    "youkomixErrInvalidSignedBody": MessageLookupByLibrary.simpleMessage(
+      "서명된 페이로드 형식이 올바르지 않습니다",
+    ),
+    "youkomixErrMissingServerPubkey": MessageLookupByLibrary.simpleMessage(
+      "사전 설정된 보안 공개키가 없어 보안 채널 연결을 거부했습니다",
+    ),
+    "youkomixErrMissingSignature": MessageLookupByLibrary.simpleMessage(
+      "패널 공개 데이터에 유효한 전자서명이 없습니다",
+    ),
+    "youkomixErrNetworkTimeout": MessageLookupByLibrary.simpleMessage(
+      "패널 연결 시간이 초과되었습니다. 네트워크를 확인하고 다시 시도하세요",
+    ),
+    "youkomixErrNetworkUnreachable": MessageLookupByLibrary.simpleMessage(
+      "패널 서버에 연결할 수 없습니다. 네트워크 또는 패널 주소를 확인하세요",
+    ),
+    "youkomixErrParseSignedFailed": MessageLookupByLibrary.simpleMessage(
+      "서명된 페이로드 구문 분석에 실패했습니다",
+    ),
+    "youkomixErrRequestFailed": MessageLookupByLibrary.simpleMessage("요청 실패"),
+    "youkomixErrServerPubkeyMismatch": MessageLookupByLibrary.simpleMessage(
+      "서버 보안 공개키가 일치하지 않아 연결이 차단되었습니다",
+    ),
+    "youkomixErrServerUnavailable": MessageLookupByLibrary.simpleMessage(
+      "패널 서비스를 일시적으로 사용할 수 없습니다",
+    ),
+    "youkomixErrSignatureInvalid": MessageLookupByLibrary.simpleMessage(
+      "전자서명 검증에 실패했습니다. 응답이 변조되었을 수 있습니다",
+    ),
     "youkomixExpired": MessageLookupByLibrary.simpleMessage("플랜 만료됨"),
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage("비밀번호 찾기"),
     "youkomixFreeQuotaExhaustedDesc": MessageLookupByLibrary.simpleMessage(
@@ -1948,5 +2012,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "브라우저 인증 완료 대기 중",
     ),
     "zhCN": MessageLookupByLibrary.simpleMessage("중국어 간체"),
+    "zhTW": MessageLookupByLibrary.simpleMessage("중국어 번체"),
   };
 }

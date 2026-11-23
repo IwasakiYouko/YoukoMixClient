@@ -151,3 +151,38 @@ Locale? getLocaleForString(String? localString) {
   }
   return null;
 }
+
+Locale? normalizeSupportedAppLocale(Locale locale) {
+  if (locale.languageCode == 'zh') {
+    final isHant =
+        locale.scriptCode == 'Hant' ||
+        const {'TW', 'HK', 'MO'}.contains(locale.countryCode);
+    return isHant ? const Locale('zh', 'TW') : const Locale('zh', 'CN');
+  }
+  return switch (locale.languageCode) {
+    'en' => const Locale('en'),
+    'es' => const Locale('es'),
+    'fr' => const Locale('fr'),
+    'ja' => const Locale('ja'),
+    'ko' => const Locale('ko'),
+    'ru' => const Locale('ru'),
+    _ => null,
+  };
+}
+
+Locale resolveEffectiveAppLocale(
+  String? savedLocale,
+  Iterable<Locale> systemLocales,
+) {
+  final explicit = getLocaleForString(savedLocale);
+  if (explicit != null) {
+    return normalizeSupportedAppLocale(explicit) ?? const Locale('zh', 'CN');
+  }
+  for (final candidate in systemLocales) {
+    final matched = normalizeSupportedAppLocale(candidate);
+    if (matched != null) {
+      return matched;
+    }
+  }
+  return const Locale('zh', 'CN');
+}

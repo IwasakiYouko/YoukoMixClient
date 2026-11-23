@@ -1893,6 +1893,72 @@ class MessageLookup extends MessageLookupByLibrary {
     "youkomixEnterAuthCode": MessageLookupByLibrary.simpleMessage(
       "ワンタイムコードを入力",
     ),
+    "youkomixErrBadCertificate": MessageLookupByLibrary.simpleMessage(
+      "パネルのTLS証明書の検証に失敗しました",
+    ),
+    "youkomixErrDecodeSubFailed": MessageLookupByLibrary.simpleMessage(
+      "暗号化されたサブスクリプションの復号に失敗しました",
+    ),
+    "youkomixErrDecryptFailed": MessageLookupByLibrary.simpleMessage(
+      "セキュアチャネルの復号検証に失敗しました",
+    ),
+    "youkomixErrEmptyServerUrl": MessageLookupByLibrary.simpleMessage(
+      "パネルのアドレスを入力してください",
+    ),
+    "youkomixErrEmptySubscription": MessageLookupByLibrary.simpleMessage(
+      "取得したノード設定が空です",
+    ),
+    "youkomixErrEnvelopeSigInvalid": MessageLookupByLibrary.simpleMessage(
+      "暗号化レスポンスの署名検証に失敗したため接続を遮断しました",
+    ),
+    "youkomixErrFetchCaptchaFailed": MessageLookupByLibrary.simpleMessage(
+      "画像認証コードの取得に失敗しました。再試行してください",
+    ),
+    "youkomixErrInvalidEnvelope": MessageLookupByLibrary.simpleMessage(
+      "暗号化レスポンスの封筒形式が無効です",
+    ),
+    "youkomixErrInvalidEnvelopeBody": MessageLookupByLibrary.simpleMessage(
+      "暗号化レスポンスの内容形式が無効です",
+    ),
+    "youkomixErrInvalidResponse": MessageLookupByLibrary.simpleMessage(
+      "パネルからの応答を解析できません",
+    ),
+    "youkomixErrInvalidServerPubkey": MessageLookupByLibrary.simpleMessage(
+      "サーバー公開鍵の形式が無効です",
+    ),
+    "youkomixErrInvalidServerUrl": MessageLookupByLibrary.simpleMessage(
+      "パネルURLの形式が無効です。https:// ドメインを使用してください",
+    ),
+    "youkomixErrInvalidSignedBody": MessageLookupByLibrary.simpleMessage(
+      "署名付きペイロードの形式が無効です",
+    ),
+    "youkomixErrMissingServerPubkey": MessageLookupByLibrary.simpleMessage(
+      "クライアントに事前共有公開鍵が設定されていないため接続を拒否しました",
+    ),
+    "youkomixErrMissingSignature": MessageLookupByLibrary.simpleMessage(
+      "パネル公開データに有効な電子署名がありません",
+    ),
+    "youkomixErrNetworkTimeout": MessageLookupByLibrary.simpleMessage(
+      "パネルへの接続がタイムアウトしました。通信環境をご確認ください",
+    ),
+    "youkomixErrNetworkUnreachable": MessageLookupByLibrary.simpleMessage(
+      "パネルサーバーに接続できません。ネットワークまたはURLをご確認ください",
+    ),
+    "youkomixErrParseSignedFailed": MessageLookupByLibrary.simpleMessage(
+      "署名付きペイロードの解析に失敗しました",
+    ),
+    "youkomixErrRequestFailed": MessageLookupByLibrary.simpleMessage(
+      "リクエストに失敗しました",
+    ),
+    "youkomixErrServerPubkeyMismatch": MessageLookupByLibrary.simpleMessage(
+      "サーバーの公開鍵が一致しないため接続を遮断しました",
+    ),
+    "youkomixErrServerUnavailable": MessageLookupByLibrary.simpleMessage(
+      "パネルサービスが一時的に利用できません",
+    ),
+    "youkomixErrSignatureInvalid": MessageLookupByLibrary.simpleMessage(
+      "電子署名の検証に失敗しました。応答が改ざんされた可能性があります",
+    ),
     "youkomixExpired": MessageLookupByLibrary.simpleMessage("期限切れ"),
     "youkomixForgotPassword": MessageLookupByLibrary.simpleMessage(
       "パスワードを忘れた場合",
@@ -1981,5 +2047,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "ブラウザでの認証完了を待機中",
     ),
     "zhCN": MessageLookupByLibrary.simpleMessage("簡体字中国語"),
+    "zhTW": MessageLookupByLibrary.simpleMessage("中国語（繁体字）"),
   };
 }

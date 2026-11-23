@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:fl_clash/l10n/l10n.dart';
 import 'package:flutter/foundation.dart';
 
 import 'youkomix_api.dart';
@@ -51,8 +52,9 @@ class YoukoMixServerPublicKey {
   static YoukoMixServerPublicKey parse(String raw) {
     final parsed = tryParse(raw);
     if (parsed == null) {
-      throw const YoukoMixApiException(
-        message: '服务端安全公钥格式无效',
+      final l10n = AppLocalizations.maybeCurrent;
+      throw YoukoMixApiException(
+        message: l10n?.youkomixErrInvalidServerPubkey ?? '服务端安全公钥格式无效',
         errorCode: 'invalid_server_pubkey',
       );
     }
@@ -139,17 +141,18 @@ abstract final class YoukoMixCrypto {
     required Map<String, Object?> json,
     required YoukoMixServerPublicKey? pinnedKey,
   }) async {
+    final l10n = AppLocalizations.maybeCurrent;
     if (pinnedKey == null) {
-      throw const YoukoMixApiException(
-        message: '客户端未配置预置安全公钥，已拒绝建立信任',
+      throw YoukoMixApiException(
+        message: l10n?.youkomixErrMissingServerPubkey ?? '客户端未配置预置安全公钥，已拒绝建立信任',
         errorCode: 'missing_server_pubkey',
       );
     }
     final rawPubkey = json['server_pubkey']?.toString().trim() ?? '';
     final advertisedKey = YoukoMixServerPublicKey.tryParse(rawPubkey);
     if (advertisedKey != null && advertisedKey != pinnedKey) {
-      throw const YoukoMixApiException(
-        message: '服务端安全公钥不匹配，连接已被拦截',
+      throw YoukoMixApiException(
+        message: l10n?.youkomixErrServerPubkeyMismatch ?? '服务端安全公钥不匹配，连接已被拦截',
         errorCode: 'signature_invalid',
       );
     }
@@ -158,8 +161,8 @@ abstract final class YoukoMixCrypto {
     final sigRaw = json['sig']?.toString().trim() ?? '';
     final sigBytes = b64uDecode(sigRaw);
     if (payloadB64.isEmpty || sigBytes.length != _sigBytes) {
-      throw const YoukoMixApiException(
-        message: '面板公开数据缺少有效的数字签名',
+      throw YoukoMixApiException(
+        message: l10n?.youkomixErrMissingSignature ?? '面板公开数据缺少有效的数字签名',
         errorCode: 'signature_invalid',
       );
     }
@@ -170,16 +173,16 @@ abstract final class YoukoMixCrypto {
       signature: Signature(sigBytes, publicKey: pinnedKey.ed25519PublicKey),
     );
     if (!verified) {
-      throw const YoukoMixApiException(
-        message: '面板数字签名校验未通过，响应可能被篡改',
+      throw YoukoMixApiException(
+        message: l10n?.youkomixErrSignatureInvalid ?? '面板数字签名校验未通过，响应可能被篡改',
         errorCode: 'signature_invalid',
       );
     }
 
     final payloadBytes = b64uDecode(payloadB64);
     if (payloadBytes.isEmpty) {
-      throw const YoukoMixApiException(
-        message: '签名载荷格式无效',
+      throw YoukoMixApiException(
+        message: l10n?.youkomixErrInvalidSignedBody ?? '签名载荷格式无效',
         errorCode: 'invalid_envelope',
       );
     }
@@ -194,8 +197,8 @@ abstract final class YoukoMixCrypto {
         serverKey: pinnedKey,
       );
     } on FormatException {
-      throw const YoukoMixApiException(
-        message: '签名载荷解析失败',
+      throw YoukoMixApiException(
+        message: l10n?.youkomixErrParseSignedFailed ?? '签名载荷解析失败',
         errorCode: 'invalid_envelope',
       );
     }
@@ -280,12 +283,13 @@ abstract final class YoukoMixCrypto {
     final respNonce = b64uDecode(nonceB64);
     final respBox = b64uDecode(ctB64);
     final sigBytes = b64uDecode(sigB64);
+    final l10n = AppLocalizations.maybeCurrent;
     if (version != protocolVersion ||
         respNonce.length != _nonceBytes ||
         respBox.length < _macBytes ||
         sigBytes.length != _sigBytes) {
-      throw const YoukoMixApiException(
-        message: '加密响应信封格式无效',
+      throw YoukoMixApiException(
+        message: l10n?.youkomixErrInvalidEnvelope ?? '加密响应信封格式无效',
         errorCode: 'invalid_envelope',
       );
     }
@@ -302,8 +306,8 @@ abstract final class YoukoMixCrypto {
       ),
     );
     if (!sigValid) {
-      throw const YoukoMixApiException(
-        message: '加密响应数字签名校验失败，连接已被拦截',
+      throw YoukoMixApiException(
+        message: l10n?.youkomixErrEnvelopeSigInvalid ?? '加密响应数字签名校验失败，连接已被拦截',
         errorCode: 'signature_invalid',
       );
     }
@@ -332,13 +336,13 @@ abstract final class YoukoMixCrypto {
       }
       return Map<String, Object?>.from(decoded);
     } on SecretBoxAuthenticationError {
-      throw const YoukoMixApiException(
-        message: '安全信道解密校验失败',
+      throw YoukoMixApiException(
+        message: l10n?.youkomixErrDecryptFailed ?? '安全信道解密校验失败',
         errorCode: 'decrypt_failed',
       );
     } on FormatException {
-      throw const YoukoMixApiException(
-        message: '加密响应内容格式无效',
+      throw YoukoMixApiException(
+        message: l10n?.youkomixErrInvalidEnvelopeBody ?? '加密响应内容格式无效',
         errorCode: 'invalid_envelope',
       );
     }

@@ -18,6 +18,8 @@ class AppLocalizations {
 
   static AppLocalizations? _current;
 
+  static AppLocalizations? get maybeCurrent => _current;
+
   static AppLocalizations get current {
     assert(
       _current != null,
@@ -29,9 +31,17 @@ class AppLocalizations {
   static const AppLocalizationDelegate delegate = AppLocalizationDelegate();
 
   static Future<AppLocalizations> load(Locale locale) {
-    final name = (locale.countryCode?.isEmpty ?? false)
-        ? locale.languageCode
-        : locale.toString();
+    final String name;
+    if (locale.languageCode == 'zh') {
+      final isHant =
+          locale.scriptCode == 'Hant' ||
+          const {'TW', 'HK', 'MO'}.contains(locale.countryCode);
+      name = isHant ? 'zh_TW' : 'zh_CN';
+    } else {
+      name = (locale.countryCode?.isEmpty ?? false)
+          ? locale.languageCode
+          : locale.toString();
+    }
     final localeName = Intl.canonicalizedLocale(name);
     return initializeMessages(localeName).then((_) {
       Intl.defaultLocale = localeName;
@@ -9757,6 +9767,236 @@ class AppLocalizations {
       args: [day],
     );
   }
+
+  /// `Traditional Chinese`
+  String get zhTW {
+    return Intl.message(
+      'Traditional Chinese',
+      name: 'zhTW',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Panel TLS certificate verification failed`
+  String get youkomixErrBadCertificate {
+    return Intl.message(
+      'Panel TLS certificate verification failed',
+      name: 'youkomixErrBadCertificate',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to decode encrypted subscription payload`
+  String get youkomixErrDecodeSubFailed {
+    return Intl.message(
+      'Failed to decode encrypted subscription payload',
+      name: 'youkomixErrDecodeSubFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Secure channel authenticated decryption failed`
+  String get youkomixErrDecryptFailed {
+    return Intl.message(
+      'Secure channel authenticated decryption failed',
+      name: 'youkomixErrDecryptFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter the panel server URL`
+  String get youkomixErrEmptyServerUrl {
+    return Intl.message(
+      'Please enter the panel server URL',
+      name: 'youkomixErrEmptyServerUrl',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Returned node configuration is empty`
+  String get youkomixErrEmptySubscription {
+    return Intl.message(
+      'Returned node configuration is empty',
+      name: 'youkomixErrEmptySubscription',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Encrypted response signature check failed; connection blocked`
+  String get youkomixErrEnvelopeSigInvalid {
+    return Intl.message(
+      'Encrypted response signature check failed; connection blocked',
+      name: 'youkomixErrEnvelopeSigInvalid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to load image CAPTCHA, please try again`
+  String get youkomixErrFetchCaptchaFailed {
+    return Intl.message(
+      'Failed to load image CAPTCHA, please try again',
+      name: 'youkomixErrFetchCaptchaFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invalid encrypted response envelope format`
+  String get youkomixErrInvalidEnvelope {
+    return Intl.message(
+      'Invalid encrypted response envelope format',
+      name: 'youkomixErrInvalidEnvelope',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invalid encrypted response payload format`
+  String get youkomixErrInvalidEnvelopeBody {
+    return Intl.message(
+      'Invalid encrypted response payload format',
+      name: 'youkomixErrInvalidEnvelopeBody',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unable to parse panel response`
+  String get youkomixErrInvalidResponse {
+    return Intl.message(
+      'Unable to parse panel response',
+      name: 'youkomixErrInvalidResponse',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invalid server security public key format`
+  String get youkomixErrInvalidServerPubkey {
+    return Intl.message(
+      'Invalid server security public key format',
+      name: 'youkomixErrInvalidServerPubkey',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invalid panel URL format; please use an https:// domain`
+  String get youkomixErrInvalidServerUrl {
+    return Intl.message(
+      'Invalid panel URL format; please use an https:// domain',
+      name: 'youkomixErrInvalidServerUrl',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invalid signed payload format`
+  String get youkomixErrInvalidSignedBody {
+    return Intl.message(
+      'Invalid signed payload format',
+      name: 'youkomixErrInvalidSignedBody',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Client security public key is not configured; secure channel refused`
+  String get youkomixErrMissingServerPubkey {
+    return Intl.message(
+      'Client security public key is not configured; secure channel refused',
+      name: 'youkomixErrMissingServerPubkey',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Panel public response is missing a valid digital signature`
+  String get youkomixErrMissingSignature {
+    return Intl.message(
+      'Panel public response is missing a valid digital signature',
+      name: 'youkomixErrMissingSignature',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connection to panel timed out; check your network and retry`
+  String get youkomixErrNetworkTimeout {
+    return Intl.message(
+      'Connection to panel timed out; check your network and retry',
+      name: 'youkomixErrNetworkTimeout',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unable to reach panel server; check your network or server URL`
+  String get youkomixErrNetworkUnreachable {
+    return Intl.message(
+      'Unable to reach panel server; check your network or server URL',
+      name: 'youkomixErrNetworkUnreachable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to parse signed payload`
+  String get youkomixErrParseSignedFailed {
+    return Intl.message(
+      'Failed to parse signed payload',
+      name: 'youkomixErrParseSignedFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Request failed`
+  String get youkomixErrRequestFailed {
+    return Intl.message(
+      'Request failed',
+      name: 'youkomixErrRequestFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Server public key mismatch; connection blocked`
+  String get youkomixErrServerPubkeyMismatch {
+    return Intl.message(
+      'Server public key mismatch; connection blocked',
+      name: 'youkomixErrServerPubkeyMismatch',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Panel service temporarily unavailable`
+  String get youkomixErrServerUnavailable {
+    return Intl.message(
+      'Panel service temporarily unavailable',
+      name: 'youkomixErrServerUnavailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Digital signature verification failed; response may have been tampered with`
+  String get youkomixErrSignatureInvalid {
+    return Intl.message(
+      'Digital signature verification failed; response may have been tampered with',
+      name: 'youkomixErrSignatureInvalid',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {
@@ -9771,6 +10011,7 @@ class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {
       Locale.fromSubtags(languageCode: 'ko'),
       Locale.fromSubtags(languageCode: 'ru'),
       Locale.fromSubtags(languageCode: 'zh', countryCode: 'CN'),
+      Locale.fromSubtags(languageCode: 'zh', countryCode: 'TW'),
     ];
   }
 

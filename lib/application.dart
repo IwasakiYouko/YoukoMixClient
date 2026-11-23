@@ -152,7 +152,10 @@ class ApplicationState extends ConsumerState<Application> {
             );
           },
           title: appName,
-          locale: getLocaleForString(locale),
+          locale: resolveEffectiveAppLocale(
+            locale,
+            WidgetsBinding.instance.platformDispatcher.locales,
+          ),
           supportedLocales: AppLocalizations.delegate.supportedLocales,
           themeMode: themeProps.themeMode,
           theme: watchAppTheme(ref, Brightness.light),
